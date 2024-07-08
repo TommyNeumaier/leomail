@@ -1,0 +1,42 @@
+stages:
+  - build
+  - deploy
+
+build-quarkus:
+  stage: build
+  image: maven:3.8.5-openjdk-11
+  script:
+    - cd app/leomail-backend
+    - mvn clean package -DskipTests
+  artifacts:
+    paths:
+      - target/*
+
+build-vuejs:
+  stage: build
+  image: node:16
+  script:
+    - cd app/leomail-frontend
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/dist
+
+# Deploy to the remote server
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk update && apk add openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deployment_key
+    - chmod 600 ~/.ssh/id_rsa
+    - eval $(ssh-agent -s)
+    - ssh-add ~/.ssh/id_rsa
+    - ssh-keyscan tommyneumaier.at >> ~/.ssh/known_hosts
+  script:
+    - scp -i ~/.ssh/id_rsa -r app/leomail-backend/target/* deployment@tommyneumaier.at:/home/deployment/quarkus
+    - scp -i ~/.ssh/id_rsa -r app/leomail-frontend/dist/* deployment@tommyneumaier.at:/home/deployment/vue
+  only:
+    - main
