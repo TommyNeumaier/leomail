@@ -1,6 +1,4 @@
 <script setup lang="ts">
-
-import {RouterLink} from "vue-router";
 </script>
 
 <template>
@@ -28,17 +26,18 @@ import {RouterLink} from "vue-router";
 
 <style scoped>
 #bigNavBox{
-  width: 12%;
-  height: 100%;
-  border: black solid 1px;
+  width: 10%;
   margin-top: 2%;
+  border-right: rgba(0, 0, 0, 0.20) solid 2px;
+  border-radius: 20px;
+  padding-bottom: 1.5%;
 }
 .iconBox{
   text-align: center;
   padding-top: 20%;
 }
 .iconBoxSetting{
-  margin-top: 30rem;
+  margin-top: 240%;
   text-align: center;
 }
 </style>

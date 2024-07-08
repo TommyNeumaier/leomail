@@ -9,6 +9,7 @@
     <a class="HeaderLinks" href="#">Projekte</a>
     <a class="HeaderLinks" href="#">Personen</a>
   </div>
+  <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50">
 </div>
 </template>
 
@@ -18,10 +19,11 @@ body{
   padding: 0;
 }
 #headerNav{
+  background-color: white;
   display: flex;
   flex-direction: row;
+  align-items: center;
   height: 5em;
-  padding-top: 15px;
   padding-left: 2.5%;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 }
@@ -40,5 +42,10 @@ body{
 #HeaderLinkBox{
   margin-left: 4%;
   padding-top: 10px;
+}
+.profil-photo{
+  border-radius: 50%;
+  margin-left: auto;
+  margin-right: 2%;
 }
 </style>
