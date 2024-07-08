@@ -5,7 +5,6 @@ import io.quarkus.mailer.Mailer;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
-import org.hibernate.annotations.IdGeneratorType;
 
 @Path("mail")
 public class MailResource {
