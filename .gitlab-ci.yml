@@ -19,7 +19,7 @@ before_script:
 
 build:
   stage: build
-  image: maven:3.8.5-openjdk-11
+  image: maven:3.8.5-openjdk-21
   script:
     - cd app/leomail-backend
     - mvn clean package -DskipTests
@@ -29,7 +29,7 @@ build:
 
 test:
   stage: test
-  image: maven:3.8.5-openjdk-11
+  image: maven:3.8.5-openjdk-21
   script:
     - cd app/leomail-backend
     - mvn test
