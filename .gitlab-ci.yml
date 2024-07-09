@@ -1,8 +1,23 @@
 stages:
   - build
+  - test
   - deploy
 
-build-quarkus:
+variables:
+  SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
+  SSH_USER: deployment
+  SSH_HOST: tommyneumaier.at
+  APP_NAME: leomail-backend
+
+before_script:
+  # Set up SSH
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+
+build:
   stage: build
   image: maven:3.8.5-openjdk-11
   script:
@@ -10,20 +25,15 @@ build-quarkus:
     - mvn clean package -DskipTests
   artifacts:
     paths:
-      - target/*
+      - app/leomail-backend/target/*.jar
 
-build-vuejs:
-  stage: build
-  image: node:16
+test:
+  stage: test
+  image: maven:3.8.5-openjdk-11
   script:
-    - cd app/leomail-frontend
-    - npm install
-    - npm run build
-  artifacts:
-    paths:
-      - frontend/dist
+    - cd app/leomail-backend
+    - mvn test
 
-# Deploy to the remote server
 deploy:
   stage: deploy
   image: alpine:latest
@@ -31,12 +41,13 @@ deploy:
     - apk update && apk add openssh
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deployment_key
-    - chmod 600 ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/deployment_key
     - eval $(ssh-agent -s)
-    - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan tommyneumaier.at >> ~/.ssh/known_hosts
+    - ssh-add ~/.ssh/deployment_key
+    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
   script:
-    - scp -i ~/.ssh/id_rsa -r app/leomail-backend/target/* deployment@tommyneumaier.at:/home/deployment/quarkus
-    - scp -i ~/.ssh/id_rsa -r app/leomail-frontend/dist/* deployment@tommyneumaier.at:/home/deployment/vue
+    - scp -i ~/.ssh/deployment_key app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
+    - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST 'pkill -f ${APP_NAME}.jar || true'
+    - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST "nohup java -jar /home/$SSH_USER/${APP_NAME}.jar &"
   only:
     - main
