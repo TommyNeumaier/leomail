@@ -33,7 +33,7 @@ public class TestResource {
 
     @GET
     @Path("authtest")
-    @Authenticated
+    @RolesAllowed("user")
     public String authtest() {
         return "You are authenticated!";
     }
