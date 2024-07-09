@@ -18,7 +18,7 @@ before_script:
 
 build:
   stage: build
-  image: maven
+  image: maven:3.8.5-openjdk-11
   script:
     - ls -la
     - cd app/leomail-backend
@@ -29,7 +29,7 @@ build:
 
 test:
   stage: test
-  image: maven
+  image: maven:3.8.5-openjdk-11
   script:
     - cd app/leomail-backend
     - mvn test
