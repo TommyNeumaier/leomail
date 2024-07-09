@@ -48,7 +48,9 @@ deploy:
     - chmod 600 ~/.ssh/deployment_key
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/deployment_key
+    - echo "h"
     - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
+    - echo "a"
   script:
     - scp -i ~/.ssh/deployment_key app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
     - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST 'pkill -f ${APP_NAME}.jar || true'
