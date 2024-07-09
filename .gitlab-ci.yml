@@ -10,7 +10,6 @@ variables:
   APP_NAME: leomail-backend
 
 before_script:
-  # Set up SSH
   - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
   - eval $(ssh-agent -s)
   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
@@ -21,6 +20,8 @@ build:
   stage: build
   image: maven:3.8.5-openjdk-11
   script:
+    # Debug step to list the directory structure
+    - ls -la
     - cd app/leomail-backend
     - mvn clean package -DskipTests
   artifacts:
