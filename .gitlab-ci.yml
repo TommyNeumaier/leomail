@@ -18,22 +18,18 @@ before_script:
 
 build:
   stage: build
-  image: maven
+  image: maven:3.8.5-openjdk-11
   script:
-    # List the directory structure
     - ls -la
-    # Clean the local repository
     - cd app/leomail-backend
-    - mvn dependency:purge-local-repository -DreResolve=false -DactTransitively=false
-    # Build the application with detailed logs
-    - mvn clean package -DskipTests -e -X
+    - mvn clean package -DskipTests
   artifacts:
     paths:
       - app/leomail-backend/target/*.jar
 
 test:
   stage: test
-  image: maven
+  image: maven:3.8.5-openjdk-11
   script:
     - cd app/leomail-backend
     - mvn test
@@ -50,7 +46,11 @@ deploy:
     - ssh-add ~/.ssh/deployment_key
   script:
     - ls -a app/leomail-backend/target
+    # Verify SSH connection
+    - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST 'echo "SSH connection successful"'
+    # Copy the built jar to the VM
     - scp -i ~/.ssh/deployment_key app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
+    # Deploy the application
     - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST 'pkill -f ${APP_NAME}.jar || true'
     - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST "nohup java -jar /home/$SSH_USER/${APP_NAME}.jar &"
   only:
