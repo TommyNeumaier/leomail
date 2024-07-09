@@ -44,7 +44,6 @@ deploy:
     - chmod 600 ~/.ssh/deployment_key
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/deployment_key
-    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
   script:
     - ls -a app/leomail-backend/target
     # Verify SSH connection
