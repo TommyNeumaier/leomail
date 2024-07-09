@@ -18,9 +18,8 @@ before_script:
 
 build:
   stage: build
-  image: maven:3.8.5-openjdk-11
+  image: maven:3.9.5-openjdk-21
   script:
-    # Debug step to list the directory structure
     - ls -la
     - cd app/leomail-backend || echo "Directory not found"
     - mvn clean package -DskipTests
@@ -30,7 +29,7 @@ build:
 
 test:
   stage: test
-  image: maven:3.8.5-openjdk-11
+  image: maven:3.9.5-openjdk-21
   script:
     - cd app/leomail-backend
     - mvn test
