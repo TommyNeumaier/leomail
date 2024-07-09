@@ -23,9 +23,9 @@ build:
     # List the directory structure
     - ls -la
     # Clean the local repository
+    - cd app/leomail-backend
     - mvn dependency:purge-local-repository -DreResolve=false -DactTransitively=false
     # Build the application with detailed logs
-    - cd app/leomail-backend
     - mvn clean package -DskipTests -e -X
   artifacts:
     paths:
