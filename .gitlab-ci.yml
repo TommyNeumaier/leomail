@@ -7,7 +7,7 @@ variables:
   SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
   SSH_USER: deployment
   SSH_HOST: tommyneumaier.at
-  APP_NAME: leomail-backend
+  APP_NAME: leomail-backend-1.0-SNAPSHOT
 
 before_script:
   - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
@@ -18,10 +18,10 @@ before_script:
 
 build:
   stage: build
-  image: maven:3.9.5-openjdk-21
+  image: maven:3.8.5-openjdk-11
   script:
     - ls -la
-    - cd app/leomail-backend || echo "Directory not found"
+    - cd app/leomail-backend
     - mvn clean package -DskipTests
   artifacts:
     paths:
@@ -29,7 +29,7 @@ build:
 
 test:
   stage: test
-  image: maven:3.9.5-openjdk-21
+  image: maven:3.8.5-openjdk-11
   script:
     - cd app/leomail-backend
     - mvn test
@@ -38,17 +38,17 @@ deploy:
   stage: deploy
   image: alpine:latest
   before_script:
-    # Ensure SSH is set up
     - apk update && apk add openssh
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deployment_key
     - chmod 600 ~/.ssh/deployment_key
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/deployment_key
-    - echo "before"
     - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
-    - echo "after"
   script:
+    - ls -a app/leomail-backend/target
+    # Verify SSH connection
+    - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST 'echo "SSH connection successful"'
     # Copy the built jar to the VM
     - scp -i ~/.ssh/deployment_key app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
     # Deploy the application
