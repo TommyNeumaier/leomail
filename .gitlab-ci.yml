@@ -19,7 +19,7 @@ before_script:
 
 build:
   stage: build
-  image: maven:3.8.5-openjdk-21
+  image: maven:3.8.5-openjdk-11
   script:
     - cd app/leomail-backend
     - mvn clean package -DskipTests
@@ -29,7 +29,7 @@ build:
 
 test:
   stage: test
-  image: maven:3.8.5-openjdk-21
+  image: maven:3.8.5-openjdk-11
   script:
     - cd app/leomail-backend
     - mvn test
@@ -38,6 +38,7 @@ deploy:
   stage: deploy
   image: alpine:latest
   before_script:
+    # Ensure SSH is set up
     - apk update && apk add openssh
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deployment_key
@@ -46,7 +47,9 @@ deploy:
     - ssh-add ~/.ssh/deployment_key
     - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
   script:
+    # Copy the built jar to the VM
     - scp -i ~/.ssh/deployment_key app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
+    # Deploy the application
     - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST 'pkill -f ${APP_NAME}.jar || true'
     - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST "nohup java -jar /home/$SSH_USER/${APP_NAME}.jar &"
   only:
