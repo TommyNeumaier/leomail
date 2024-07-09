@@ -19,25 +19,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import {ref, onMounted, onUnmounted} from 'vue';
 import axios from 'axios';
 
 const inputData = ref('');
 const responseData = ref('');
 const sendData = async () => {
   try {
-    const response = await axios.post('http://localhost:8080/test/add', {
-      s: inputData.value
-    });
+    const response = await axios.post('http://localhost:8080/test/add', inputData.value);
     console.log('Erfolgreich gesendet:', response.data);
     responseData.value = response.data;
+    data.value.push(response.data)
     // Hier kannst du die Rückgabe des Servers verarbeiten, falls erforderlich
   } catch (error) {
     console.error('Fehler beim Senden der Daten:', error);
   }
 };
 
-const data = ref([]);
+const data = ref<string[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
@@ -55,7 +54,8 @@ const getData = async () => {
   }
 };
 
-// Daten abrufen, wenn die Komponente montiert wird
+
+// Daten abrufen und Polling starten, wenn die Komponente montiert wird
 onMounted(() => {
   getData();
 });
