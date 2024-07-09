@@ -53,9 +53,8 @@ app/leomail-backend/target/
 # Other
 app/leomail-backend/log/
 app/leomail-backend/tmp/
-app/leomail-backend/http/priv/env.json
+app/leomail-backend/http/priv/
 
 # Git Secret
 .gitsecret/keys/random_seed
-!*.secret
 app/leomail-backend/src/main/resources/application.properties

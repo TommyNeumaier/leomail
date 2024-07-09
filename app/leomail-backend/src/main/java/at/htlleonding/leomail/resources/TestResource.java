@@ -1,5 +1,7 @@
 package at.htlleonding.leomail.resources;
 
+import io.quarkus.security.Authenticated;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -27,5 +29,12 @@ public class TestResource {
     public String add(String s) {
         list.add(s);
         return s;
+    }
+
+    @GET
+    @Path("authtest")
+    @Authenticated
+    public String authtest() {
+        return "You are authenticated!";
     }
 }
