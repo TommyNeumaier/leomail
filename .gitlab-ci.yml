@@ -20,7 +20,11 @@ build:
   stage: build
   image: maven:3.8.5-openjdk-11
   script:
+    # List the directory structure
     - ls -la
+    # Clean the local repository
+    - mvn dependency:purge-local-repository -DreResolve=false -DactTransitively=false
+    # Build the application with detailed logs
     - cd app/leomail-backend
     - mvn clean package -DskipTests -e -X
   artifacts:
