@@ -49,7 +49,7 @@ deploy:
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/deployment_key
   script:
-    - ls -a
+    - ls -a app/leomail-backend/target
     - scp -i ~/.ssh/deployment_key app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
     - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST 'pkill -f ${APP_NAME}.jar || true'
     - ssh -i ~/.ssh/deployment_key $SSH_USER@$SSH_HOST "nohup java -jar /home/$SSH_USER/${APP_NAME}.jar &"
