@@ -49,7 +49,6 @@ deploy:
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/deployment_key
     - echo "h"
-    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
     - echo "a"
   script:
     - scp -i ~/.ssh/deployment_key app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
