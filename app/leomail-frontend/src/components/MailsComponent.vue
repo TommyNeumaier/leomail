@@ -5,9 +5,9 @@ import Example from "@/components/Example.vue";
 </script>
 
 <template>
-  <div id="bigMainBox">
-    <div id="mailHeaderBox">
-      <h1 id="mail-heading">Emails</h1>
+  <div id="bigVGContainer">
+    <div id="VGHeaderBox">
+      <h1 id="vgHeading">Emails</h1>
 
       <div id="neueMail">
         <p>Neue Email</p>
@@ -61,23 +61,23 @@ import Example from "@/components/Example.vue";
 #search-icon{
   padding: 15%;
 }
-#bigMainBox{
+#bigVGContainer{
   width: 86.5%;
   margin-top: 2%;
   margin-left: 1.5%;
   display: flex;
   flex-direction: column;
 }
-#mailHeaderBox{
+#VGHeaderBox{
   display: flex;
   flex-direction: row;
-  height: 12%;
   background-color: white;
   box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 }
-#mail-heading{
+#vgHeading{
   margin-left: 4%;
   margin-top: 2%;
+  margin-bottom: 2%;
   font-size: 1.1em;
 }
 #neueMail{
