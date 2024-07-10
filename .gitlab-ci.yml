@@ -5,7 +5,7 @@ stages:
 
 variables:
   SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
-  SSH_USER: deployment
+  SSH_USER: root
   SSH_HOST: tommyneumaier.at
   APP_NAME: leomail-backend-1.0-SNAPSHOT
 
