@@ -7,14 +7,14 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Entity;
 
 @Entity
-public class TemplateGreetings extends PanacheEntity {
+public class TemplateGreeting extends PanacheEntity {
 
     public String content;
 
-    public TemplateGreetings() {
+    public TemplateGreeting() {
     }
 
-    public TemplateGreetings(Long id, String content) {
+    public TemplateGreeting(Long id, String content) {
         this.id = id;
         this.content = content;
     }
