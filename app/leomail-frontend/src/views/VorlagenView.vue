@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import NavComponent from "@/components/NavComponent.vue";
-import MainComponent from "@/components/MainComponent.vue";
+import MainComponent from "@/components/MailsComponent.vue";
+import VGMainComponent from "@/components/VGMainComponent.vue";
 </script>
 
 <template>
-<nav-component></nav-component>
-  <main-component></main-component>
+
+  <v-g-main-component></v-g-main-component>
+
 </template>
 
 <style scoped>

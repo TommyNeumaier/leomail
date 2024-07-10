@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MainComponent from "@/components/MainComponent.vue";
+import MainComponent from "@/components/MailsComponent.vue";
 import HeaderComponent from "@/components/HeaderComponent.vue";
 import NavComponent from "@/components/NavComponent.vue";
 </script>
