@@ -41,7 +41,7 @@ deploy:
     - apk update && apk add openssh
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deployment_key
-    - chmod 600 ~/.ssh/deployment_key
+    - chmod 777 ~/.ssh/deployment_key
     - eval $(ssh-agent -s)
     - ssh-add ~/.ssh/deployment_key
   script:
