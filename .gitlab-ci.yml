@@ -47,10 +47,10 @@ deploy:
   script:
     - ls -a app/leomail-backend/target
     # Verify SSH connection
-    - ssh -vvv -i ~/.ssh/deployment_key -R $SSH_USER@$SSH_HOST 'echo "SSH connection successful"'
-    - scp -v -i ~/.ssh/deployment_key app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
+    - ssh $SSH_USER@$SSH_HOST 'echo "SSH connection successful"'
+    - scp app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
     # Deploy the application
-    - ssh -i ~/.ssh/deployment_key -R $SSH_USER@$SSH_HOST 'pkill -f ${APP_NAME}.jar || true'
-    - ssh -i ~/.ssh/deployment_key - R$SSH_USER@$SSH_HOST "nohup java -jar /home/$SSH_USER/${APP_NAME}.jar &"
+    - ssh $SSH_USER@$SSH_HOST 'pkill -f ${APP_NAME}.jar || true'
+    - ssh $SSH_USER@$SSH_HOST "nohup java -jar /home/$SSH_USER/${APP_NAME}.jar &"
   only:
     - dev
