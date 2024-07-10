@@ -47,7 +47,7 @@ deploy:
   script:
     - ls -a app/leomail-backend/target
     # Verify SSH connection
-    - ssh $SSH_USER@$SSH_HOST 'echo "SSH connection successful"'
+    - ssh -vvv $SSH_USER@$SSH_HOST 'echo "SSH connection successful"'
     - scp app/leomail-backend/target/${APP_NAME}.jar $SSH_USER@$SSH_HOST:/home/$SSH_USER/
     # Deploy the application
     - ssh $SSH_USER@$SSH_HOST 'pkill -f ${APP_NAME}.jar || true'
