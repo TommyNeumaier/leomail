@@ -3,31 +3,37 @@ import NavComponent from "@/components/NavComponent.vue";
 import axios from "axios";
 import {onMounted, ref} from "vue";
 import {Service} from "@/stores/service";
+import VorlageMainContentComponent from "@/components/VorlageMainContentComponent.vue";
 
-
-let fetchedData = ref<string[]>([]);
-const response = ref(null);
+const fetchedData = ref<{ name: string }[]>([]);
 
 const getData = async () => {
-    const response = await Service.getInstance().getVorlage();
-    fetchedData.value = response.data;
-    console.log(fetchedData)// Annahme: response.data ist ein Array von Strings
+  const response = await Service.getInstance().getVorlagen();
+  fetchedData.value = response.data;
 };
 
-const submitForm = async () => {
-  try {
-    const formData = {
-      name: (document.getElementById('name') as HTMLInputElement).value,
-      betreff: (document.getElementById('betreff') as HTMLInputElement).value,
-      anrede: (document.getElementById('anrede') as HTMLSelectElement).value
-    };
-    const response = await Service.getInstance().postVorlage(formData);
-    console.log('Erfolgreich gesendet:', response.data);
-    // Hier kannst du die Rückgabe des Servers weiter verarbeiten, falls nötig
-  } catch (error) {
-    console.error('Fehler beim Senden der Daten:', error);
+const handleClick = (item: { name: string }, index: number) => {
+  console.log(item); // Gibt die Daten des geklickten Objekts aus
+  console.log(index)
+
+
+  const vorlagenEintrag = document.querySelector('#template-' + index) as HTMLElement | null;
+  if (vorlagenEintrag) {
+    for(let i = 0; i < document.getElementsByClassName("vorlagenItems").length; i++) {
+      let entry = document.getElementById(`template-${i}`) as HTMLElement
+      entry.style.fontWeight = "normal"
+    }
+
+    vorlagenEintrag.style.fontWeight = 'bold'; // Beispiel: Rand ändern
   }
 };
+
+const emittedVorlagen = ref<{name:string}[]>([]);
+
+const handleVorlageAdded = (newVorlage: {name:string}) => {
+  emittedVorlagen.value.push(newVorlage);
+  getData();
+}
 
 onMounted(() => {
   getData()
@@ -54,6 +60,12 @@ onMounted(() => {
             <input type="text" id="search" placeholder="suche">
           </div>
 
+          <ul id="vorlagenBoxContainer">
+            <li v-for="(item, index) in fetchedData" :key="index" :id="String('template-' + index)" @click="handleClick(item,index)" class="vorlagenItems">
+              {{ item.name }}
+            </li>
+          </ul>
+
         </div>
 
         <div id="newVGBox">
@@ -70,31 +82,7 @@ onMounted(() => {
         </div>
 
         <div id="VGContentBox">
-          <form @submit.prevent="submitForm">
-            <div>
-              <label for="name1">Name:</label>
-              <input type="text" id="name">
-            </div>
-            <div>
-              <label for="betreff1">Betreff:</label>
-              <input type="text" id="betreff">
-            </div>
-            <div>
-              <label for="anrede">Anrede aussuchen:</label>
-              <select id="anrede">
-                <option value="Hallo">Hallo</option>
-                <option value="Sehr geehrte">Sehr geehrte</option>
-              </select>
-            </div>
-            <div>
-            </div>
-            <button type="submit">Absenden</button>
-          </form>
-
-          <!--<div v-if="fetchedData">
-            <h2>Abgerufene Daten:</h2>
-            <pre>{{ fetchedData }}</pre>
-          </div>-->
+         <vorlage-main-content-component @vorlage-added="handleVorlageAdded"></vorlage-main-content-component>
         </div>
       </div>
 
@@ -103,6 +91,17 @@ onMounted(() => {
 </template>
 
 <style scoped>
+#vorlagenBoxContainer{
+  margin-top: 5%;
+}
+.vorlagenItems{
+  font-size: 0.7em;
+}
+.vorlagenItems:hover{
+  color: darkgray;
+  cursor: pointer;
+}
+
 #VGMainContainer {
   display: flex;
   flex-direction: row;

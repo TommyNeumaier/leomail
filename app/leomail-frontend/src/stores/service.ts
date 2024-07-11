@@ -5,7 +5,7 @@ export class Service{
     private baseUrl: string;
 
     private constructor() {
-        this.baseUrl = 'http://localhost:8080/test';
+        this.baseUrl = 'http://localhost:8080/';
     }
 
     public static getInstance(): Service {
@@ -15,11 +15,12 @@ export class Service{
         return Service.instance;
     }
 
-    public postVorlage(formData: any){
-        return axios.post(`${this.baseUrl}/post`, formData);
+    public addVorlage(formData: any){
+        console.log("du schickst gleich die daten");
+        return axios.post(`${this.baseUrl}/template/add`, formData);
     }
 
     public getVorlagen(){
-        return axios.get(`${this.baseUrl}/get`);
+        return axios.get(`${this.baseUrl}/template/all`);
     }
 }
