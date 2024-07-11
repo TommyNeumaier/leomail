@@ -1,21 +1,29 @@
 <script setup lang="ts">
 
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import {Service} from "@/stores/service";
+import {Quill, QuillEditor} from "@vueup/vue-quill";
 
 const inputName = ref('');
 const inputBetreff = ref('');
 const selectAnrede = ref('');
-const content = ref('');
 
 const emit = defineEmits(['vorlage-added']);
+
+const content = ref("dj")
+const anredeData = ref<{ id: number, content: string }[]>([]);
+
+const getGreetings = async () => {
+  const response = await Service.getInstance().getGreetings();
+  anredeData.value = response.data;
+}
 
 const addVorlage = async () => {
   try {
     const formData = {
       name: inputName.value,
       headline: inputBetreff.value,
-      content: selectAnrede.value,
+      content: content.value,
       accountName: 'IT200274'
     };
     console.log(formData)
@@ -33,6 +41,23 @@ const clearForm = () => {
   inputBetreff.value = '';
   selectAnrede.value = '';
 }
+
+const toolbarOptions = ref([
+  [{ 'font': [] }],
+  [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+  ['bold', 'italic', 'underline', 'strike'],
+  [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+  [{ 'align': [] }], // toggled buttons
+
+  [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+  ['blockquote'],
+
+  ['link', 'image', 'clean'],
+]);
+
+onMounted (() => {
+  getGreetings();
+})
 </script>
 
 <template>
@@ -49,10 +74,10 @@ const clearForm = () => {
       <label for="anrede" >Anrede aussuchen:</label>
       <select id="anrede" v-model="selectAnrede">
         <option disabled value="">Please select one</option>
-        <option value="Hallo">Hallo</option>
-        <option value="Sehr geehrte">Sehr geehrte</option>
+        <option v-for="item in anredeData" :key="item.content" :value="item.id">{{ item.content }}</option>
       </select>
     </div>
+    <QuillEditor :toolbar="toolbarOptions" v-model:content="content" content-type="html"/>
     <div>
     </div>
     <button type="submit">Absenden</button>

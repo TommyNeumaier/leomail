@@ -23,4 +23,8 @@ export class Service{
     public getVorlagen(){
         return axios.get(`${this.baseUrl}/template/all`);
     }
+
+    public getGreetings(){
+        return axios.get(`${this.baseUrl}/template/greetings`);
+    }
 }
