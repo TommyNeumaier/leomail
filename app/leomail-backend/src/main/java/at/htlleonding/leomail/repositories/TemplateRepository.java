@@ -37,4 +37,8 @@ public class TemplateRepository {
         template.persist();
         return template;
     }
+
+    public Object sendMail(Long templateId, ) {
+        return null;
+    }
 }

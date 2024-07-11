@@ -1,5 +1,6 @@
 package at.htlleonding.leomail.resources;
 
+import at.htlleonding.leomail.entities.Template;
 import at.htlleonding.leomail.model.dto.TemplateDTO;
 import at.htlleonding.leomail.repositories.TemplateRepository;
 import io.quarkus.security.Authenticated;
@@ -36,5 +37,12 @@ public class TemplateResource {
     @Authenticated
     public Response addTemplate(TemplateDTO templateDTO) {
         return Response.ok(templateRepository.addTemplate(templateDTO)).build();
+    }
+
+    @GET
+    @Path("getById")
+    @Authenticated
+    public Response getById(Long id) {
+        return Response.ok(Template.findById(id)).build();
     }
 }
