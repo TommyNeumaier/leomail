@@ -1,5 +1,7 @@
 package at.htlleonding.leomail.model.dto;
 
-public record TemplateDTO(String name, String headline, String content, String accountName) {
+import java.io.Serializable;
+
+public record TemplateDTO(String name, String headline, String content, Long greeting, String accountName) implements Serializable {
 
 }

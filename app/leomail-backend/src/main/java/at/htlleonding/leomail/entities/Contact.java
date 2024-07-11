@@ -1,5 +1,6 @@
 package at.htlleonding.leomail.entities;
 
+import at.htlleonding.leomail.model.enums.Gender;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
@@ -13,6 +14,7 @@ public class Contact extends PanacheEntity {
     public String lastName;
     public String mailAddress;
     public LocalDate birthDate;
+    public Gender gender;
     public String phoneNumber;
     public String company;
     public String position;
@@ -24,7 +26,7 @@ public class Contact extends PanacheEntity {
     public Contact() {
     }
 
-    public Contact(String firstName, String lastName, String mailAddress, LocalDate birthDate, String phoneNumber, String company, String position, String departement) {
+    public Contact(String firstName, String lastName, String mailAddress, LocalDate birthDate, String phoneNumber, String company, String position, String departement, Gender gender) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.mailAddress = mailAddress;
@@ -33,6 +35,7 @@ public class Contact extends PanacheEntity {
         this.company = company;
         this.position = position;
         this.departement = departement;
+        this.gender = gender;
     }
 
     public String getFullName() {

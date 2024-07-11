@@ -1,5 +1,6 @@
 package at.htlleonding.leomail.entities;
 
+import at.htlleonding.leomail.model.enums.Gender;
 import com.arjuna.ats.jta.exceptions.NotImplementedException;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
@@ -13,11 +14,11 @@ public class UsedTemplate extends Template {
     @ManyToOne
     public Account sentBy;
 
-    public UsedTemplate()  {
+    public UsedTemplate() {
     }
 
-    public UsedTemplate(String name, String headline, String content, String createdBy, LocalDateTime sentOn, Account sentBy) {
-        super(name, headline, content, createdBy);
+    public UsedTemplate(String name, String headline, String content, String createdBy, Long greeting, LocalDateTime sentOn, Account sentBy) {
+        super(name, headline, content, Account.findById(createdBy), TemplateGreeting.find("id", greeting).firstResult());
         this.sentOn = sentOn;
         this.sentBy = sentBy;
     }
