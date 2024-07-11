@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,15 +19,19 @@ public class Template extends PanacheEntity {
     @ManyToOne
     public Account createdBy;
 
+    @ManyToOne
+    public TemplateGreeting greeting;
+
     public Template() {
         this.created = LocalDateTime.now();
     }
 
-    public Template(String name, String headline, String content, String createdBy) {
+    public Template(String name, String headline, String content, Account createdBy, TemplateGreeting greeting) {
         this.name = name;
         this.headline = headline;
         this.content = content;
-        this.createdBy = Account.findById(createdBy);
+        this.createdBy = createdBy;
         this.created = LocalDateTime.now();
+        this.greeting = greeting;
     }
 }

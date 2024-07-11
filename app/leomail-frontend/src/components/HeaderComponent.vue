@@ -1,5 +1,5 @@
 <script setup lang="ts">
-
+import {logout} from "@/services/token.service";
 </script>
 
 <template>
@@ -9,7 +9,7 @@
     <a class="HeaderLinks" href="#">Projekte</a>
     <a class="HeaderLinks" href="#">Personen</a>
   </div>
-  <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50">
+  <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">
 </div>
 </template>
 

@@ -9,3 +9,7 @@ grant_type=password&client_id=leomail&client_secret={{client_secret}}&username={
 GET http://localhost:8080/test/authtest
 Content-Type: */*
 Authorization: Bearer {{getToken.response.body.access_token}}
+
+###
+GET https://kc.tommyneumaier.at/realms/2425-5bhitm/protocol/openid-connect/userinfo
+# Authorization:
