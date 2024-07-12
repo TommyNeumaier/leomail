@@ -1,21 +1,33 @@
 <script setup lang="ts">
 import NavComponent from "@/components/NavComponent.vue";
 import axios from "axios";
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {Service} from "@/stores/service";
 import VorlageMainContentComponent from "@/components/VorlageMainContentComponent.vue";
+import {useRoute} from "vue-router";
+
+const route = useRoute();
 
 const fetchedData = ref<{ name: string }[]>([]);
+const selectedTemplate = ref<{ name: string, headline: string, greeting: string } | null>(null);
+let headlineVG = ref('');
+let newVGButton = ref('');
+let formVG = ref(null);
 
 const getData = async () => {
-  const response = await Service.getInstance().getVorlagen();
+  let response;
+  if (route.path.includes('vorlagen')) {
+    response = await Service.getInstance().getVorlagen();
+  } else if (route.path.includes('gruppen')) {
+    response = await Service.getInstance().getGruppen();
+  }
   fetchedData.value = response.data;
 };
 
-const handleClick = (item: { name: string }, index: number) => {
+const handleClick = (item: { name: string, headline: string, greeting: string }, index: number) => {
   console.log(item); // Gibt die Daten des geklickten Objekts aus
   console.log(index)
-
+  selectedTemplate.value = item;
 
   const vorlagenEintrag = document.querySelector('#template-' + index) as HTMLElement | null;
   if (vorlagenEintrag) {
@@ -39,7 +51,22 @@ onMounted(() => {
   getData()
 })
 
-
+watch(
+    () => route.path,
+    (newPath) => {
+      if (newPath.toLowerCase().includes('vorlagen')) {
+        headlineVG.value = 'Vorlagen';
+        newVGButton.value = 'Neue Vorlage';
+        formVG.value = VorlageMainContentComponent;
+      } else if (newPath.toLowerCase().includes('gruppen')) {
+        headlineVG.value = 'Gruppen';
+        newVGButton.value = 'Neue Gruppe';
+        formVG.value = null;
+      }
+      getData();
+    },
+    { immediate: true }
+);
 </script>
 
 <template>
@@ -49,7 +76,7 @@ onMounted(() => {
     <div id="bigVGContainer">
 
       <div id="dataVGContainer">
-        <h3 id="headlineDataVG">Vorlagen</h3>
+        <h3 id="headlineDataVG">{{ headlineVG }}</h3>
 
         <div id="getVGBox">
           <!--suche nach Vorlagen-->
@@ -71,18 +98,18 @@ onMounted(() => {
         <div id="newVGBox">
           <button id="newVGButton">
             <!--<img src="../assets/icons/newMail-grau.svg" width="auto" height="10">-->
-            <p>Neue Vorlage</p>
+            <p>{{newVGButton}}</p>
           </button>
         </div>
       </div>
 
       <div id="contentVGContainer">
         <div id="VGHeaderBox">
-          <h1 id="vgHeading">Neue Vorlage</h1>
+          <h1 id="vgHeading">{{ headlineVG }}</h1>
         </div>
 
-        <div id="VGContentBox">
-         <vorlage-main-content-component @vorlage-added="handleVorlageAdded"></vorlage-main-content-component>
+        <div id="VGFormBox">
+          <component :is="formVG" @template-added="handleVorlageAdded" :selected-template="selectedTemplate"></component>
         </div>
       </div>
 
@@ -199,7 +226,7 @@ input[type="text"] {
   font-size: 1.1em;
 }
 
-#VGContentBox {
+#VGFormBox {
   height: 80%;
   margin-top: 5%;
   background-color: white;

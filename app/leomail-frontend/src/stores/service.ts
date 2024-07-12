@@ -15,7 +15,7 @@ export class Service{
         return Service.instance;
     }
 
-    public addVorlage(formData: any){
+    public addTemplate(formData: any){
         console.log("du schickst gleich die daten");
         return axios.post(`${this.baseUrl}/template/add`, formData);
     }
