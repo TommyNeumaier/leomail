@@ -31,7 +31,7 @@ const handleClick = (item: { name: string, headline: string, greeting: string, c
 
   const vorlagenEintrag = document.querySelector('#template-' + index) as HTMLElement | null;
   if (vorlagenEintrag) {
-    for(let i = 0; i < document.getElementsByClassName("vorlagenItems").length; i++) {
+    for (let i = 0; i < document.getElementsByClassName("vorlagenItems").length; i++) {
       let entry = document.getElementById(`template-${i}`) as HTMLElement
       entry.style.fontWeight = "normal"
     }
@@ -40,9 +40,9 @@ const handleClick = (item: { name: string, headline: string, greeting: string, c
   }
 };
 
-const emittedVorlagen = ref<{name:string}[]>([]);
+const emittedVorlagen = ref<{ name: string }[]>([]);
 
-const handleVorlageAdded = (newVorlage: {name:string}) => {
+const handleVorlageAdded = (newVorlage: { name: string }) => {
   emittedVorlagen.value.push(newVorlage);
   getData();
 }
@@ -65,7 +65,7 @@ watch(
       }
       getData();
     },
-    { immediate: true }
+    {immediate: true}
 );
 
 /*const observeMutations = () => {
@@ -113,7 +113,8 @@ onMounted(observeMutations);*/
           </div>
 
           <ul id="vorlagenBoxContainer">
-            <li v-for="(item, index) in fetchedData" :key="index" :id="String('template-' + index)" @click="handleClick(item,index)" class="vorlagenItems">
+            <li v-for="(item, index) in fetchedData" :key="index" :id="String('template-' + index)"
+                @click="handleClick(item,index)" class="vorlagenItems">
               {{ item.name }}
             </li>
           </ul>
@@ -121,10 +122,10 @@ onMounted(observeMutations);*/
         </div>
 
         <div id="newVGBox">
-          <button id="newVGButton">
-            <!--<img src="../assets/icons/newMail-grau.svg" width="auto" height="10">-->
-            <p>{{newVGButton}}</p>
-          </button>
+            <button id="newVGButton">
+              {{ newVGButton }}
+              <!--<img src="../assets/icons/newMail-grau.svg" width="auto" height="10">-->
+            </button>
         </div>
       </div>
 
@@ -134,7 +135,10 @@ onMounted(observeMutations);*/
         </div>
 
         <div id="VGFormBox">
-          <component :is="formVG" @template-added="handleVorlageAdded" :selected-template="selectedTemplate"></component>
+          <router-view>
+            <component :is="formVG" @template-added="handleVorlageAdded"
+                       :selected-template="selectedTemplate"></component>
+          </router-view>
         </div>
       </div>
 
@@ -143,13 +147,15 @@ onMounted(observeMutations);*/
 </template>
 
 <style scoped>
-#vorlagenBoxContainer{
+#vorlagenBoxContainer {
   margin-top: 5%;
 }
-.vorlagenItems{
-  font-size: 0.7em;
+
+.vorlagenItems {
+  font-size: 0.7rem;
 }
-.vorlagenItems:hover{
+
+.vorlagenItems:hover {
   color: darkgray;
   cursor: pointer;
 }
@@ -171,11 +177,15 @@ onMounted(observeMutations);*/
 #newVGButton {
   all: unset; /* Entfernt alle CSS-Eigenschaften */
   color: #A3A3A3;
+  font-size: 0.75rem;
+}
+
+#newVGButton:hover {
   font-weight: bold;
 }
 
 #newVGButton p {
-  font-size: 0.8em;
+  font-size: 0.8rem;
 }
 
 #dataVGContainer {
@@ -188,7 +198,7 @@ onMounted(observeMutations);*/
 #headlineDataVG {
   margin-top: 5%;
   margin-left: 5%;
-  font-size: 1.1em;
+  font-size: 1.1rem;
   text-align: left;
 }
 
@@ -236,7 +246,7 @@ input[type="text"] {
 #search {
   width: 90%;
   margin-left: 3%;
-  font-size: 0.2em;
+  font-size: 0.3rem;
 }
 
 #VGHeaderBox {
@@ -250,7 +260,7 @@ input[type="text"] {
   margin-left: 4%;
   margin-top: 2%;
   margin-bottom: 2%;
-  font-size: 1.1em;
+  font-size: 1.1rem;
 }
 
 #VGFormBox {
