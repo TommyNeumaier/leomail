@@ -4,21 +4,23 @@ import at.htlleonding.leomail.entities.Template;
 import at.htlleonding.leomail.entities.TemplateGreeting;
 import at.htlleonding.leomail.entities.Account;
 import at.htlleonding.leomail.model.dto.TemplateDTO;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class TemplateRepository {
 
     public Set<Template> getAllTemplates() {
-        return new HashSet<>(Template.listAll());
+        return new HashSet<>(Template.listAll(Sort.descending("name")));
     }
 
     public Set<TemplateGreeting> getAllGreetings() {
-        return new HashSet<>(TemplateGreeting.listAll());
+        return new HashSet<>(TemplateGreeting.listAll(Sort.descending("id")));
     }
 
     @Transactional
@@ -38,7 +40,5 @@ public class TemplateRepository {
         return template;
     }
 
-    public Object sendMail(Long templateId, ) {
-        return null;
-    }
+
 }
