@@ -6,6 +6,7 @@ import at.htlleonding.leomail.repositories.TemplateRepository;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -45,4 +46,14 @@ public class TemplateResource {
     public Response getById(Long id) {
         return Response.ok(Template.findById(id)).build();
     }
+
+    @DELETE
+    @Transactional
+    @Path("delete")
+    @Authenticated
+    public Response deleteById(Long id) {
+        Template.deleteById(id);
+        return Response.ok().build();
+    }
+
 }

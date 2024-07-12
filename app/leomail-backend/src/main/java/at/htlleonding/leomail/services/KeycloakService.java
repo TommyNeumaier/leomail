@@ -37,22 +37,16 @@ public class KeycloakService {
         form.param("client_secret", clientSecret);
         form.param("grant_type", "client_credentials");
 
-        logger.info("Requesting admin token from Keycloak...");
-        logger.info("Form parameters: client_id=" + clientId + ", client_secret=" + clientSecret);
-
         Response response = client.target(keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token")
                 .request(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
                 .post(Entity.form(form));
 
         if (response.getStatus() != 200) {
             String responseBody = response.readEntity(String.class);
-            logger.info("Response status: " + response.getStatus());
-            logger.info("Response body: " + responseBody);
             throw new RuntimeException("Failed to retrieve admin token: " + responseBody);
         }
 
         TokenResponse tokenResponse = response.readEntity(TokenResponse.class);
-        logger.info("Token retrieved: " + tokenResponse.access_token);
         return tokenResponse.access_token;
     }
 

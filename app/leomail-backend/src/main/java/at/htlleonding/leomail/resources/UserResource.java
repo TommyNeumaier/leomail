@@ -16,16 +16,9 @@ public class UserResource {
     KeycloakService keycloakService;
 
     @GET
-    @Path("/searchByUsername")
-    public Response searchByUsername(@QueryParam("username") String username) {
-        List<Object> users = keycloakService.searchUserByUsername(username);
-        return Response.ok(users, MediaType.APPLICATION_JSON).build();
-    }
-
-    @GET
-    @Path("/searchByPreferredName")
-    public Response searchByPreferredName(@QueryParam("preferredName") String preferredName) {
-        List<Object> users = keycloakService.searchUserByPreferredName(preferredName);
+    @Path("/search")
+    public Response searchByUsername(@QueryParam("searchTerm") String searchTerm) {
+        List<Object> users = keycloakService.searchUser(searchTerm);
         return Response.ok(users, MediaType.APPLICATION_JSON).build();
     }
 }
