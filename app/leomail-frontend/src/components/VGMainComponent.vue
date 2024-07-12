@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import NavComponent from "@/components/NavComponent.vue";
 import axios from "axios";
-import {onMounted, ref, watch} from "vue";
+import {onMounted, onUnmounted, ref, shallowRef, watch} from "vue";
 import {Service} from "@/stores/service";
 import VorlageMainContentComponent from "@/components/VorlageMainContentComponent.vue";
 import {useRoute} from "vue-router";
@@ -9,10 +9,10 @@ import {useRoute} from "vue-router";
 const route = useRoute();
 
 const fetchedData = ref<{ name: string }[]>([]);
-const selectedTemplate = ref<{ name: string, headline: string, greeting: string } | null>(null);
+const selectedTemplate = ref<{ name: string, headline: string, greeting: string, content: string } | null>(null);
 let headlineVG = ref('');
 let newVGButton = ref('');
-let formVG = ref(null);
+let formVG = shallowRef(null);
 
 const getData = async () => {
   let response;
@@ -24,7 +24,7 @@ const getData = async () => {
   fetchedData.value = response.data;
 };
 
-const handleClick = (item: { name: string, headline: string, greeting: string }, index: number) => {
+const handleClick = (item: { name: string, headline: string, greeting: string, content: string }, index: number) => {
   console.log(item); // Gibt die Daten des geklickten Objekts aus
   console.log(index)
   selectedTemplate.value = item;
@@ -67,6 +67,31 @@ watch(
     },
     { immediate: true }
 );
+
+/*const observeMutations = () => {
+  const targetNode = document.getElementById('vorlagenBoxContainer');
+  if (!targetNode) return;
+
+  const config = { childList: true, subtree: true };
+
+  const callback = (mutationsList: MutationRecord[]) => {
+    for (let mutation of mutationsList) {
+      if (mutation.type === 'childList') {
+        console.log('A child node has been added or removed.');
+        // handle the mutation changes
+      }
+    }
+  };
+
+  const observer = new MutationObserver(callback);
+  observer.observe(targetNode, config);
+
+  onUnmounted(() => {
+    observer.disconnect();
+  });
+};
+
+onMounted(observeMutations);*/
 </script>
 
 <template>
@@ -154,7 +179,8 @@ watch(
 }
 
 #dataVGContainer {
-  width: 15%;
+  width: 20%;
+  padding: 0 1%;
   display: flex;
   flex-direction: column;
 }
@@ -179,6 +205,7 @@ watch(
 
 #contentVGContainer {
   width: 85%;
+  height: 83vh;
   padding-left: 1%;
   padding-right: 2%;
 }
@@ -227,8 +254,8 @@ input[type="text"] {
 }
 
 #VGFormBox {
-  height: 80%;
-  margin-top: 5%;
+  height: 85%;
+  margin-top: 2%;
   background-color: white;
   box-shadow: 5px 5px 10px lightgray;
 }

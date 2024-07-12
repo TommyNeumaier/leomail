@@ -40,7 +40,6 @@ const getToken = async () => {
 
 const validateToken = async (token: string): Promise<boolean> => {
     try {
-        console.log(token)
         const response = await axios.get('https://kc.tommyneumaier.at/realms/2425-5bhitm/protocol/openid-connect/userinfo', {
             headers: {
                 'Authorization': `Bearer ${token}`

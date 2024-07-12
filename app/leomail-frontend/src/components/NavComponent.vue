@@ -27,45 +27,48 @@
 
 <style scoped>
 #bigNavBox{
-  width: 10%;
-  margin-top: 2%;
+  width: 8%;
+  margin-top: 4vh;
   border-right: rgba(0, 0, 0, 0.20) solid 2px;
   border-radius: 20px;
-  padding-bottom: 1.5%;
-
-}
-.iconBoxSetting{
-  margin-top: 240%;
-  text-align: center;
+  padding-bottom: 1%;
+  padding-top: 1%;
+  height: 83vh;
+  display: flex;
+  justify-content: center;
 }
 #iconLinks{
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  height: 100%;
+  width: 80%;
 }
 .iconBox {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  padding: 5%;
-  width: 80%; /* Adjust width as needed */
-  height: 100px; /* Adjust height as needed */
-  //border: red solid 2px;
+  width: 100%;
+  height: 12%;
 }
 
 .iconBox img {
-  width: 40px;
-  padding: 20%;
+  width: 3.5vh;
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .highlight {
   background-color: lightgray;
-  border-radius: 80%;
-  /*display: flex;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
-  justify-content: center;*/
+  justify-content: center;
+  width: 7vh; /* Feste Größe für den kreisförmigen Hintergrund */
+  height: 7vh; /* Feste Größe für den kreisförmigen Hintergrund */
 }
 </style>
