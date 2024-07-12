@@ -38,51 +38,37 @@ public class KeycloakService {
         form.param("grant_type", "client_credentials");
 
         logger.info("Requesting admin token from Keycloak...");
+        logger.info("Form parameters: client_id=" + clientId + ", client_secret=" + clientSecret);
 
         Response response = client.target(keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token")
                 .request(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
                 .post(Entity.form(form));
 
-        String responseBody = response.readEntity(String.class);
-        logger.info("Response status: " + response.getStatus());
-        logger.info("Response body: " + responseBody);
-
         if (response.getStatus() != 200) {
+            String responseBody = response.readEntity(String.class);
+            logger.info("Response status: " + response.getStatus());
+            logger.info("Response body: " + responseBody);
             throw new RuntimeException("Failed to retrieve admin token: " + responseBody);
         }
 
-        return response.readEntity(TokenResponse.class).access_token;
+        TokenResponse tokenResponse = response.readEntity(TokenResponse.class);
+        logger.info("Token retrieved: " + tokenResponse.access_token);
+        return tokenResponse.access_token;
     }
 
-    public List<Object> searchUserByUsername(String username) {
+    public List<Object> searchUser(String searchTerm) {
         String token = getAdminToken();
         Client client = ClientBuilder.newClient();
 
         Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
-                .queryParam("username", username)
+                .queryParam("search", searchTerm)
                 .request(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + token)
                 .get();
 
         if (response.getStatus() != 200) {
-            throw new RuntimeException("Failed to search user by username: " + response.readEntity(String.class));
-        }
-
-        return response.readEntity(List.class);
-    }
-
-    public List<Object> searchUserByPreferredName(String preferredName) {
-        String token = getAdminToken();
-        Client client = ClientBuilder.newClient();
-
-        Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
-                .queryParam("firstName", preferredName)
-                .request(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + token)
-                .get();
-
-        if (response.getStatus() != 200) {
-            throw new RuntimeException("Failed to search user by preferred name: " + response.readEntity(String.class));
+            String responseBody = response.readEntity(String.class);
+            throw new RuntimeException("Failed to search user: " + responseBody);
         }
 
         return response.readEntity(List.class);
