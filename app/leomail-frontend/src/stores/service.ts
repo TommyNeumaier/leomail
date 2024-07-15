@@ -27,4 +27,17 @@ export class Service{
     public getGreetings(){
         return axios.get(`${this.baseUrl}/template/greetings`);
     }
+
+    public getGreetingById(id: number) {
+        return axios.get(`${this.baseUrl}/greeting?gid=${id}`)
+    }
+
+    public removeTemplate(id: any){
+        return axios.delete(`${this.baseUrl}/template/delete?tid=${id}`);
+    }
+
+    public updateTemplate(formData: any){
+        console.log(formData)
+        return axios.post(`${this.baseUrl}template/update`, formData);
+    }
 }

@@ -3,11 +3,24 @@ import {onMounted, ref, watch} from 'vue';
 import {Service} from '@/stores/service';
 import {Quill, QuillEditor} from '@vueup/vue-quill';
 
+interface Greeting {
+  id: number;
+  content: string;
+}
+
+interface Template {
+  id: number;
+  name: string;
+  headline: string;
+  greeting: Greeting;
+  content: string;
+}
+
 const inputName = ref('');
 const inputHeading = ref('');
-const selectedGreeting = ref('');
+const selectedGreeting = ref<number | null>(null); // Ref-Typ für selectedGreeting geändert
 const content = ref('');
-const greetingData = ref<{ id: number, content: string }[]>([]);
+const greetingData = ref<Greeting[]>([]); // Ref-Typ für greetingData geändert
 const toolbarOptions = ref([
   [{'font': []}],
   [{'size': ['small', false, 'large', 'huge']}],
@@ -19,10 +32,8 @@ const toolbarOptions = ref([
   ['link', 'image', 'clean']
 ]);
 
-const emit = defineEmits(['template-added']);
-const props = defineProps<{
-  selectedTemplate: { name: string, headline: string, greeting: { id: number }, content: string } | null
-}>();
+const emitEvents = defineEmits(['template-added', 'template-removed']);
+const props = defineProps<{ selectedTemplate: Template | null }>();
 
 const quillEditor = ref<Quill | null>(null);
 
@@ -43,10 +54,41 @@ const addTemplate = async () => {
     console.log(formData);
     const response = await Service.getInstance().addTemplate(formData);
     console.log('Erfolgreich gesendet:', response.data);
+    emitEvents('template-added', formData);
     clearForm();
-    emit('template-added', formData);
   } catch (error) {
     console.error('Fehler beim Senden der Daten:', error);
+  }
+};
+
+const updateTemplate = async () => {
+  try {
+    const updatedData = {
+      id: props.selectedTemplate?.id,
+      name: inputName.value,
+      headline: inputHeading.value,
+      content: content.value,
+      accountName: 'IT200274',
+      greeting: selectedGreeting.value
+    };
+    console.log(updatedData);
+    const response = await Service.getInstance().updateTemplate(updatedData);
+    console.log('Erfolgreich gesendet:', response.data);
+    clearForm();
+    //emit('template-added', updatedData);
+  } catch (error) {
+    console.error('Fehler beim Speichern der Daten:', error);
+  }
+};
+
+const removeTemplate = async () => {
+  try {
+    const response = await Service.getInstance().removeTemplate(props.selectedTemplate?.id);
+    console.log('Erfolgreich gesendet:', response.data);
+    emitEvents('template-removed', props.selectedTemplate);
+    clearForm();
+  } catch (error) {
+    console.error('Fehler beim Löschen der Daten:', error);
   }
 };
 
@@ -73,12 +115,13 @@ watch(
       if (newTemplate) {
         inputName.value = newTemplate.name;
         inputHeading.value = newTemplate.headline;
-        selectedGreeting.value = newTemplate.greeting.id;
+        selectedGreeting.value = newTemplate.greeting;
+        console.log(selectedGreeting.value)
         content.value = newTemplate.content;
         if (quillEditor.value) {
           quillEditor.value.root.innerHTML = newTemplate.content;
         }
-        console.log(newTemplate);
+        console.log('newTemplate' + newTemplate.id);
       }
     }
 );
@@ -122,8 +165,8 @@ onMounted(() => {
     </div>
     <div id="buttonBox">
       <button type="submit" class="saveTemplate" :disabled="selectedTemplate != null">Erstellen</button>
-      <button type="button" class="saveTemplate" :disabled="selectedTemplate == null">Löschen</button>
-      <button type="button" class="saveTemplate" :disabled="selectedTemplate == null">Speichern</button>
+      <button type="button" @click=removeTemplate class="saveTemplate" :disabled="selectedTemplate == null">Löschen</button>
+      <button type="button" @click=updateTemplate class="saveTemplate" :disabled="selectedTemplate == null">Speichern</button>
     </div>
   </form>
 </template>

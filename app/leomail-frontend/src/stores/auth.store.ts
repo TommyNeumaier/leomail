@@ -1,4 +1,3 @@
-// src/stores/auth.ts
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import { KEYCLOAK_CLIENT_SECRET } from '@/configs/keycloak.config';

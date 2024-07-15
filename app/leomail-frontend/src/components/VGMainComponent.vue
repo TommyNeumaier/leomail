@@ -47,10 +47,16 @@ const handleClick = (item: { name: string, headline: string, greeting: string, c
   selectedTemplate.value = item;
 };
 
-const emittedVorlagen = ref<{ name: string }[]>([]);
+const emittedNewObject = ref<{ name: string }[]>([]);
 
-const handleVorlageAdded = (newVorlage: { name: string }) => {
-  emittedVorlagen.value.push(newVorlage);
+const handleNewAddedObject = (newObject: { name: string }) => {
+  emittedNewObject.value.push(newObject);
+  getData();
+};
+
+const handleRemovedObject = (removedObject: { name: string }) => {
+  selectedTemplate.value = null; // Clear the selected template
+  emittedNewObject.value = emittedNewObject.value.filter((obj) => removedObject.name !== obj.name);
   getData();
 };
 
@@ -119,7 +125,7 @@ watch(
 
         <div id="VGFormBox">
           <router-view>
-            <component :is="formVG" @template-added="handleVorlageAdded"
+            <component :is="formVG" @template-added="handleNewAddedObject" @template-removed="handleRemovedObject"
                        :selected-template="selectedTemplate"></component>
           </router-view>
         </div>
@@ -165,9 +171,9 @@ watch(
   all: unset; /* Entfernt alle CSS-Eigenschaften */
   color: #A3A3A3;
   font-size: 0.8rem;
-  padding-left: 1vw;
+  padding-left: 0.5vw;
   margin-top: 1vh;
-  width: 80%;
+  width: 100%;
 }
 
 #newVGButton:hover {
@@ -198,9 +204,8 @@ watch(
 
 #newVGBox {
   height: 40%;
-  width: 80vw;
   border-top: #A3A3A3 solid 2px;
-  margin-left: 7.5%;
+  width: 100%;
 }
 
 #contentVGContainer {

@@ -1,15 +1,13 @@
 package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.entities.Template;
+import at.htlleonding.leomail.entities.TemplateGreeting;
 import at.htlleonding.leomail.model.dto.TemplateDTO;
 import at.htlleonding.leomail.repositories.TemplateRepository;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
 @Path("template")
@@ -32,6 +30,13 @@ public class TemplateResource {
         return Response.ok(templateRepository.getAllGreetings()).build();
     }
 
+    @GET
+    @Path("greeting")
+    @Authenticated
+    public Response getGreetingById(@QueryParam("gid") Long id) {
+        return Response.ok(TemplateGreeting.findById(id)).build();
+    }
+
     @POST
     @Transactional
     @Path("add")
@@ -51,7 +56,7 @@ public class TemplateResource {
     @Transactional
     @Path("delete")
     @Authenticated
-    public Response deleteById(Long id) {
+    public Response deleteById(@QueryParam("tid") Long id) {
         try {
             templateRepository.deleteById(id);
         } catch (IllegalArgumentException e) {
