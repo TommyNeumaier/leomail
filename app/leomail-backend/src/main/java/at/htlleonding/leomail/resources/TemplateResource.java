@@ -52,8 +52,23 @@ public class TemplateResource {
     @Path("delete")
     @Authenticated
     public Response deleteById(Long id) {
-        Template.deleteById(id);
+        try {
+            templateRepository.deleteById(id);
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
         return Response.ok().build();
     }
 
+    @POST
+    @Transactional
+    @Path("update")
+    @Authenticated
+    public Response updateTemplate(TemplateDTO templateDTO) {
+        try {
+            return Response.ok(templateRepository.updateTemplate(templateDTO)).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+    }
 }

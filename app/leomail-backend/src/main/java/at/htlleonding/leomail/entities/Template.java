@@ -1,19 +1,24 @@
 package at.htlleonding.leomail.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Template extends PanacheEntity {
 
+    @Column(length = 128, nullable = false)
     public String name;
+
     public LocalDateTime created;
+
+    @Column(length = 256, nullable = false)
     public String headline;
+
+    @Column(length = 8192, nullable = false)
     public String content;
 
     @ManyToOne
@@ -27,11 +32,16 @@ public class Template extends PanacheEntity {
     }
 
     public Template(String name, String headline, String content, Account createdBy, TemplateGreeting greeting) {
+        this();
         this.name = name;
         this.headline = headline;
         this.content = content;
         this.createdBy = createdBy;
-        this.created = LocalDateTime.now();
         this.greeting = greeting;
+    }
+
+    public Template(Long id, String name, String headline, String content, Account createdBy, TemplateGreeting greeting) {
+        this(name, headline, content, createdBy, greeting);
+        this.id = id;
     }
 }
