@@ -64,7 +64,7 @@ return em.createQuery("select t from Template t", Template.class)
         }
         deleteById(templateDTO.id());
         template = new Template(templateDTO.id(), templateDTO.name(), templateDTO.headline(), templateDTO.content(), Account.find("userName", templateDTO.accountName()).firstResult(), TemplateGreeting.findById(templateDTO.greeting()));
-        template.persist();
+        em.merge(template);
         return templateDTO;
     }
 }
