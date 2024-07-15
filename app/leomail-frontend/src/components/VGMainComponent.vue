@@ -1,43 +1,50 @@
 <script setup lang="ts">
 import NavComponent from "@/components/NavComponent.vue";
 import axios from "axios";
-import {onMounted, onUnmounted, ref, shallowRef, watch} from "vue";
-import {Service} from "@/stores/service";
-import VorlageMainContentComponent from "@/components/VorlageMainContentComponent.vue";
-import {useRoute} from "vue-router";
+import { onMounted, ref, shallowRef, watch, computed } from "vue";
+import { Service } from "@/stores/service";
+import VorlageMainContentComponent from "@/components/TemplateComponent.vue";
+import { useRoute } from "vue-router";
+import GroupComponent from "@/components/GroupComponent.vue";
+import TemplateComponent from "@/components/TemplateComponent.vue";
 
 const route = useRoute();
 
-const fetchedData = ref<{ name: string }[]>([]);
+const fetchedData = ref<{ name: string, headline: string, greeting: string, content: string }[]>([]);
 const selectedTemplate = ref<{ name: string, headline: string, greeting: string, content: string } | null>(null);
 let headlineVG = ref('');
 let newVGButton = ref('');
 let formVG = shallowRef(null);
+
+const searchQuery = ref('');
+
+const filteredTemplates = computed(() => {
+  if (!searchQuery.value) return fetchedData.value;
+  return fetchedData.value.filter(template => template.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
+});
 
 const getData = async () => {
   let response;
   if (route.path.includes('vorlagen')) {
     response = await Service.getInstance().getVorlagen();
   } else if (route.path.includes('gruppen')) {
-    response = await Service.getInstance().getGruppen();
+    //response = await Service.getInstance().getGruppen();
+    response = '';
   }
   fetchedData.value = response.data;
 };
 
-const handleClick = (item: { name: string, headline: string, greeting: string, content: string }, index: number) => {
-  console.log(item); // Gibt die Daten des geklickten Objekts aus
-  console.log(index)
-  selectedTemplate.value = item;
-
-  const vorlagenEintrag = document.querySelector('#template-' + index) as HTMLElement | null;
-  if (vorlagenEintrag) {
-    for (let i = 0; i < document.getElementsByClassName("vorlagenItems").length; i++) {
-      let entry = document.getElementById(`template-${i}`) as HTMLElement
-      entry.style.fontWeight = "normal"
-    }
-
-    vorlagenEintrag.style.fontWeight = 'bold'; // Beispiel: Rand ändern
+const handleCreate = () => {
+  selectedTemplate.value = null; // Clear the selected template
+  if (route.path.includes('vorlagen')) {
+    formVG.value = TemplateComponent;
+  } else if (route.path.includes('gruppen')) {
+    formVG.value = GroupComponent;
   }
+};
+
+const handleClick = (item: { name: string, headline: string, greeting: string, content: string }) => {
+  selectedTemplate.value = item;
 };
 
 const emittedVorlagen = ref<{ name: string }[]>([]);
@@ -45,11 +52,11 @@ const emittedVorlagen = ref<{ name: string }[]>([]);
 const handleVorlageAdded = (newVorlage: { name: string }) => {
   emittedVorlagen.value.push(newVorlage);
   getData();
-}
+};
 
 onMounted(() => {
-  getData()
-})
+  getData();
+});
 
 watch(
     () => route.path,
@@ -57,43 +64,17 @@ watch(
       if (newPath.toLowerCase().includes('vorlagen')) {
         headlineVG.value = 'Vorlagen';
         newVGButton.value = 'Neue Vorlage';
-        formVG.value = VorlageMainContentComponent;
+        formVG.value = TemplateComponent;
       } else if (newPath.toLowerCase().includes('gruppen')) {
         headlineVG.value = 'Gruppen';
         newVGButton.value = 'Neue Gruppe';
-        formVG.value = null;
+        formVG.value = GroupComponent;
       }
       getData();
     },
-    {immediate: true}
+    { immediate: true }
 );
-
-/*const observeMutations = () => {
-  const targetNode = document.getElementById('vorlagenBoxContainer');
-  if (!targetNode) return;
-
-  const config = { childList: true, subtree: true };
-
-  const callback = (mutationsList: MutationRecord[]) => {
-    for (let mutation of mutationsList) {
-      if (mutation.type === 'childList') {
-        console.log('A child node has been added or removed.');
-        // handle the mutation changes
-      }
-    }
-  };
-
-  const observer = new MutationObserver(callback);
-  observer.observe(targetNode, config);
-
-  onUnmounted(() => {
-    observer.disconnect();
-  });
-};
-
-onMounted(observeMutations);*/
 </script>
-
 <template>
   <div id="VGMainContainer">
     <nav-component></nav-component>
@@ -109,12 +90,13 @@ onMounted(observeMutations);*/
             <div id="searchIconBox">
               <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
             </div>
-            <input type="text" id="search" placeholder="suche">
+            <input v-model="searchQuery" type="text" id="search" placeholder="suche">
           </div>
 
           <ul id="vorlagenBoxContainer">
-            <li v-for="(item, index) in fetchedData" :key="index" :id="String('template-' + index)"
-                @click="handleClick(item,index)" class="vorlagenItems">
+            <li v-for="(item, index) in filteredTemplates" :key="index" :id="String('template-' + index)"
+                @click="handleClick(item)" class="vorlagenItems"
+                :class="{ highlighted: selectedTemplate && selectedTemplate.name === item.name }">
               {{ item.name }}
             </li>
           </ul>
@@ -122,10 +104,11 @@ onMounted(observeMutations);*/
         </div>
 
         <div id="newVGBox">
-            <button id="newVGButton">
-              {{ newVGButton }}
-              <!--<img src="../assets/icons/newMail-grau.svg" width="auto" height="10">-->
-            </button>
+          <button id="newVGButton" @click="handleCreate()">
+            <img src="../assets/icons/newMail-grau.svg" width="auto" height="10">
+            {{ newVGButton }}
+            <!--<img src="../assets/icons/newMail-grau.svg" width="auto" height="10">-->
+          </button>
         </div>
       </div>
 
@@ -160,6 +143,10 @@ onMounted(observeMutations);*/
   cursor: pointer;
 }
 
+.vorlagenItems.highlighted {
+  font-weight: bold;
+}
+
 #VGMainContainer {
   display: flex;
   flex-direction: row;
@@ -177,7 +164,10 @@ onMounted(observeMutations);*/
 #newVGButton {
   all: unset; /* Entfernt alle CSS-Eigenschaften */
   color: #A3A3A3;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
+  padding-left: 1vw;
+  margin-top: 1vh;
+  width: 80%;
 }
 
 #newVGButton:hover {
@@ -189,7 +179,7 @@ onMounted(observeMutations);*/
 }
 
 #dataVGContainer {
-  width: 20%;
+  width: 12vw;
   padding: 0 1%;
   display: flex;
   flex-direction: column;
@@ -208,13 +198,13 @@ onMounted(observeMutations);*/
 
 #newVGBox {
   height: 40%;
-  width: 85%;
+  width: 80vw;
   border-top: #A3A3A3 solid 2px;
   margin-left: 7.5%;
 }
 
 #contentVGContainer {
-  width: 85%;
+  width: 80vw;
   height: 83vh;
   padding-left: 1%;
   padding-right: 2%;
@@ -240,13 +230,16 @@ input[type="text"] {
   border-radius: 5px;
   padding: 2% 4%;
   background-color: #ECECEC;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 #search {
   width: 90%;
   margin-left: 3%;
   font-size: 0.3rem;
+}
+
+#search-container:focus{
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 #VGHeaderBox {

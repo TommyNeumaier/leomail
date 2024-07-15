@@ -5,7 +5,6 @@ import HeaderComponent from "@/components/HeaderComponent.vue";
 
 <template>
  <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
-  <header-component></header-component>
   <RouterView/>
 </template>
 

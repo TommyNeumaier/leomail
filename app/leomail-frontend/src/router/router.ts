@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import MailView from "@/views/MailView.vue";
 import GeplanteMails from "@/views/GeplanteMailsView.vue";
 import Gruppe from "@/views/GruppeView.vue";
-import Vorlagen from "@/views/VorlagenView.vue";
+import Vorlagen from "@/views/TemplateView.vue";
 import Settings from "@/views/SettingsView.vue";
 import Login from "@/views/Login.vue";
 import {validateToken} from "@/services/token.service";
@@ -41,7 +41,7 @@ const router = createRouter({
     },
     {
       path: '/vorlagen/create',
-      name: 'create',
+      name: 'createVorlage',
       component: Vorlagen,
       meta: { requiresAuth: true }
     },
