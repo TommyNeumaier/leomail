@@ -6,7 +6,7 @@ const refreshToken = async () => {
     const refresh_token = localStorage.getItem('refresh_token');
     if (refresh_token) {
         try {
-            const response = await axios.post('https://kc.tommyneumaier.at/realms/2425-5bhitm/protocol/openid-connect/token', new URLSearchParams({
+            const response = await axios.post('https://auth.htl-leonding.ac.at/realms/2425-5bhitm/protocol/openid-connect/token', new URLSearchParams({
                 client_id: 'leomail',
                 client_secret: KEYCLOAK_CLIENT_SECRET,
                 grant_type: 'refresh_token',
@@ -40,7 +40,7 @@ const getToken = async () => {
 
 const validateToken = async (token: string): Promise<boolean> => {
     try {
-        const response = await axios.get('https://kc.tommyneumaier.at/realms/2425-5bhitm/protocol/openid-connect/userinfo', {
+        const response = await axios.get('https://auth.htl-leonding.ac.at/realms/2425-5bhitm/protocol/openid-connect/userinfo', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

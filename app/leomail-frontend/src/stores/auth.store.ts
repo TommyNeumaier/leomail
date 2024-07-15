@@ -11,7 +11,7 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         async login(credentials: { username: string; password: string }) {
             try {
-                const response = await axios.post('https://kc.tommyneumaier.at/realms/2425-5bhitm/protocol/openid-connect/token', new URLSearchParams({
+                const response = await axios.post('https://auth.htl-leonding.ac.at/realms/2425-5bhitm/protocol/openid-connect/token', new URLSearchParams({
                     client_id: 'leomail',
                     client_secret: KEYCLOAK_CLIENT_SECRET,
                     grant_type: 'password',
