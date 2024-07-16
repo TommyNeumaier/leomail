@@ -1,5 +1,9 @@
 @import './base.css';
 
+:root {
+    --font-weight-medium: 500;
+}
+
 html,body{
     font-family: 'Inter';
     margin: 0;

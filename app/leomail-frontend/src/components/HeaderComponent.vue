@@ -6,8 +6,8 @@ import {logout} from "@/services/token.service";
 <div id="headerNav">
   <img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45">
   <div id="HeaderLinkBox">
-    <a class="HeaderLinks" href="#">Projekte</a>
-    <a class="HeaderLinks" href="#">Personen</a>
+    <RouterLink to="/projekte" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
+    <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
   </div>
   <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">
 </div>
@@ -47,5 +47,9 @@ body{
   border-radius: 50%;
   margin-left: auto;
   margin-right: 2%;
+}
+
+.highlight {
+  font-weight: bold;
 }
 </style>

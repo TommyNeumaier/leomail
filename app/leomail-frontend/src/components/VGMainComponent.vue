@@ -60,6 +60,13 @@ const handleRemovedObject = (removedObject: { name: string }) => {
   getData();
 };
 
+const handleSavedObject = (savedObject: { name: string }) => {
+    const index = emittedNewObject.value.findIndex(obj => obj.name === savedObject.name);
+    emittedNewObject.value[index] = savedObject;
+    selectedTemplate.value = null;
+    getData();
+};
+
 onMounted(() => {
   getData();
 });
@@ -125,7 +132,7 @@ watch(
 
         <div id="VGFormBox">
           <router-view>
-            <component :is="formVG" @template-added="handleNewAddedObject" @template-removed="handleRemovedObject"
+            <component :is="formVG" @template-added="handleNewAddedObject" @template-removed="handleRemovedObject" @template-saved="handleSavedObject"
                        :selected-template="selectedTemplate"></component>
           </router-view>
         </div>

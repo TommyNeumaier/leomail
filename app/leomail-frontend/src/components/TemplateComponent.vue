@@ -18,7 +18,7 @@ interface Template {
 
 const inputName = ref('');
 const inputHeading = ref('');
-const selectedGreeting = ref<number | null>(null); // Ref-Typ für selectedGreeting geändert
+const selectedGreeting = ref('');
 const content = ref('');
 const greetingData = ref<Greeting[]>([]); // Ref-Typ für greetingData geändert
 const toolbarOptions = ref([
@@ -32,7 +32,7 @@ const toolbarOptions = ref([
   ['link', 'image', 'clean']
 ]);
 
-const emitEvents = defineEmits(['template-added', 'template-removed']);
+const emitEvents = defineEmits(['template-added', 'template-removed','template-saved']);
 const props = defineProps<{ selectedTemplate: Template | null }>();
 
 const quillEditor = ref<Quill | null>(null);
@@ -74,8 +74,8 @@ const updateTemplate = async () => {
     console.log(updatedData);
     const response = await Service.getInstance().updateTemplate(updatedData);
     console.log('Erfolgreich gesendet:', response.data);
+    emitEvents('template-saved', updatedData)
     clearForm();
-    //emit('template-added', updatedData);
   } catch (error) {
     console.error('Fehler beim Speichern der Daten:', error);
   }
@@ -155,7 +155,7 @@ onMounted(() => {
       <div id="anredeBox">
         <label for="anrede" class="template-label">Anrede</label><br>
         <select id="anrede" class="formTemplate" v-model="selectedGreeting">
-          <option disabled value="" id="placeholderSelectionTemplate">Wähle eine Anrede ...</option>
+          <option disabled value="">Wähle eine Anrede ...</option>
           <option v-for="item in greetingData" :key="item.id" :value="item.id">{{ item.content }}</option>
         </select>
       </div>
