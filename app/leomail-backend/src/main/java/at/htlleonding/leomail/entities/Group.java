@@ -3,6 +3,7 @@ package at.htlleonding.leomail.entities;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -18,10 +19,7 @@ public class Group extends PanacheEntity {
     public Project project;
 
     @OneToMany(mappedBy = "group")
-    public Set<Contact> members;
-
-    @ManyToOne
-    public Contact contact;
+    public List<Contact> members;
 
     public Group() {
     }

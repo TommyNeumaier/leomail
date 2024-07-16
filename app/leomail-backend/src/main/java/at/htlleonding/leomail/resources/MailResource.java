@@ -1,20 +1,24 @@
 package at.htlleonding.leomail.resources;
 
-import io.quarkus.mailer.Mail;
-import io.quarkus.mailer.Mailer;
+import at.htlleonding.leomail.model.SMTPInformation;
+import at.htlleonding.leomail.repositories.MailRepository;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @Path("mail")
 public class MailResource {
 
     @Inject
-    Mailer mailer;
+    MailRepository repository;
 
-    @GET
-    @Path("send")
-    public void sendMail() {
-        mailer.send(Mail.withText("ls@tommyneumaier.at", "Test", "Hello World"));
+    @POST
+    @Path("sendByTemplate")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response sendMailByTemplate(SMTPInformation smtpInformation) {
+        repository.sendMailsByTemplate(smtpInformation);
+        return Response.ok("Emails sent successfully").build();
     }
 }

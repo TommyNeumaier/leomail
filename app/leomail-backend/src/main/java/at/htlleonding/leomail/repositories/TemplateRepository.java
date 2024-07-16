@@ -1,8 +1,8 @@
 package at.htlleonding.leomail.repositories;
 
+import at.htlleonding.leomail.entities.Account;
 import at.htlleonding.leomail.entities.Template;
 import at.htlleonding.leomail.entities.TemplateGreeting;
-import at.htlleonding.leomail.entities.Account;
 import at.htlleonding.leomail.model.dto.TemplateDTO;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -11,8 +11,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class TemplateRepository {
@@ -20,12 +20,11 @@ public class TemplateRepository {
     @Inject
     EntityManager em;
 
-    public Set<TemplateDTO> getAllTemplates() {
-return em.createQuery("select t from Template t", Template.class)
+    public List<TemplateDTO> getAllTemplates() {
+        return em.createQuery("select t from Template t", Template.class)
                 .getResultList()
                 .stream()
-                .map(template -> new TemplateDTO(template.id, template.name, template.headline, template.content, template.greeting.id, template.createdBy.userName))
-                .collect(Collectors.toSet());
+                .map(template -> new TemplateDTO(template.id, template.name, template.headline, template.content, template.greeting.id, template.createdBy.userName)).toList();
     }
 
     public Set<TemplateGreeting> getAllGreetings() {

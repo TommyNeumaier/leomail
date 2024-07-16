@@ -1,11 +1,11 @@
 package at.htlleonding.leomail.entities;
 
-import at.htlleonding.leomail.model.enums.Gender;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
-
-import java.time.LocalDate;
+import jakarta.persistence.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Entity
 public class Contact extends PanacheEntity {
@@ -13,32 +13,40 @@ public class Contact extends PanacheEntity {
     public String firstName;
     public String lastName;
     public String mailAddress;
-    public LocalDate birthDate;
-    public Gender gender;
-    public String phoneNumber;
-    public String company;
-    public String position;
-    public String departement;
+
+    @ElementCollection
+    @CollectionTable(name = "contact_attributes", joinColumns = @JoinColumn(name = "id"))
+    @MapKeyColumn(name = "key")
+    @Column(name = "val")
+    public Map<String, String> attributes = new HashMap<>();
 
     @ManyToOne
+    @JsonIgnore
     public Group group;
 
     public Contact() {
     }
 
-    public Contact(String firstName, String lastName, String mailAddress, LocalDate birthDate, String phoneNumber, String company, String position, String departement, Gender gender) {
+    public Contact(String firstName, String lastName, String mailAddress) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.mailAddress = mailAddress;
-        this.birthDate = birthDate;
-        this.phoneNumber = phoneNumber;
-        this.company = company;
-        this.position = position;
-        this.departement = departement;
-        this.gender = gender;
     }
 
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Contact contact = (Contact) o;
+        return Objects.equals(id, contact.id) && Objects.equals(firstName, contact.firstName) && Objects.equals(lastName, contact.lastName) && Objects.equals(mailAddress, contact.mailAddress) && Objects.equals(attributes, contact.attributes) && Objects.equals(group, contact.group);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, firstName, lastName, mailAddress, attributes, group);
     }
 }
