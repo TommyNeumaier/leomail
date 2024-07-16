@@ -1,4 +1,6 @@
 package at.htlleonding.leomail.model;
 
-public record SMTPInformation(Receiver receiver, Long templateId, boolean personalized) {
+import java.io.Serializable;
+
+public record SMTPInformation(Receiver receiver, Long templateId, boolean personalized) implements Serializable {
 }

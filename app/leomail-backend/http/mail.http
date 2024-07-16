@@ -4,19 +4,9 @@ Content-Type: application/json
 
 {
   "templateId": 1,
-  "personalized": false,
+  "personalized": true,
   "receiver": {
     "groups": [],
-    "contacts": [
-      {
-        "firstName": "Tommy",
-        "lastName": "Neumaier",
-        "mailAddress": "t.neumaier@students.htl-leonding.ac.at",
-        "attributes": {
-          "birthdate": "16.07.2005",
-          "sex": "M"
-        }
-      }
-    ]
+    "contacts": [1,2]
   }
 }

@@ -9,8 +9,9 @@ import java.util.List;
 
 public class GroupSplitter {
 
-    public static List<Contact> getAllContacts(List<Group> groups, List<Contact> contacts) {
-        List<Contact> allContacts = new LinkedList<>(contacts);
+    public static List<Contact> getAllContacts(List<Group> groups, List<Long> contacts) {
+        List<Contact> contactList = Contact.find("id in ?1", contacts).list();
+        List<Contact> allContacts = new LinkedList<>(contactList);
         for (Group group : groups) {
             for (Contact contact : group.members) {
                 if (!allContacts.contains(contact)) {

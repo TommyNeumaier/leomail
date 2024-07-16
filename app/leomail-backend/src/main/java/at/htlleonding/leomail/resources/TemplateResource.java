@@ -2,6 +2,7 @@ package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.entities.Template;
 import at.htlleonding.leomail.entities.TemplateGreeting;
+import at.htlleonding.leomail.entities.UsedTemplate;
 import at.htlleonding.leomail.model.dto.TemplateDTO;
 import at.htlleonding.leomail.repositories.TemplateRepository;
 import io.quarkus.security.Authenticated;
@@ -83,5 +84,11 @@ public class TemplateResource {
         } catch (IllegalArgumentException e) {
             return Response.status(418).build();
         }
+    }
+
+    @GET
+    @Path("usedtemplate")
+    public Response usedTemplate() {
+        return Response.ok(UsedTemplate.listAll()).build();
     }
 }
