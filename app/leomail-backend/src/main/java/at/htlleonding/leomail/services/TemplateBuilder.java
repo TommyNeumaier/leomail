@@ -22,7 +22,6 @@ public class TemplateBuilder {
 
     public List<String> renderTemplates(Long templateId, List<Contact> contacts) {
         List<TemplateInstance> instances = buildTemplateInstances(templateId, contacts);
-        System.out.println(instances.size());
         List<String> renderedTemplates = new LinkedList<>();
         for (TemplateInstance instance : instances) {
             renderedTemplates.add(instance.render());
@@ -36,18 +35,14 @@ public class TemplateBuilder {
         io.quarkus.qute.Template quteTemplate = engine.parse(template.content);
         List<TemplateInstance> instances = new LinkedList<>();
 
-        System.out.println("hey");
         for(Contact contact : contacts) {
-            System.out.println(contact.firstName);
             TemplateInstance instance = quteTemplate.instance();
             for (String variable : templateVariables) {
                 String value = getContactValue(contact, variable);
                 instance.data(variable, value);
-                System.out.println(value + " into " + variable);
             }
             instances.add(instance);
         }
-        System.out.println("wups");
         return instances;
     }
 
