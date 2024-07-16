@@ -7,9 +7,6 @@ import io.quarkus.qute.TemplateInstance;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,8 +17,8 @@ public class TemplateBuilder {
     @Inject
     Engine engine;
 
-    public List<String> renderTemplates(Long templateId, List<Contact> contacts) {
-        List<TemplateInstance> instances = buildTemplateInstances(templateId, contacts);
+    public List<String> renderTemplates(Long templateId, List<Contact> contacts, boolean personalized) {
+        List<TemplateInstance> instances = buildTemplateInstances(templateId, contacts, personalized);
         List<String> renderedTemplates = new LinkedList<>();
         for (TemplateInstance instance : instances) {
             renderedTemplates.add(instance.render());
@@ -29,20 +26,25 @@ public class TemplateBuilder {
         return renderedTemplates;
     }
 
-    private List<TemplateInstance> buildTemplateInstances(Long templateId, List<Contact> contacts) {
+    private List<TemplateInstance> buildTemplateInstances(Long templateId, List<Contact> contacts, boolean personalized) {
         Template template = Template.findById(templateId);
-        List<String> templateVariables = getTemplateVariables(template.content);
-        io.quarkus.qute.Template quteTemplate = engine.parse(template.content);
+        List<String> templateVariables = getTemplateVariables(template.greeting.templateString + "<br>" + template.content);
+        io.quarkus.qute.Template quteTemplate = engine.parse(template.greeting.templateString + "<br>" + template.content);
         List<TemplateInstance> instances = new LinkedList<>();
 
-        for(Contact contact : contacts) {
+        for (Contact contact : contacts) {
             TemplateInstance instance = quteTemplate.instance();
             for (String variable : templateVariables) {
                 String value = getContactValue(contact, variable);
-                instance.data(variable, value);
+                if (value != null) {
+                    instance.data(variable, value);
+                }
             }
+            instance.data("personalized", personalized);
+            if (personalized) instance.data("sex", contact.attributes.get("sex"));
             instances.add(instance);
         }
+
         return instances;
     }
 
@@ -53,13 +55,25 @@ public class TemplateBuilder {
             int endIndex = templateContent.indexOf("}", startIndex);
             if (endIndex != -1) {
                 String variable = templateContent.substring(startIndex + 1, endIndex).trim();
-                variables.add(variable);
+                if (!isControlStatement(variable)) {
+                    variables.add(variable);
+                }
                 startIndex = endIndex + 1;
             } else {
                 break;
             }
         }
         return variables;
+    }
+
+    private boolean isControlStatement(String variable) {
+        List<String> controlStatements = List.of("if", "else", "for", "end", "set", "define", "include", "extends");
+        for (String statement : controlStatements) {
+            if (variable.startsWith(statement)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getContactValue(Contact contact, String variable) {

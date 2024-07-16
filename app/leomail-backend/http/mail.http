@@ -1,0 +1,22 @@
+### SEND EMAIL BY TEMPLATE
+POST http://localhost:8080/mail/sendByTemplate
+Content-Type: application/json
+
+{
+  "templateId": 1,
+  "personalized": false,
+  "receiver": {
+    "groups": [],
+    "contacts": [
+      {
+        "firstName": "Tommy",
+        "lastName": "Neumaier",
+        "mailAddress": "t.neumaier@students.htl-leonding.ac.at",
+        "attributes": {
+          "birthdate": "16.07.2005",
+          "sex": "M"
+        }
+      }
+    ]
+  }
+}

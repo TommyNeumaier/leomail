@@ -1,4 +1,4 @@
 package at.htlleonding.leomail.model;
 
-public record SMTPInformation(Receiver receiver, Long templateId) {
+public record SMTPInformation(Receiver receiver, Long templateId, boolean personalized) {
 }

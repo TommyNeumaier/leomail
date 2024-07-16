@@ -33,18 +33,22 @@ public class TemplateRepository {
 
     @Transactional
     public TemplateDTO addTemplate(TemplateDTO templateDTO) {
-        Account account = Account.find("userName", templateDTO.accountName()).firstResult();
-        if (account == null) {
-            throw new IllegalArgumentException("Account with name " + templateDTO.accountName() + " not found");
+        try {
+            Account account = Account.find("userName", templateDTO.accountName()).firstResult();
+            if (account == null) {
+                throw new IllegalArgumentException("Account with name " + templateDTO.accountName() + " not found");
+            }
+
+            TemplateGreeting greeting = TemplateGreeting.findById(templateDTO.greeting());
+            if (greeting == null) {
+                throw new IllegalArgumentException("Greeting with id " + templateDTO.greeting() + " not found");
+            }
+            Template template = new Template(templateDTO.name(), templateDTO.headline(), templateDTO.content(), account, greeting);
+            template.persist();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error while persisting template: " + e.getMessage());
         }
 
-        TemplateGreeting greeting = TemplateGreeting.findById(templateDTO.greeting());
-        if (greeting == null) {
-            throw new IllegalArgumentException("Greeting with id " + templateDTO.greeting() + " not found");
-        }
-
-        Template template = new Template(templateDTO.name(), templateDTO.headline(), templateDTO.content(), account, greeting);
-        template.persist();
         return templateDTO;
     }
 

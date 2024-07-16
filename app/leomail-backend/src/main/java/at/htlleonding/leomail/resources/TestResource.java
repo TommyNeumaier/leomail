@@ -11,7 +11,7 @@ import java.util.List;
 
 @Path("test")
 public class TestResource {
-    private List<String> list = new LinkedList<>();
+    private final List<String> list = new LinkedList<>();
 
     public TestResource() {
         list.add("Hello");

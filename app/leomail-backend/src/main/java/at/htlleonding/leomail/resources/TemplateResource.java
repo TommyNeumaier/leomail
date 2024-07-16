@@ -42,14 +42,22 @@ public class TemplateResource {
     @Path("add")
     @Authenticated
     public Response addTemplate(TemplateDTO templateDTO) {
-        return Response.ok(templateRepository.addTemplate(templateDTO)).build();
+        try {
+            return Response.ok(templateRepository.addTemplate(templateDTO)).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(418).build();
+        }
     }
 
     @GET
     @Path("getById")
     @Authenticated
     public Response getById(Long id) {
-        return Response.ok(Template.findById(id)).build();
+        try {
+            return Response.ok(Template.findById(id)).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(418).build();
+        }
     }
 
     @DELETE
@@ -60,7 +68,7 @@ public class TemplateResource {
         try {
             templateRepository.deleteById(id);
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(418).build();
         }
         return Response.ok().build();
     }
@@ -73,7 +81,7 @@ public class TemplateResource {
         try {
             return Response.ok(templateRepository.updateTemplate(templateDTO)).build();
         } catch (IllegalArgumentException e) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(418).build();
         }
     }
 }

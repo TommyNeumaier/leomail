@@ -30,7 +30,7 @@ public class MailRepository {
         Template template = Template.findById(smtpInformation.templateId());
         List<Contact> receivers = GroupSplitter.getAllContacts(smtpInformation.receiver().groups().get(), smtpInformation.receiver().contacts().get());
 
-        List<String> renderedTemplates = templateBuilder.renderTemplates(template.id, receivers);
+        List<String> renderedTemplates = templateBuilder.renderTemplates(template.id, receivers, smtpInformation.personalized());
         for (int i = 0; i < renderedTemplates.size(); i++) {
             sendMail(receivers.get(i).mailAddress, template.headline, renderedTemplates.get(i));
         }

@@ -10,12 +10,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 @ApplicationScoped
 public class KeycloakService {
-
-    private static final Logger logger = Logger.getLogger(KeycloakService.class.getName());
 
     @ConfigProperty(name = "keycloak.url")
     String keycloakUrl;
