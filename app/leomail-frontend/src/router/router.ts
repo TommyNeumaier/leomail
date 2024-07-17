@@ -8,6 +8,7 @@ import Login from "@/views/Login.vue";
 import {validateToken} from "@/services/token.service";
 import ProjekteView from "@/views/ProjekteView.vue";
 import PersonenView from "@/views/PersonenView.vue";
+import ProfilView from "@/views/ProfilView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -63,6 +64,12 @@ const router = createRouter({
       path: '/personen',
       name: 'personen',
       component: PersonenView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/profil',
+      name: 'profil',
+      component: ProfilView,
       meta: { requiresAuth: true }
     }
   ]
