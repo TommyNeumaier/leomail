@@ -9,7 +9,7 @@ import {logout} from "@/services/token.service";
     <RouterLink to="/projekte" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
     <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
   </div>
-  <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">
+  <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50"> <!--@click="logout()"-->
 </div>
 </template>
 

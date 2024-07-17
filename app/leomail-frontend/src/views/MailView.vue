@@ -16,5 +16,6 @@ import NavComponent from "@/components/NavComponent.vue";
 #mail-mainBox{
   display: flex;
   flex-direction: row;
+  width: 100%;
 }
 </style>

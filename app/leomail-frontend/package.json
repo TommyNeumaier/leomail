@@ -11,6 +11,7 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
+    "@vuepic/vue-datepicker": "^9.0.0",
     "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.7.2",
     "esbuild": "^0.23.0",
@@ -20,6 +21,7 @@
     "vue-multiselect": "^3.0.0",
     "vue-resource": "^1.5.3",
     "vue-router": "^4.3.3",
+    "vue-search-select": "^3.2.0",
     "vue-simple-search-dropdown": "^1.0.1"
   },
   "devDependencies": {

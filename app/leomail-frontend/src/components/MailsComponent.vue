@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue'
+import MailFormComponent from "@/components/MailFormComponent.vue";
 
 const mails = ref([]);
 const startIndex = ref(1);
 const endIndex = ref(10);
 const totalMails = ref(50);
 const limit = ref(10);
+const showEmailFrom = ref(false);
+
+const clickedEmailForm = () => {
+  showEmailFrom.value = true;
+}
 
 const decrement = () => {
   if (startIndex.value - limit.value >= 0) {
@@ -22,7 +28,6 @@ const increment = () => {
     startIndex.value += limit.value;
     endIndex.value = startIndex.value + limit.value - 1;
   } else {
-
   }
 };
 
@@ -37,14 +42,18 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="bigVGContainer">
+  <div v-if="showEmailFrom">
+    <MailFormComponent/>
+  </div>
+  <div v-else id="bigVGContainer">
     <div id="VGHeaderBox">
       <h1 id="vgHeading">Emails</h1>
 
-      <div id="neueMail">
+      <button id="neueMail" @click="clickedEmailForm">
         <p>Neue Email</p>
-      </div>
+      </button>
     </div>
+
 
     <div id="search-container">
       <input type="text" id="search" placeholder="suche">
@@ -199,6 +208,7 @@ onMounted(() => {
 }
 
 #neueMail {
+  all: unset;
   background-color: #E8E8E8;
   height: 50%;
   display: flex;
@@ -208,6 +218,13 @@ onMounted(() => {
   margin-left: 80%;
   margin-top: 1.8%;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
+  border: #8a8a8a solid 2px;
+}
+
+#neueMail:hover {
+  background-color: #a2a2a2;
+  color: white;
+  border-color: #8a8a8a;
 }
 
 #neueMail p {
@@ -222,6 +239,7 @@ onMounted(() => {
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 
 }
+
 #mailFeaturesContainer {
   display: flex;
   flex-direction: row;
@@ -264,7 +282,7 @@ onMounted(() => {
   border-radius: 5px;
 }
 
-.icon-button:active{
+.icon-button:active {
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
 }
 
