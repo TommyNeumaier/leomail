@@ -28,7 +28,7 @@ public class MailScheduler {
     public void checkScheduledMails() {
         List<UsedTemplate> usedTemplates = getAllScheduledUsedTemplates();
         for (UsedTemplate usedTemplate : usedTemplates) {
-            if (usedTemplate.scheduledAt.isBefore(java.time.LocalDateTime.now()) || usedTemplate.scheduledAt.isEqual(java.time.LocalDateTime.now())) {
+            if ((usedTemplate.scheduledAt.isBefore(java.time.LocalDateTime.now()) || usedTemplate.scheduledAt.isEqual(java.time.LocalDateTime.now()) && usedTemplate.sentOn == null)) {
                 mailRepository.sendMail(usedTemplate.id);
             }
         }
