@@ -1,9 +1,11 @@
 package at.htlleonding.leomail.entities;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,24 +18,20 @@ public class UsedTemplate extends Template {
 
     public LocalDateTime sentOn;
 
+    public LocalDateTime scheduledAt;
+
     @ManyToOne
     public Account sentBy;
 
-    @OneToMany(mappedBy = "template", fetch = FetchType.LAZY)
-    public List<SentMail> mails;
+    @OneToMany(mappedBy = "usedTemplate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    public List<SentMail> mails = new ArrayList<>();
 
     public UsedTemplate() {
     }
 
-    public UsedTemplate(String name, String headline, String content, String createdBy, Long greeting, LocalDateTime sentOn, Account sentBy) {
-        super(name, headline, content, Account.findById(createdBy), TemplateGreeting.find("id", greeting).firstResult());
-        this.sentOn = sentOn;
-        this.sentBy = sentBy;
-    }
-
-    public UsedTemplate(Template template, LocalDateTime sentOn, Account sentBy) {
+    public UsedTemplate(Template template, LocalDateTime scheduledAt, Account sentBy) {
         super(template.name, template.headline, template.content, template.createdBy, template.greeting);
-        this.sentOn = sentOn;
+        this.scheduledAt = scheduledAt;
         this.sentBy = sentBy;
     }
 }

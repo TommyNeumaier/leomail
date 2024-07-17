@@ -3,8 +3,9 @@ POST http://localhost:8080/mail/sendByTemplate
 Content-Type: application/json
 
 {
-  "templateId": 1,
+  "templateId": 3,
   "personalized": true,
+  "scheduledAt": "2024-07-17T11:30:39.000Z",
   "receiver": {
     "groups": [],
     "contacts": [1,2]

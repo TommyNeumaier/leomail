@@ -87,8 +87,8 @@ public class TemplateResource {
     }
 
     @GET
-    @Path("usedtemplate")
-    public Response usedTemplate() {
-        return Response.ok(UsedTemplate.listAll()).build();
+    @Path("getUsedTemplates")
+    public Response getScheduledUsedTemplates(@QueryParam("scheduled") boolean scheduled) {
+        return Response.ok(templateRepository.getUsedTemplates(scheduled)).build();
     }
 }

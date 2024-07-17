@@ -1,29 +1,34 @@
 package at.htlleonding.leomail.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 
 @Entity
-public class SentMail extends PanacheEntity {
+public class SentMail extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
     @ManyToOne
     public Contact contact;
 
     @ManyToOne
     @JsonIgnore
-    public UsedTemplate template;
+    public UsedTemplate usedTemplate;
 
-    @Column(nullable = false, length = 8192)
+    @Column(length = 8192)
     public String actualContent;
 
-    public SentMail() {}
+    public SentMail() {
+    }
 
-    public SentMail(Contact contact, UsedTemplate template, String actualContent) {
+    public SentMail(Contact contact, UsedTemplate usedTemplate, String content) {
         this.contact = contact;
-        this.template = template;
-        this.actualContent = actualContent;
+        this.usedTemplate = usedTemplate;
+        this.actualContent = content;
     }
 }
