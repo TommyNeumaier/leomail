@@ -55,7 +55,6 @@ public class MailRepository {
 
         usedTemplate.sentOn = LocalDateTime.now();
 
-        System.out.println(usedTemplate.sentOn);
         for (SentMail sentMail : usedTemplate.mails) {
             mailer.send(Mail.withHtml(sentMail.contact.mailAddress, usedTemplate.headline, sentMail.actualContent));
         }

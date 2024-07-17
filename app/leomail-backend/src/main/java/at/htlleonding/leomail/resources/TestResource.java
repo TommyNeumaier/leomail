@@ -2,9 +2,11 @@ package at.htlleonding.leomail.resources;
 
 import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,5 +38,15 @@ public class TestResource {
     @RolesAllowed("user")
     public String authtest() {
         return "You are authenticated!";
+    }
+
+    @Inject
+    JsonWebToken jwt;
+
+    @GET
+    @Path("jwt")
+    @Authenticated
+    public String jwt() {
+        return jwt.getClaim("preferred_username");
     }
 }
