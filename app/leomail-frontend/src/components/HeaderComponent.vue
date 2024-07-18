@@ -10,7 +10,7 @@ import {logout} from "@/services/auth.service";
       <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
     </div>
     <div id="profilBox">
-      <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">
+      <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">)
     </div>
   </div>
 </template>

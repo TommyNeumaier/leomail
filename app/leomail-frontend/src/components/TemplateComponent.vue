@@ -31,11 +31,11 @@ const toolbarOptions = ref([
   ['blockquote'],
   ['link', 'image', 'clean']
 ]);
-
+const quillEditor = ref<Quill | null>(null);
 const emitEvents = defineEmits(['template-added', 'template-removed','template-saved']);
 const props = defineProps<{ selectedTemplate: Template | null }>();
 
-const quillEditor = ref<Quill | null>(null);
+
 
 const getGreetings = async () => {
   const response = await Service.getInstance().getGreetings();

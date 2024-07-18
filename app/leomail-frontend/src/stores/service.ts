@@ -17,15 +17,15 @@ export class Service{
 
     public addTemplate(formData: any){
         console.log("du schickst gleich die daten");
-        return axios.post(`${this.baseUrl}/template/add`, formData);
+        return axios.post(`${this.baseUrl}template/add`, formData);
     }
 
     public getVorlagen(){
-        return axios.get(`${this.baseUrl}/template/all`);
+        return axios.get(`${this.baseUrl}template/all`);
     }
 
     public getGreetings(){
-        return axios.get(`${this.baseUrl}/template/greetings`);
+        return axios.get(`${this.baseUrl}template/greetings`);
     }
 
     public getGreetingById(id: number) {
@@ -33,11 +33,16 @@ export class Service{
     }
 
     public removeTemplate(id: any){
-        return axios.delete(`${this.baseUrl}/template/delete?tid=${id}`);
+        return axios.delete(`${this.baseUrl}template/delete?tid=${id}`);
     }
 
     public updateTemplate(formData: any){
         console.log(formData)
         return axios.post(`${this.baseUrl}template/update`, formData);
+    }
+
+    public sendEmails(formData: any){
+        console.log("du schickst gleich die daten");
+        return axios.post(`${this.baseUrl}mail/sendByTemplate`, formData);
     }
 }

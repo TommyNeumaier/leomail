@@ -7,10 +7,10 @@ const startIndex = ref(1);
 const endIndex = ref(10);
 const totalMails = ref(50);
 const limit = ref(10);
-const showEmailFrom = ref(false);
+const showEmailForm = ref(false);
 
 const clickedEmailForm = () => {
-  showEmailFrom.value = true;
+  showEmailForm.value = true;
 }
 
 const decrement = () => {
@@ -42,7 +42,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="showEmailFrom">
+  <div v-if="showEmailForm" id="form">
     <MailFormComponent/>
   </div>
   <div v-else id="bigVGContainer">
@@ -104,6 +104,13 @@ onMounted(() => {
 </template>
 
 <style scoped>
+#form {
+  width: 86vw;
+  margin-top: 4vh;
+  margin-left: 1.5%;
+  display: flex;
+  flex-direction: column;
+}
 
 #pagesNummern {
   display: flex;
