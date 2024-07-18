@@ -38,5 +38,6 @@ export const useAuthStore = defineStore('auth', {
             this.refreshToken = '';
             routerConfig.push("/login").then(() => {});
         }
-    }
+    },
+    persist: true
 });

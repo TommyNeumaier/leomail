@@ -4,6 +4,7 @@ import io.quarkus.Generated;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -16,9 +17,10 @@ public class Template extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_template")
     public Long id;
 
-    @Column(length = 128, nullable = false)
+    @Column(length = 128, nullable = false, unique = true)
     public String name;
 
+    @CreationTimestamp
     public LocalDateTime created;
 
     @Column(length = 256, nullable = false)

@@ -64,6 +64,7 @@ public class AuthResource {
                     "refresh_token",
                     refreshToken
             );
+            System.out.println(tokenResponse);
             return Response.ok(tokenResponse).build();
         } catch (Exception e) {
             return Response.status(Response.Status.UNAUTHORIZED).build();

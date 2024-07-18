@@ -8,13 +8,15 @@ import at.htlleonding.leomail.model.dto.template.TemplateAccountInformationDTO;
 import at.htlleonding.leomail.model.dto.template.TemplateDateInformationDTO;
 import at.htlleonding.leomail.model.dto.template.TemplateMetaInformationDTO;
 import at.htlleonding.leomail.model.dto.template.mail.TemplateMailContactInformationDTO;
+import at.htlleonding.leomail.model.exceptions.account.NonExistingAccountException;
+import at.htlleonding.leomail.model.exceptions.greeting.NonExistingGreetingException;
+import at.htlleonding.leomail.model.exceptions.template.TemplateNameAlreadyExistsException;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,21 +41,22 @@ public class TemplateRepository {
 
     @Transactional
     public TemplateDTO addTemplate(TemplateDTO templateDTO) {
-        try {
-            Account account = Account.find("userName", templateDTO.accountName()).firstResult();
-            if (account == null) {
-                throw new IllegalArgumentException("Account with name " + templateDTO.accountName() + " not found");
-            }
-
-            TemplateGreeting greeting = TemplateGreeting.findById(templateDTO.greeting());
-            if (greeting == null) {
-                throw new IllegalArgumentException("Greeting with id " + templateDTO.greeting() + " not found");
-            }
-            Template template = new Template(templateDTO.name(), templateDTO.headline(), templateDTO.content(), account, greeting);
-            template.persist();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Error while persisting template: " + e.getMessage());
+        if (Template.find("name", templateDTO.name()).count() > 0) {
+            throw new TemplateNameAlreadyExistsException();
         }
+
+        Account account = Account.find("userName", templateDTO.accountName()).firstResult();
+        if (account == null) {
+            throw new NonExistingAccountException();
+        }
+
+        TemplateGreeting greeting = TemplateGreeting.findById(templateDTO.greeting());
+        if (greeting == null) {
+            throw new NonExistingGreetingException();
+        }
+
+        Template template = new Template(templateDTO.name(), templateDTO.headline(), templateDTO.content(), account, greeting);
+        template.persist();
 
         return templateDTO;
     }

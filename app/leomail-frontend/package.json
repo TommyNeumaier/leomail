@@ -17,6 +17,7 @@
     "esbuild": "^0.23.0",
     "keycloak-js": "^25.0.1",
     "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.1",
     "vue": "^3.4.29",
     "vue-multiselect": "^3.0.0",
     "vue-resource": "^1.5.3",

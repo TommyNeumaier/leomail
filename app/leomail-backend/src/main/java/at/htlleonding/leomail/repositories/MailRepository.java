@@ -59,4 +59,13 @@ public class MailRepository {
             mailer.send(Mail.withHtml(sentMail.contact.mailAddress, usedTemplate.headline, sentMail.actualContent));
         }
     }
+
+    public void sendMail(SentMail sentMail) {
+        mailer.send(Mail.withHtml(sentMail.contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent));
+        sentMail.sent = true;
+    }
+
+    public List<SentMail> getAllUnsentMails() {
+        return SentMail.find("sent = false").list();
+    }
 }

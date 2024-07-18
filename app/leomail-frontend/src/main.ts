@@ -4,7 +4,7 @@ import {QuillEditor} from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import {createApp} from 'vue';
 import {createPinia} from 'pinia';
-import axios from 'axios';
+import piniaPersist from "pinia-plugin-persistedstate";
 import App from "@/App.vue";
 import routerConfig from "@/configs/router.config";
 import setupAxiosInterceptors from "@/configs/interceptor.config";
@@ -18,6 +18,8 @@ app.component('VueDatePicker', VueDatePicker);
 const pinia = createPinia();
 app.use(pinia);
 app.use(routerConfig);
+
+pinia.use(piniaPersist);
 
 setupAxiosInterceptors(pinia);
 

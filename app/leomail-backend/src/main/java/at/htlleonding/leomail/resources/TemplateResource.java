@@ -2,8 +2,10 @@ package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.entities.Template;
 import at.htlleonding.leomail.entities.TemplateGreeting;
-import at.htlleonding.leomail.entities.UsedTemplate;
 import at.htlleonding.leomail.model.dto.TemplateDTO;
+import at.htlleonding.leomail.model.exceptions.account.NonExistingAccountException;
+import at.htlleonding.leomail.model.exceptions.greeting.NonExistingGreetingException;
+import at.htlleonding.leomail.model.exceptions.template.TemplateNameAlreadyExistsException;
 import at.htlleonding.leomail.repositories.TemplateRepository;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
@@ -45,8 +47,12 @@ public class TemplateResource {
     public Response addTemplate(TemplateDTO templateDTO) {
         try {
             return Response.ok(templateRepository.addTemplate(templateDTO)).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(418).build();
+        } catch (TemplateNameAlreadyExistsException excp) {
+            return Response.status(409).entity("E-Template-01").build();
+        } catch (NonExistingAccountException excp) {
+            return Response.status(409).entity("E-Template-02").build();
+        } catch (NonExistingGreetingException excp) {
+            return Response.status(409).entity("E-Template-03").build();
         }
     }
 

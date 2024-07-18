@@ -32,7 +32,7 @@ export const refreshToken = async () => {
     if (refresh_token) {
         try {
             const response = await axios.post('/api/auth/refresh', new URLSearchParams({
-                refresh_token: refresh_token,
+                "refresh_token": refresh_token,
             }), {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

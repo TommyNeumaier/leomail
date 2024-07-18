@@ -23,6 +23,8 @@ public class SentMail extends PanacheEntityBase {
     @Column(length = 8192)
     public String actualContent;
 
+    public boolean sent = false;
+
     public SentMail() {
     }
 
