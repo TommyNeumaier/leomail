@@ -2,11 +2,6 @@ import axios from "axios";
 
 export class Service{
     private static instance: Service;
-    private baseUrl: string;
-
-    private constructor() {
-        this.baseUrl = 'http://localhost:8080/';
-    }
 
     public static getInstance(): Service {
         if (!Service.instance) {
@@ -17,32 +12,32 @@ export class Service{
 
     public addTemplate(formData: any){
         console.log("du schickst gleich die daten");
-        return axios.post(`${this.baseUrl}template/add`, formData);
+        return axios.post(`/api/template/add`, formData);
     }
 
     public getVorlagen(){
-        return axios.get(`${this.baseUrl}template/all`);
+        return axios.get(`/api/template/all`);
     }
 
     public getGreetings(){
-        return axios.get(`${this.baseUrl}template/greetings`);
+        return axios.get(`/api/template/greetings`);
     }
 
     public getGreetingById(id: number) {
-        return axios.get(`${this.baseUrl}/greeting?gid=${id}`)
+        return axios.get(`/api/greeting?gid=${id}`)
     }
 
     public removeTemplate(id: any){
-        return axios.delete(`${this.baseUrl}template/delete?tid=${id}`);
+        return axios.delete(`/api/template/delete?tid=${id}`);
     }
 
     public updateTemplate(formData: any){
         console.log(formData)
-        return axios.post(`${this.baseUrl}template/update`, formData);
+        return axios.post(`/api/template/update`, formData);
     }
 
     public sendEmails(formData: any){
         console.log("du schickst gleich die daten");
-        return axios.post(`${this.baseUrl}mail/sendByTemplate`, formData);
+        return axios.post(`/api/mail/sendByTemplate`, formData);
     }
 }
