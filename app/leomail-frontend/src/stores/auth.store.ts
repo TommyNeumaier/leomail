@@ -1,46 +1,42 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import { KEYCLOAK_CLIENT_SECRET } from '@/configs/keycloak.config';
+import routerConfig from "@/configs/router.config";
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
-        accessToken: localStorage.getItem('access_token') || null,
-        refreshToken: localStorage.getItem('refresh_token') || null,
+        accessToken: '',
+        refreshToken: '',
     }),
     actions: {
-        async login(credentials: { username: string; password: string }) {
+        setTokens(accessToken: string, refreshToken: string) {
+            this.accessToken = accessToken;
+            this.refreshToken = refreshToken;
+        },
+        async refreshToken() {
+            if (!this.refreshToken) {
+                throw new Error('No refresh token available');
+            }
             try {
-                const response = await axios.post('https://auth.htl-leonding.ac.at/realms/2425-5bhitm/protocol/openid-connect/token', new URLSearchParams({
-                    client_id: 'leomail',
-                    client_secret: KEYCLOAK_CLIENT_SECRET,
-                    grant_type: 'password',
-                    username: credentials.username,
-                    password: credentials.password,
-                    scope: 'openid',
+                const response = await axios.post('/api/auth/refresh', new URLSearchParams({
+                    refresh_token: this.refreshToken,
                 }), {
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                 });
 
-                const { access_token, refresh_token } = response.data;
-                this.setTokens(access_token, refresh_token);
+                const { access_token, refresh_token: new_refresh_token } = response.data;
+                this.setTokens(access_token, new_refresh_token);
+                return access_token;
             } catch (error) {
-                console.error('Login error', error);
+                this.logout();
                 throw error;
             }
         },
-        setTokens(accessToken: string, refreshToken: string) {
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            localStorage.setItem('access_token', accessToken);
-            localStorage.setItem('refresh_token', refreshToken);
-        },
         logout() {
-            this.accessToken = null;
-            this.refreshToken = null;
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-        },
-    },
+            this.accessToken = '';
+            this.refreshToken = '';
+            routerConfig.push("/login").then(() => {});
+        }
+    }
 });

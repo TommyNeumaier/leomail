@@ -1,7 +1,6 @@
 package at.htlleonding.leomail.resources;
 
-import at.htlleonding.leomail.services.KeycloakService;
-import io.quarkus.security.Authenticated;
+import at.htlleonding.leomail.services.KeycloakAdminService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -15,13 +14,19 @@ import java.util.List;
 public class KeycloakResource {
 
     @Inject
-    KeycloakService keycloakService;
+    KeycloakAdminService keycloakService;
 
     // TODO: Doesnt work atm because of services account permissions in the keycloak client configuration
-    @GET
+   /* @GET
     @Path("/search")
     public Response searchUser(@QueryParam("searchTerm") String searchTerm) {
         List<Object> users = keycloakService.searchUser(searchTerm);
         return Response.ok(users, MediaType.APPLICATION_JSON).build();
+    }*/
+
+    @GET
+    @Path("hello")
+    public Response hello() {
+        return Response.ok("Hello World").build();
     }
 }

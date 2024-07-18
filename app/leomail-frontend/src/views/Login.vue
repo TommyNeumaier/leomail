@@ -1,5 +1,5 @@
 <template>
-  <header-login></header-login>
+  <HeaderLoginComponent></HeaderLoginComponent>
   <div id="login-container">
     <h2 id="headline">Login</h2>
     <form @submit.prevent="handleLogin">
@@ -18,25 +18,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import HeaderLogin from '@/components/HeaderLoginComponent.vue';
-import {useAuthStore} from "@/stores/auth.store";
+import {ref} from 'vue';
+import {useRouter} from 'vue-router';
+import {login} from "@/services/auth.service";
+import HeaderLoginComponent from "@/components/HeaderLoginComponent.vue";
 
 const username = ref('');
 const password = ref('');
 const errorMessage = ref('');
 const router = useRouter();
-const authStore = useAuthStore();
 
 const handleLogin = async () => {
-  try {
-    await authStore.login({ username: username.value, password: password.value });
-    router.push('/');
-  } catch (error) {
+  if (await login(username.value, password.value) === false) {
     errorMessage.value = 'Invalid username or password';
-    console.error('Login failed', error);
-  }
+  } else router.push("/").then(() => {});
 };
 </script>
 

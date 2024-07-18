@@ -1,15 +1,14 @@
-// src/services/axios-interceptors.ts
 import axios from 'axios';
-import { KEYCLOAK_CLIENT_SECRET } from '@/configs/keycloak.config';
-import {useAuthStore} from "@/stores/auth.store";
+import { useAuthStore } from '@/stores/auth.store';
+import { refreshToken } from '@/services/auth.service';
 
 const setupAxiosInterceptors = (store: any) => {
     axios.interceptors.request.use(
-        async (config) => {
+        (config) => {
             const authStore = useAuthStore(store);
             const token = authStore.accessToken;
 
-            if (token) {
+            if (token && !config.isLoginRequest) {
                 config.headers['Authorization'] = `Bearer ${token}`;
             }
 
@@ -28,30 +27,12 @@ const setupAxiosInterceptors = (store: any) => {
             const originalRequest = error.config;
             const authStore = useAuthStore(store);
 
-            if (error.response.status === 401 && !originalRequest._retry) {
+            if (error.response.status === 401 && !originalRequest._retry && !originalRequest.isLoginRequest) {
                 originalRequest._retry = true;
                 try {
-                    const refreshToken = authStore.refreshToken;
-                    if (!refreshToken) {
-                        throw new Error('No refresh token available');
-                    }
-
-                    const response = await axios.post('https://auth.htl-leonding.ac.at/realms/2425-5bhitm/protocol/openid-connect/token', new URLSearchParams({
-                        client_id: 'leomail',
-                        client_secret: KEYCLOAK_CLIENT_SECRET,
-                        grant_type: 'refresh_token',
-                        refresh_token: refreshToken,
-                    }), {
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                    });
-
-                    const { access_token, refresh_token } = response.data;
-                    authStore.setTokens(access_token, refresh_token);
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-                    originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
-
+                    const newToken = await refreshToken();
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+                    originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
                     return axios(originalRequest);
                 } catch (err) {
                     console.error('Refresh token error:', err);

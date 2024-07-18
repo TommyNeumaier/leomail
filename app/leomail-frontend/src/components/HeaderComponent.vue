@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {logout} from "@/services/token.service";
+import {logout} from "@/services/auth.service";
 </script>
 
 <template>
@@ -10,10 +10,7 @@ import {logout} from "@/services/token.service";
       <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
     </div>
     <div id="profilBox">
-      <RouterLink to="/profil">
-        <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50">
-        <!--@click="logout()"-->
-      </RouterLink>
+      <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">
     </div>
   </div>
 </template>

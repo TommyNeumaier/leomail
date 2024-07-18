@@ -6,7 +6,7 @@ import {createApp} from 'vue';
 import {createPinia} from 'pinia';
 import axios from 'axios';
 import App from "@/App.vue";
-import router from "@/router/router";
+import routerConfig from "@/configs/router.config";
 import setupAxiosInterceptors from "@/configs/interceptor.config";
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -17,7 +17,7 @@ app.component('VueDatePicker', VueDatePicker);
 
 const pinia = createPinia();
 app.use(pinia);
-app.use(router);
+app.use(routerConfig);
 
 setupAxiosInterceptors(pinia);
 

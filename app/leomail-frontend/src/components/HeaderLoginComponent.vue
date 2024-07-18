@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {logout} from "@/services/token.service";
+import {logout} from "@/services/auth.service";
 </script>
 
 <template>
