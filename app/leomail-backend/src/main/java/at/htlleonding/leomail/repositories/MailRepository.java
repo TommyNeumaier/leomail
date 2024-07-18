@@ -6,6 +6,7 @@ import at.htlleonding.leomail.services.GroupSplitter;
 import at.htlleonding.leomail.services.TemplateBuilder;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
+import io.smallrye.mutiny.Multi;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -55,14 +56,15 @@ public class MailRepository {
 
         usedTemplate.sentOn = LocalDateTime.now();
 
-        for (SentMail sentMail : usedTemplate.mails) {
-            mailer.send(Mail.withHtml(sentMail.contact.mailAddress, usedTemplate.headline, sentMail.actualContent));
-        }
+        Multi.createFrom().iterable(usedTemplate.mails)
+                .onItem().transform(sentMail -> Mail.withHtml(sentMail.contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent))
+                .subscribe().with(mail -> mailer.send(mail));
     }
 
-    public void sendMail(SentMail sentMail) {
-        mailer.send(Mail.withHtml(sentMail.contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent));
-        sentMail.sent = true;
+    public void sendMail(List<SentMail> sentMails) {
+        Multi.createFrom().iterable(sentMails)
+                .onItem().transform(sentMail -> Mail.withHtml(sentMail.contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent))
+                .subscribe().with(mail -> mailer.send(mail));
     }
 
     public List<SentMail> getAllUnsentMails() {

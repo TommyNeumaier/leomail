@@ -37,9 +37,7 @@ public class MailScheduler {
     @Transactional
     public void checkUnsentMails() {
         List<SentMail> sentMails = mailRepository.getAllUnsentMails();
-        for (SentMail sentMail : sentMails) {
-            mailRepository.sendMail(sentMail);
-        }
+        mailRepository.sendMail(sentMails);
     }
 
 

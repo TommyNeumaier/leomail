@@ -2,7 +2,7 @@ package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.model.dto.KeycloakTokenIntrospectionResponse;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
-import at.htlleonding.leomail.services.KeycloakService;
+import at.htlleonding.leomail.contracts.IKeycloak;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -20,7 +20,7 @@ public class AuthResource {
 
     @Inject
     @RestClient
-    KeycloakService keycloakService;
+    IKeycloak IKeycloak;
 
     @ConfigProperty(name = "quarkus.oidc.client-id")
     String clientId;
@@ -39,7 +39,7 @@ public class AuthResource {
             @FormParam("password") String password) {
 
         try {
-            KeycloakTokenResponse tokenResponse = keycloakService.login(
+            KeycloakTokenResponse tokenResponse = IKeycloak.login(
                     clientId,
                     clientSecret,
                     "password",
@@ -58,7 +58,7 @@ public class AuthResource {
             @FormParam("refresh_token") String refreshToken) {
 
         try {
-            KeycloakTokenResponse tokenResponse = keycloakService.refreshToken(
+            KeycloakTokenResponse tokenResponse = IKeycloak.refreshToken(
                     clientId,
                     clientSecret,
                     "refresh_token",
@@ -76,7 +76,7 @@ public class AuthResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response validateToken() {
         try {
-            KeycloakTokenIntrospectionResponse introspectionResponse = keycloakService.introspectToken(
+            KeycloakTokenIntrospectionResponse introspectionResponse = IKeycloak.introspectToken(
                     clientId,
                     clientSecret,
                     jwt.getRawToken()
