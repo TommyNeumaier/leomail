@@ -8,8 +8,8 @@ import Login from "@/views/Login.vue";
 import ProjekteView from "@/views/ProjekteView.vue";
 import PersonenView from "@/views/PersonenView.vue";
 import ProfilView from "@/views/ProfilView.vue";
-import { validateToken } from "@/services/auth.service";
-import {useAuthStore} from "@/stores/auth.store";
+import { refreshToken, validateToken } from "@/services/auth.service";
+import { useAuthStore } from "@/stores/auth.store";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -31,19 +31,32 @@ const routerConfig = createRouter({
 
 routerConfig.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
-    const accessToken = useAuthStore().accessToken;
-    if (accessToken) {
+    const authStore = useAuthStore();
+    const accessToken = authStore.accessToken;
+
+    if (!accessToken) {
+      return next({ name: 'login' });
+    }
+
+    try {
       const isValid = await validateToken(accessToken);
       if (isValid) {
-        next();
-      } else {
-        next({ name: 'login' });
+        return next();
       }
-    } else {
-      next({ name: 'login' });
+
+      const newToken = await refreshToken();
+      const newIsValid = await validateToken(newToken);
+
+      if (!newIsValid) {
+        return next({ name: 'login' });
+      }
+
+      return next();
+    } catch (error) {
+      return next({ name: 'login' });
     }
   } else {
-    next();
+    return next();
   }
 });
 

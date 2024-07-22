@@ -9,6 +9,7 @@ export const useAuthStore = defineStore('auth', {
     }),
     actions: {
         setTokens(accessToken: string, refreshToken: string) {
+            console.log('Setting tokens:', { accessToken, refreshToken }); // Debugging step
             this.accessToken = accessToken;
             this.refreshToken = refreshToken;
         },
@@ -17,6 +18,7 @@ export const useAuthStore = defineStore('auth', {
                 throw new Error('No refresh token available');
             }
             try {
+                console.log('Attempting to refresh token with refresh token:', this.refreshToken); // Debugging step
                 const response = await axios.post('/api/auth/refresh', new URLSearchParams({
                     refresh_token: this.refreshToken,
                 }), {
@@ -29,11 +31,13 @@ export const useAuthStore = defineStore('auth', {
                 this.setTokens(access_token, new_refresh_token);
                 return access_token;
             } catch (error) {
+                console.error('Error refreshing token:', error); // Debugging step
                 this.logout();
                 throw error;
             }
         },
         logout() {
+            console.log('Logging out'); // Debugging step
             this.accessToken = '';
             this.refreshToken = '';
             routerConfig.push("/login").then(() => {});

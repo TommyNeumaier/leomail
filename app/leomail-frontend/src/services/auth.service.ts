@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useAuthStore } from '@/stores/auth.store';
+import {useAuthStore} from '@/stores/auth.store';
 
 export const login = async (username: string, password: string) => {
     try {
@@ -18,7 +18,7 @@ export const login = async (username: string, password: string) => {
         const isValid = await validateToken(access_token);
 
         if (!isValid) {
-
+            return false;
         }
 
         authStore.setTokens(access_token, refresh_token);
@@ -28,7 +28,7 @@ export const login = async (username: string, password: string) => {
 
 export const refreshToken = async () => {
     const authStore = useAuthStore();
-    const refresh_token = authStore.refreshToken;
+    const refresh_token = authStore.$state.refreshToken;
     if (refresh_token) {
         try {
             const response = await axios.post('/api/auth/refresh', new URLSearchParams({
@@ -41,10 +41,11 @@ export const refreshToken = async () => {
 
             const { access_token, refresh_token: new_refresh_token } = response.data;
             authStore.setTokens(access_token, new_refresh_token);
+            console.log("new access token", access_token)
+            console.log("new refresh token", new_refresh_token)
             return access_token;
         } catch (error) {
             authStore.logout();
-            throw error;
         }
     }
 };
@@ -58,7 +59,7 @@ export const validateToken = async (token: string) => {
         });
         return response.status === 200;
     } catch (error) {
-        throw error;
+        return false;
     }
 };
 

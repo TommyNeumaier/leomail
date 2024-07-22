@@ -43,6 +43,7 @@ public class KeycloakAdminService {
 
         Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
                 .queryParam("search", searchTerm)
+                .queryParam("max", Integer.MAX_VALUE)
                 .request(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + token)
                 .get();
@@ -60,6 +61,7 @@ public class KeycloakAdminService {
         Client client = ClientBuilder.newClient();
 
         Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
+                .queryParam("max", Integer.MAX_VALUE)
                 .request(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + token)
                 .get();
@@ -70,8 +72,8 @@ public class KeycloakAdminService {
         }
 
         List<Object> users = response.readEntity(List.class);
-        System.out.println(users);
-
-        // TODO: Implement user synchronisation
+        for (Object user : users) {
+            System.out.println(user);
+        }
     }
 }

@@ -3,6 +3,7 @@ package at.htlleonding.leomail.resources;
 import at.htlleonding.leomail.model.dto.KeycloakTokenIntrospectionResponse;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
 import at.htlleonding.leomail.contracts.IKeycloak;
+import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -53,6 +54,7 @@ public class AuthResource {
 
     @POST
     @Path("/refresh")
+    @Authenticated
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response refreshToken(
             @FormParam("refresh_token") String refreshToken) {
@@ -67,12 +69,14 @@ public class AuthResource {
             System.out.println(tokenResponse);
             return Response.ok(tokenResponse).build();
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
     }
 
     @GET
     @Path("/validate")
+    @Authenticated
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response validateToken() {
         try {
@@ -81,6 +85,7 @@ public class AuthResource {
                     clientSecret,
                     jwt.getRawToken()
             );
+            System.out.println(introspectionResponse);
             if (introspectionResponse.active()) {
                 return Response.ok().build();
             } else {
