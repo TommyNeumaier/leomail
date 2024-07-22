@@ -40,4 +40,8 @@ export class Service{
         console.log("du schickst gleich die daten");
         return axios.post(`/api/mail/sendByTemplate`, formData);
     }
+
+    public getSendEmails(){
+        return axios.get(`/api/template/getUsedTemplates?scheduled=false`);
+    }
 }

@@ -1,44 +1,64 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from "vue";
+import {computed, nextTick, onMounted, onUnmounted, ref, watch} from "vue";
 import {Quill, QuillEditor} from "@vueup/vue-quill";
 import {Service} from "@/stores/service";
 import '@vuepic/vue-datepicker/dist/main.css';
 
-interface DropdownItem {
+interface Template {
   id: number;
-  label: string;
+  name: string;
+  headline: string;
+  greeting: string;
+  content: string;
   visible: boolean;
 }
 
-const items: DropdownItem[] = [
-  {id: 1, label: 'About', visible: true},
-  {id: 2, label: 'Base', visible: true},
-  {id: 3, label: 'Blog', visible: true},
-  {id: 4, label: 'Contact', visible: true},
-  {id: 5, label: 'Custom', visible: true},
-  {id: 6, label: 'Support', visible: true},
-  {id: 7, label: 'Tools', visible: true},
-];
-
-const toolbarOptions = ref([]);
-const quillEditor = ref<Quill | null>(null);
-
 const filter = ref('');
 const dropdownVisible = ref(false);
-const filteredItems = ref(items);
-const selectedTemplate = ref<DropdownItem | null>(null);
-const receiver = ref([]);
+const selectedTemplate = ref<Template | null>(null);
+const receiverInput = ref(''); // Eingabewert als String
+const receiver = ref<number[]>([]); // Array von Nummern
 const checked = ref(false);
+const fetchedTemplates = ref<Template[]>([]);
+const editor = ref<Quill | null>(null);
+
+const closeDropdown = () => {
+  dropdownVisible.value = false;
+};
+
+onMounted(() => {
+  getTemplates()
+  editor.value = new Quill('#editor');
+  nextTick(() => {
+    if (selectedTemplate.value) {
+      onEditorReady(editor.value);
+    }
+  });
+
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  const searchSelectBox = document.getElementById('searchSelectBox');
+  if (searchSelectBox && !searchSelectBox.contains(target)) {
+    closeDropdown();
+  }
+};
 
 const date = ref({
-  day: new Date().getDate(),
-  month: new Date().getMonth() + 1, // Monate sind 0-basiert, daher +1
+  day: new Date().getDate().toString().padStart(2, "0"),
+  month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
   year: new Date().getFullYear()
 });
 
 const time = ref({
   hours: new Date().getHours(),
-  minutes: new Date().getMinutes()
+  minutes: new Date().getMinutes().toString().padStart(2,"0"),
 });
 
 const scheduledAt = ref({
@@ -48,49 +68,73 @@ const scheduledAt = ref({
 
 const filterFunction = () => {
   const filterValue = filter.value.trim().toLowerCase();
-  items.forEach(item => {
-    const txtValue = item.label.toLowerCase();
-    item.visible = txtValue.includes(filterValue);
+  fetchedTemplates.value.forEach(item => {
+    item.visible = item.name.toLowerCase().includes(filterValue);
   });
 };
 
 watch(filter, () => {
   filterFunction();
+  dropdownVisible.value = filter.value.length > 0;
 });
 
 const showDropdown = () => {
-  dropdownVisible.value = true;
+  dropdownVisible.value = filter.value.length > 0;
 };
-
-const selectTemplate = (template: DropdownItem) => {
-  selectedTemplate.value = template;
-  dropdownVisible.value = false;
-  filter.value = selectedTemplate.value.label;
-};
-
-const checkIfAlreaySelected = () => {
-  filter.value = '';
-}
-
-let htmlContent = '<p>This is <h1>HTML</h1> content.</p>';
 
 const onEditorReady = (editor: Quill) => {
-  editor.root.innerHTML = htmlContent; // HTML-Inhalt in den Editor einfügen
+  if (selectedTemplate.value) {
+    console.log(selectedTemplate.value.content);
+    editor.root.innerHTML = selectedTemplate.value.content;
+  }
 };
 
-onMounted(() => {
-  const editor = new Quill('#editor');
-  onEditorReady(editor);
-});
+const selectTemplate = (template: Template) => {
+  selectedTemplate.value = template;
+  filter.value = template.name;
+  setTimeout(() => {
+    closeDropdown();
+  }, 0);
+
+  if (editor.value) {
+    nextTick(() => {
+      onEditorReady(editor.value);
+    });
+  }
+};
+
+const getTemplates = async () => {
+  const response = await Service.getInstance().getVorlagen();
+  fetchedTemplates.value = response.data.map((template: { id: number; name: string; headline: string; greeting: string; content: string }) => ({
+    ...template,
+    visible: true
+  }));
+};
+
+const parseReceiverInput = () => {
+  receiver.value = receiverInput.value.split(',').map(Number);
+};
+
+const parseDate = () => {
+  if(checked == ref(false)){
+    return `${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z`;
+  } else{
+    return null;
+  }
+}
 
 const sendMail = async () => {
   try {
+    parseReceiverInput();
     console.log(receiver);
     const mailForm = {
-      receiver: receiver.value,
+      receiver: {
+        contacts: receiver.value,
+        groups: []
+      },
       templateId: selectedTemplate.value?.id,
       personalized: true,  //todo: must be optimized if bauer wants the checkbox
-      scheduledAt: scheduledAt.value,
+      scheduledAt: parseDate(),
     };
     console.log(mailForm);
     const response = await Service.getInstance().sendEmails(mailForm);
@@ -116,16 +160,17 @@ const handleSubmit = () => {
       <form>
         <div id="receiverFlexBox">
           <div class="boxLabel">
-          <label for="an" class="mail-label">An:</label><br>
+            <label for="an" class="mail-label">An:</label><br>
           </div>
-          <input type="text" id="an" class="mailForm" v-model="receiver">
+          <input type="text" id="an" class="mailForm" v-model="receiverInput">
         </div>
 
 
         <div id="formFlexBox">
           <div id="dateFlexBox">
             <div class="boxLabel">
-              <label class="mail-label">Senden am:</label></div><br>
+              <label class="mail-label">Senden am:</label></div>
+            <br>
             <div id="checkboxSendLater">
               <input type="checkbox" id="date" v-model="checked">
               <label for="date">später senden</label>
@@ -141,13 +186,16 @@ const handleSubmit = () => {
 
           <div id="templateBox">
             <div class="boxLabel">
-              <label for="template" class="mail-label">Vorlagen:</label></div><br>
+              <label for="template" class="mail-label">Vorlagen:</label></div>
+            <br>
             <div id="searchSelectBox">
-              <div><input type="text" id="myInput" v-model="filter" placeholder="Search.." @input="filterFunction"
-                          @focus="showDropdown" @click="checkIfAlreaySelected" class="mailForm"></div>
+              <div>
+                <input type="text" id="myInput" v-model="filter" placeholder="Search.." @input="filterFunction"
+                       @focus="showDropdown" class="mailForm">
+              </div>
               <div v-if="dropdownVisible" class="dropdown-content">
-                <a v-for="item in filteredItems" :key="item.id" v-show="item.visible"
-                   @click="selectTemplate(item)">{{ item.label }}</a>
+                <a v-for="item in fetchedTemplates" :key="item.id" v-show="item.visible"
+                   @click="selectTemplate(item)">{{ item.name }}</a>
               </div>
             </div>
           </div>
@@ -162,18 +210,17 @@ const handleSubmit = () => {
 </template>
 
 <style scoped>
-#date{
+#date {
   margin-right: 2vw;
   margin-left: 1vw;
 }
-.boxLabel{
+
+.boxLabel {
   width: 6vw;
 }
-#checkboxSendLater{
-  width: 15vw;
-}
-#searchSelectBox {
 
+#checkboxSendLater {
+  width: 15vw;
 }
 
 #datepickerFlexBox {
@@ -182,7 +229,7 @@ const handleSubmit = () => {
   flex-direction: row;
 }
 
-.datepicker{
+.datepicker {
   width: 8vw; /* Hier können Sie die gewünschte Schriftgröße angeben */
 }
 
@@ -280,6 +327,7 @@ body {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
   max-height: 25vh;
   overflow-y: scroll;
+  cursor: pointer;
 }
 
 /* Links inside the dropdown */

@@ -4,13 +4,13 @@ import {logout} from "@/services/auth.service";
 
 <template>
   <div id="headerNav">
-    <img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45">
+    <RouterLink to="/"><img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45"></RouterLink>
     <div id="HeaderLinkBox">
       <RouterLink to="/projekte" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
       <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
     </div>
     <div id="profilBox">
-      <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">)
+      <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">
     </div>
   </div>
 </template>

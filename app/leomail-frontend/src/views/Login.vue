@@ -117,15 +117,15 @@ form {
 
 @media (min-width: 1001px) {
   #login-container {
-    width: 70%;
+    width: 40%;
     align-items: center;
     justify-content: center;
-    height: 50vh;
+    height: 60vh;
   }
 
   .formLogin {
-    font-size: 1.5rem;
-    width: 50vw;
+    font-size: 0.8rem;
+    width: 30vw;
   }
 
   #loginButton{
@@ -139,15 +139,15 @@ form {
 
 @media (max-width: 1000px) {
   #login-container {
-    width: 70%;
+    width: 50%;
     align-items: center;
     justify-content: center;
-    height: 50vh;
+    height: 60vh;
   }
 
   .formLogin {
     font-size: 1.5rem;
-    width: 50vw;
+    width: 40vw;
   }
 
   #loginButton{
@@ -181,7 +181,7 @@ form {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   #login-container {
     width: 90%;
     align-items: center;

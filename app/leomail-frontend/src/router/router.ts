@@ -51,7 +51,7 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/projekte',
+      path: '/',
       name: 'projekte',
       component: ProjekteView,
       meta: { requiresAuth: true }

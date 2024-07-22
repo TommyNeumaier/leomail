@@ -1,13 +1,90 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue'
 import MailFormComponent from "@/components/MailFormComponent.vue";
+import {Service} from "@/stores/service";
 
-const mails = ref([]);
+
+interface MailMeta {
+  templateName: string;
+  mailHeadline: string;
+  mailContent: string;
+  greetingId: number;
+}
+
+interface MailKeyDates {
+  created: string;
+  sentOn: string;
+  scheduledAt: string | null;
+}
+
+interface MailAccountInformation {
+  createdBy: string;
+  sentBy: string;
+}
+
+interface Contact {
+  id: number;
+  firstName: string;
+  lastName: string;
+  mailAddress: string;
+}
+
+interface MailDetails {
+  contact: Contact;
+  content: string;
+}
+
+interface Mail {
+  id: number;
+  meta: MailMeta;
+  keyDates: MailKeyDates;
+  accountInformation: MailAccountInformation;
+  mails: MailDetails[];
+  visible: boolean;
+}
+
+const fetchedMails = ref<Mail[]>([]);
 const startIndex = ref(1);
 const endIndex = ref(10);
 const totalMails = ref(50);
 const limit = ref(10);
 const showEmailForm = ref(false);
+
+const getMails = async () => {
+  const response = await Service.getInstance().getSendEmails();
+  fetchedMails.value = response.data.map((mail: any) => ({
+    id: mail.id,
+    meta: {
+      templateName: mail.meta.templateName,
+      mailHeadline: mail.meta.mailHeadline,
+      mailContent: mail.meta.mailContent,
+      greetingId: mail.meta.greetingId,
+    },
+    keyDates: {
+      created: mail.keyDates.created,
+      sentOn: mail.keyDates.sentOn,
+      scheduledAt: mail.keyDates.scheduledAt,
+    },
+    accountInformation: {
+      createdBy: mail.accountInformation.createdBy,
+      sentBy: mail.accountInformation.sentBy,
+    },
+    mails: mail.mails.map((mailDetail: any) => ({
+      contact: {
+        id: mailDetail.contact.id,
+        firstName: mailDetail.contact.firstName,
+        lastName: mailDetail.contact.lastName,
+        mailAddress: mailDetail.contact.mailAddress,
+      },
+      content: mailDetail.content,
+    }))
+  }))
+  console.log(fetchedMails.value);
+}
+
+onMounted(()=> {
+  getMails();
+})
 
 const clickedEmailForm = () => {
   showEmailForm.value = true;
@@ -31,13 +108,10 @@ const increment = () => {
   }
 };
 
-/*const displayedItems = computed(() => {
-  return mails.value.slice(startIndex.value, endIndex.value + 1);
-});
-
-onMounted(() => {
-  displayedItems;
-})*/
+const handleEmailClick = (mailAddress: string) => {
+  console.log('Clicked email:', mailAddress);
+  // Add your logic here to handle the email click event, e.g., navigate to a detailed view or open a modal
+};
 
 </script>
 
@@ -98,6 +172,11 @@ onMounted(() => {
 
     <div id="mailsBox">
       <div id="mailContentBox">
+        <div v-for="email in fetchedMails" :key="email.id">
+          <a v-for="mailDetail in email.mails" :key="mailDetail.contact.id" @click="handleEmailClick(mailDetail.contact.mailAddress)">
+            {{ mailDetail.contact.mailAddress }} - {{ email.meta.mailHeadline }}<br>
+          </a>
+        </div>
       </div>
     </div>
   </div>
