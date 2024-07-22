@@ -55,15 +55,14 @@ public class MailRepository {
         }
 
         usedTemplate.sentOn = LocalDateTime.now();
-
-        Multi.createFrom().iterable(usedTemplate.mails)
-                .onItem().transform(sentMail -> Mail.withHtml(sentMail.contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent))
-                .subscribe().with(mail -> mailer.send(mail));
+        sendMail(usedTemplate.mails);
     }
 
     public void sendMail(List<SentMail> sentMails) {
         Multi.createFrom().iterable(sentMails)
-                .onItem().transform(sentMail -> Mail.withHtml(sentMail.contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent))
+                .invoke(sentMail -> sentMail.sent = true)
+                .onItem()
+                .transform(sentMail -> Mail.withHtml(sentMail.contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent))
                 .subscribe().with(mail -> mailer.send(mail));
     }
 
