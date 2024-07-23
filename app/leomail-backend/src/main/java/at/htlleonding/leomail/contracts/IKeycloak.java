@@ -21,7 +21,8 @@ public interface IKeycloak {
                                 @FormParam("client_secret") String clientSecret,
                                 @FormParam("grant_type") String grantType,
                                 @FormParam("username") String username,
-                                @FormParam("password") String password);
+                                @FormParam("password") String password,
+                                @FormParam("scope") String scope);
 
     @POST
     @Path("/token")

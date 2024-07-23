@@ -19,20 +19,25 @@
 
 <script setup lang="ts">
 import {ref} from 'vue';
-import {useRouter} from 'vue-router';
 import {login} from "@/services/auth.service";
 import HeaderLoginComponent from "@/components/HeaderLoginComponent.vue";
+import router from "@/configs/router";
 
 const username = ref('');
 const password = ref('');
 const errorMessage = ref('');
-const router = useRouter();
 
 const handleLogin = async () => {
-  if (await login(username.value, password.value) === false) {
-    errorMessage.value = 'Invalid username or password';
-  } else router.push("/").then(() => {});
+  try {
+    const loginSuccess = await login(username.value, password.value);
+    if (loginSuccess) {
+      router.push('/gruppen').then(() => {});
+    }
+  } catch (error) {
+    errorMessage.value = error.message;
+  }
 };
+
 </script>
 
 <style scoped>

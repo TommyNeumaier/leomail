@@ -1,9 +1,11 @@
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
 import {useAuthStore} from '@/stores/auth.store';
 
 export const login = async (username: string, password: string) => {
     try {
-        const response = await axios.post('/api/auth/login', new URLSearchParams({
+        const authStore = useAuthStore();
+
+        await axios.post('/api/auth/login', new URLSearchParams({
             username,
             password
         }), {
@@ -11,19 +13,14 @@ export const login = async (username: string, password: string) => {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             isLoginRequest: true
+        }).then((response) => {
+            const {access_token, refresh_token} = response.data;
+            authStore.setTokens(access_token, refresh_token);
         });
-        const { access_token, refresh_token } = response.data;
-        const authStore = useAuthStore();
-
-        const isValid = await validateToken(access_token);
-
-        if (!isValid) {
-            return false;
-        }
-
-        authStore.setTokens(access_token, refresh_token);
-        return access_token;
-    } catch (error) {return false;}
+        return true;
+    } catch (error) {
+        throw new Error("Kein Benutzer, passend zu den eingegebenen Daten, gefunden.");
+    }
 };
 
 export const refreshToken = async () => {
@@ -41,8 +38,6 @@ export const refreshToken = async () => {
 
             const { access_token, refresh_token: new_refresh_token } = response.data;
             authStore.setTokens(access_token, new_refresh_token);
-            console.log("new access token", access_token)
-            console.log("new refresh token", new_refresh_token)
             return access_token;
         } catch (error) {
             authStore.logout();
@@ -52,12 +47,14 @@ export const refreshToken = async () => {
 
 export const validateToken = async (token: string) => {
     try {
-        const response = await axios.get('/api/auth/validate', {
+        await axios.get('/api/auth/validate', {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
             }
+        }).then((response: AxiosResponse<boolean, boolean>) => {
+            return response.status === 200;
         });
-        return response.status === 200;
     } catch (error) {
         return false;
     }

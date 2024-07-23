@@ -4,6 +4,7 @@ import at.htlleonding.leomail.model.dto.KeycloakTokenIntrospectionResponse;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
 import at.htlleonding.leomail.contracts.IKeycloak;
 import io.quarkus.security.Authenticated;
+import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -34,6 +35,7 @@ public class AuthResource {
 
     @POST
     @Path("/login")
+    @PermitAll
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response login(
             @FormParam("username") String username,
@@ -45,9 +47,11 @@ public class AuthResource {
                     clientSecret,
                     "password",
                     username,
-                    password);
+                    password,
+                    "openid");
             return Response.ok(tokenResponse).build();
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
     }
@@ -66,7 +70,6 @@ public class AuthResource {
                     "refresh_token",
                     refreshToken
             );
-            System.out.println(tokenResponse);
             return Response.ok(tokenResponse).build();
         } catch (Exception e) {
             e.printStackTrace();
@@ -76,7 +79,7 @@ public class AuthResource {
 
     @GET
     @Path("/validate")
-    @Authenticated
+    @PermitAll
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response validateToken() {
         try {
@@ -85,13 +88,13 @@ public class AuthResource {
                     clientSecret,
                     jwt.getRawToken()
             );
-            System.out.println(introspectionResponse);
             if (introspectionResponse.active()) {
                 return Response.ok().build();
             } else {
                 return Response.status(Response.Status.UNAUTHORIZED).build();
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
     }

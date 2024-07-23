@@ -6,7 +6,7 @@ import {createApp} from 'vue';
 import {createPinia} from 'pinia';
 import piniaPersist from "pinia-plugin-persistedstate";
 import App from "@/App.vue";
-import routerConfig from "@/configs/router.config";
+import router from "@/configs/router";
 import setupAxiosInterceptors from "@/configs/interceptor.config";
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -17,7 +17,7 @@ app.component('VueDatePicker', VueDatePicker);
 
 const pinia = createPinia();
 app.use(pinia);
-app.use(routerConfig);
+app.use(router);
 
 pinia.use(piniaPersist);
 

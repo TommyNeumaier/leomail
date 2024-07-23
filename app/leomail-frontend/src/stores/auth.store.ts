@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import routerConfig from "@/configs/router.config";
+import router from "@/configs/router";
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -31,16 +31,16 @@ export const useAuthStore = defineStore('auth', {
                 this.setTokens(access_token, new_refresh_token);
                 return access_token;
             } catch (error) {
-                console.error('Error refreshing token:', error); // Debugging step
+                console.error('Error refreshing token:', error);
                 this.logout();
                 throw error;
             }
         },
         logout() {
-            console.log('Logging out'); // Debugging step
+            console.log('Logging out');
             this.accessToken = '';
             this.refreshToken = '';
-            routerConfig.push("/login").then(() => {});
+            router.push("/login").then(() => {});
         }
     },
     persist: true
