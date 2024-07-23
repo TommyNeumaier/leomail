@@ -32,6 +32,7 @@ public class TemplateRepository {
         return em.createQuery("select t from Template t", Template.class)
                 .getResultList()
                 .stream()
+                .filter(template -> template.getClass() == Template.class)
                 .map(template -> new TemplateDTO(template.id, template.name, template.headline, template.content, template.greeting.id, template.createdBy.userName)).toList();
     }
 

@@ -18,7 +18,7 @@ public class Group extends PanacheEntity {
     @ManyToOne
     public Project project;
 
-    @OneToMany(mappedBy = "group")
+    @ManyToMany
     public List<Contact> members;
 
     public Group() {

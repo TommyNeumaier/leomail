@@ -32,7 +32,7 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
   if (to.meta.requiresAuth) {
-    const accessToken = authStore.accessToken;
+    const accessToken = authStore.$state.accessToken;
 
     if (!accessToken) {
       console.log('No access token found, redirecting to login');

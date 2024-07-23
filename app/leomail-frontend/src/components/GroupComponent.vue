@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {QuillEditor} from "@vueup/vue-quill";
 import {Service} from "@/stores/service";
+import {ref} from "vue";
 
 
 const addGroup = async () => {
@@ -45,6 +46,11 @@ const removeGroup = async () => {
     console.error('Fehler beim Löschen der Daten:', error);
   }
 };
+
+const inputName = ref('');
+const inputGroupDescription = ref('');
+const selectedPeople = ref('');
+const selectedTemplate = ref('');
 
 </script>
 
