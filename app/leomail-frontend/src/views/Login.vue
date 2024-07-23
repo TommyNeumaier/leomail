@@ -21,7 +21,7 @@
 import {ref} from 'vue';
 import {login} from "@/services/auth.service";
 import HeaderLoginComponent from "@/components/HeaderLoginComponent.vue";
-import router from "@/configs/router";
+import router from "@/configs/router.config";
 
 const username = ref('');
 const password = ref('');

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import router from "@/configs/router";
+import routerConfig from "@/configs/router.config";
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -40,7 +40,7 @@ export const useAuthStore = defineStore('auth', {
             console.log('Logging out');
             this.accessToken = '';
             this.refreshToken = '';
-            router.push("/login").then(() => {});
+            routerConfig.push("/login").then(() => {});
         }
     },
     persist: true
