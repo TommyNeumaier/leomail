@@ -1,7 +1,5 @@
 package at.htlleonding.leomail.entities;
 
-import io.quarkus.Generated;
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @SequenceGenerator(name = "seq_template", sequenceName = "seq_template", allocationSize = 1, initialValue = 5)
 public class Template extends PanacheEntityBase {
 
@@ -30,7 +27,7 @@ public class Template extends PanacheEntityBase {
     public String content;
 
     @ManyToOne
-    public Account createdBy;
+    public Contact createdBy;
 
     @ManyToOne
     public TemplateGreeting greeting;
@@ -39,7 +36,7 @@ public class Template extends PanacheEntityBase {
         this.created = LocalDateTime.now();
     }
 
-    public Template(String name, String headline, String content, Account createdBy, TemplateGreeting greeting) {
+    public Template(String name, String headline, String content, Contact createdBy, TemplateGreeting greeting) {
         this();
         this.name = name;
         this.headline = headline;
@@ -48,7 +45,7 @@ public class Template extends PanacheEntityBase {
         this.greeting = greeting;
     }
 
-    public Template(Long id, String name, String headline, String content, Account createdBy, TemplateGreeting greeting) {
+    public Template(Long id, String name, String headline, String content, Contact createdBy, TemplateGreeting greeting) {
         this(name, headline, content, createdBy, greeting);
         this.id = id;
     }

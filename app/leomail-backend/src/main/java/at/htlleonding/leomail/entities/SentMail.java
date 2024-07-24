@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 public class SentMail extends PanacheEntityBase {
 
@@ -18,7 +16,7 @@ public class SentMail extends PanacheEntityBase {
 
     @ManyToOne
     @JsonIgnore
-    public UsedTemplate usedTemplate;
+    public SentTemplate usedTemplate;
 
     @Column(length = 8192)
     public String actualContent;
@@ -28,7 +26,7 @@ public class SentMail extends PanacheEntityBase {
     public SentMail() {
     }
 
-    public SentMail(Contact contact, UsedTemplate usedTemplate, String content) {
+    public SentMail(Contact contact, SentTemplate usedTemplate, String content) {
         this.contact = contact;
         this.usedTemplate = usedTemplate;
         this.actualContent = content;

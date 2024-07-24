@@ -3,6 +3,9 @@ package at.htlleonding.leomail.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,9 +19,18 @@ public class Contact extends PanacheEntityBase {
     @Id
     public String id;
 
+    @Column(nullable = false)
+    public boolean kcUser = false;
+
     public String firstName;
+
     public String lastName;
+
     public String mailAddress;
+
+    @ManyToMany
+    @JsonIgnore
+    public List<Project> projects;
 
     @ElementCollection
     @CollectionTable(name = "contact_attributes", joinColumns = @JoinColumn(name = "id"))
@@ -31,12 +43,19 @@ public class Contact extends PanacheEntityBase {
     public List<Group> groups;
 
     public Contact() {
+
     }
 
-    public Contact(String firstName, String lastName, String mailAddress) {
+    public Contact(String id, String firstName, String lastName, String mailAddress) {
+        super();
         this.firstName = firstName;
         this.lastName = lastName;
         this.mailAddress = mailAddress;
+    }
+
+    public Contact(String id, String firstName, String lastName, String mailAddress, boolean kcUser) {
+        this(id, firstName, lastName, mailAddress);
+        this.kcUser = kcUser;
     }
 
     public String getFullName() {

@@ -1,7 +1,7 @@
 package at.htlleonding.leomail.services.scheduler;
 
 import at.htlleonding.leomail.entities.SentMail;
-import at.htlleonding.leomail.entities.UsedTemplate;
+import at.htlleonding.leomail.entities.SentTemplate;
 import at.htlleonding.leomail.repositories.MailRepository;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.annotation.PostConstruct;
@@ -25,8 +25,8 @@ public class MailScheduler {
     @Scheduled(every = "15s")
     @Transactional
     public void checkScheduledTemplates() {
-        List<UsedTemplate> usedTemplates = getAllScheduledUsedTemplates();
-        for (UsedTemplate usedTemplate : usedTemplates) {
+        List<SentTemplate> usedTemplates = getAllScheduledUsedTemplates();
+        for (SentTemplate usedTemplate : usedTemplates) {
             if ((usedTemplate.scheduledAt.isBefore(java.time.LocalDateTime.now()) || usedTemplate.scheduledAt.isEqual(java.time.LocalDateTime.now()) && usedTemplate.sentOn == null)) {
                 mailRepository.sendMail(usedTemplate.id);
             }
@@ -41,7 +41,7 @@ public class MailScheduler {
     }
 
 
-    private List<UsedTemplate> getAllScheduledUsedTemplates() {
-        return UsedTemplate.find("scheduledAt < ?1 and sentOn is null", java.time.LocalDateTime.now()).list();
+    private List<SentTemplate> getAllScheduledUsedTemplates() {
+        return SentTemplate.find("scheduledAt < ?1 and sentOn is null", java.time.LocalDateTime.now()).list();
     }
 }

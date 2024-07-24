@@ -33,7 +33,7 @@ public class TemplateRepository {
                 .getResultList()
                 .stream()
                 .filter(template -> template.getClass() == Template.class)
-                .map(template -> new TemplateDTO(template.id, template.name, template.headline, template.content, template.greeting.id, template.createdBy.userName)).toList();
+                .map(template -> new TemplateDTO(template.id, template.name, template.headline, template.content, template.greeting.id, template.createdBy.id)).toList();
     }
 
     public Set<TemplateGreeting> getAllGreetings() {
@@ -46,7 +46,7 @@ public class TemplateRepository {
             throw new TemplateNameAlreadyExistsException();
         }
 
-        Account account = Account.find("userName", templateDTO.accountName()).firstResult();
+        Contact account = Contact.find("userName", templateDTO.accountName()).firstResult();
         if (account == null) {
             throw new NonExistingAccountException();
         }
@@ -76,17 +76,17 @@ public class TemplateRepository {
             throw new IllegalArgumentException("Template with id " + templateDTO.id() + " not found");
         }
         deleteById(templateDTO.id());
-        template = new Template(templateDTO.id(), templateDTO.name(), templateDTO.headline(), templateDTO.content(), Account.find("userName", templateDTO.accountName()).firstResult(), TemplateGreeting.findById(templateDTO.greeting()));
+        template = new Template(templateDTO.id(), templateDTO.name(), templateDTO.headline(), templateDTO.content(), Contact.find("userName", templateDTO.accountName()).firstResult(), TemplateGreeting.findById(templateDTO.greeting()));
         em.merge(template);
         return templateDTO;
     }
 
     public List<UsedTemplateDTO> getUsedTemplates(boolean scheduled) {
-        List<UsedTemplate> usedTemplateList = UsedTemplate.listAll();
+        List<SentTemplate> usedTemplateList = SentTemplate.listAll();
         List<UsedTemplateDTO> dtoList = new ArrayList<>();
 
-        for(UsedTemplate template : usedTemplateList) {
-            TemplateAccountInformationDTO accountInformation = new TemplateAccountInformationDTO(template.createdBy.userName.trim(), template.sentBy.userName.trim());
+        for(SentTemplate template : usedTemplateList) {
+            TemplateAccountInformationDTO accountInformation = new TemplateAccountInformationDTO(template.createdBy.id.trim(), template.sentBy.id.trim());
             TemplateDateInformationDTO dateInformation = new TemplateDateInformationDTO(template.created, template.sentOn, template.scheduledAt);
             TemplateMetaInformationDTO metaInformation = new TemplateMetaInformationDTO(template.name.trim(), template.headline.trim(), template.content.trim(), template.greeting.id);
 

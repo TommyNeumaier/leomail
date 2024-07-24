@@ -16,10 +16,10 @@ public class Project extends PanacheEntity {
     public LocalDateTime createdOn;
 
     @ManyToOne
-    public Account createdBy;
+    public Contact createdBy;
 
-    @OneToMany(mappedBy = "project")
-    public Set<Account> members;
+    @ManyToMany
+    public Set<Contact> members;
 
     @OneToMany(mappedBy = "project")
     public Set<Group> groups;
@@ -28,7 +28,7 @@ public class Project extends PanacheEntity {
         this.createdOn = LocalDateTime.now();
     }
 
-    public Project(String name, String description, Account createdBy) {
+    public Project(String name, String description, Contact createdBy) {
         this.name = name;
         this.description = description;
         this.createdBy = createdBy;

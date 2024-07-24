@@ -13,7 +13,7 @@ public class Group extends PanacheEntity {
     public String name;
 
     @ManyToOne
-    public Account createdBy;
+    public Contact createdBy;
 
     @ManyToOne
     public Project project;
@@ -24,7 +24,7 @@ public class Group extends PanacheEntity {
     public Group() {
     }
 
-    public Group(String name, Account createdBy, Project project) {
+    public Group(String name, Contact createdBy, Project project) {
         this.name = name;
         this.createdBy = createdBy;
         this.project = project;
