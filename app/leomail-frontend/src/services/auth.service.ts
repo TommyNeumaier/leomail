@@ -53,7 +53,7 @@ export const validateToken = async (token: string) => {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
         }).then((response: AxiosResponse<boolean, boolean>) => {
-            return response.status === 200;
+            return response.data;
         });
     } catch (error) {
         return false;

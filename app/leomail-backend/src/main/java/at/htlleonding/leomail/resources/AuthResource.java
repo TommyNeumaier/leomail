@@ -50,7 +50,6 @@ public class AuthResource {
                     "openid");
             return Response.ok(tokenResponse).build();
         } catch (Exception e) {
-            e.printStackTrace();
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
     }
@@ -85,8 +84,8 @@ public class AuthResource {
         long iat = jwt.getIssuedAtTime();
 
         if (exp > System.currentTimeMillis() && iat < System.currentTimeMillis())
-            return Response.ok().build();
+            return Response.ok(true).build();
         else
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Expired").build();
+            return Response.status(Response.Status.UNAUTHORIZED).entity(false).build();
     }
 }

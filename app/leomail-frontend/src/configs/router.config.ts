@@ -40,8 +40,8 @@ router.beforeEach(async (to, from, next) => {
     }
 
     try {
-      const isValid = await validateToken(accessToken).then((value: boolean) => {
-        return !value;
+      const isValid = validateToken(accessToken).then((value: boolean) => {
+        return value;
       });
 
       if (isValid) {
@@ -58,10 +58,12 @@ router.beforeEach(async (to, from, next) => {
           }
         }
         console.log('New access token is invalid, redirecting to login');
+        authStore.logout();
         return next({ name: 'login' });
       }
     } catch (error) {
       console.error('Error during token validation or refresh:', error);
+      authStore.logout();
       return next({ name: 'login' });
     }
   } else {
