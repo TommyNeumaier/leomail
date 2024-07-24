@@ -43,9 +43,11 @@ public class KeycloakAdminService {
         String token = getAdminToken();
         Client client = ClientBuilder.newClient();
 
-        // TODO: Only get users with valid email addresses, valid firstnames, and valid lastnames
         Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
-                .queryParam("search", searchTerm != null ? searchTerm : "")
+                .queryParam("search", searchTerm)
+                .queryParam("firstName", "")
+                .queryParam("lastName", "")
+                .queryParam("email", "@")
                 .queryParam("max", maxSearchResults)
                 .request(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + token)

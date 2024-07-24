@@ -77,7 +77,9 @@ public class ContactRepository {
             throw new ObjectContainsNullAttributesException(nullFields);
         }
 
-        Contact contact = new Contact(contactDTO.firstName(), contactDTO.lastName(), contactDTO.mailAddress(), contactDTO.prefixTitle(), contactDTO.suffixTitle(), contactDTO.company(), contactDTO.positionAtCompany(), contactDTO.gender());
+        Utilities.setEmptyStringsToNull(contactDTO);
+
+        Contact contact = new Contact(contactDTO.firstName().trim(), contactDTO.lastName().trim(), contactDTO.mailAddress().trim(), contactDTO.prefixTitle().trim(), contactDTO.suffixTitle().trim(), contactDTO.company().trim(), contactDTO.positionAtCompany().trim(), contactDTO.gender());
         contact.persist();
     }
 

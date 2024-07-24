@@ -4,6 +4,7 @@ import at.htlleonding.leomail.contracts.IKeycloak;
 import at.htlleonding.leomail.model.dto.authtest.JwtClaimTest;
 import at.htlleonding.leomail.model.dto.authtest.JwtTest;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
+import at.htlleonding.leomail.repositories.UserRepository;
 import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
@@ -33,6 +34,9 @@ public class AuthResource {
 
     @Inject
     JsonWebToken jwt;
+
+    @Inject
+    UserRepository userRepository;
 
     @GET
     @Path("jwt")
@@ -64,6 +68,8 @@ public class AuthResource {
                     username,
                     password,
                     "openid");
+
+
             return Response.ok(tokenResponse).build();
         } catch (Exception e) {
             return Response.status(Response.Status.UNAUTHORIZED).build();

@@ -1,27 +1,38 @@
 package at.htlleonding.leomail.entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
-public class Project extends PanacheEntity {
+public class Project extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    public String id;
+
     public String name;
     public String description;
     public LocalDateTime createdOn;
+
+    public String mailAddress;
+    public String password;
 
     @ManyToOne
     public Contact createdBy;
 
     @ManyToMany
-    public Set<Contact> members;
+    @JoinTable(
+            name = "project_contact",
+            joinColumns = @JoinColumn(name = "project_id"),
+            inverseJoinColumns = @JoinColumn(name = "contact_id")
+    )
+    public List<Contact> members;
 
-    @OneToMany(mappedBy = "project")
+    @OneToMany
     public Set<Group> groups;
 
     public Project() {
@@ -33,5 +44,12 @@ public class Project extends PanacheEntity {
         this.description = description;
         this.createdBy = createdBy;
         this.createdOn = LocalDateTime.now();
+    }
+
+    public Project(String name, String description, Contact createdBy, String mailAddress, String password, List<Contact> members) {
+        this(name, description, createdBy);
+        this.mailAddress = mailAddress;
+        this.password = password;
+        this.members = members;
     }
 }

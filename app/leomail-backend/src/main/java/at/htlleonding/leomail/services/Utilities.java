@@ -63,4 +63,22 @@ public class Utilities {
 
         return result;
     }
+
+    public static Object setEmptyStringsToNull(Object obj) {
+        Field[] fields = obj.getClass().getDeclaredFields();
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+
+            try {
+                if (field.get(obj) != null && field.get(obj).equals("")) {
+                    field.set(obj, null);
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return obj;
+    }
 }

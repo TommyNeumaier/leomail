@@ -24,10 +24,9 @@ public class ContactResource {
     ContactRepository contactRepository;
 
     @GET
-    @Path("/search")
+    @Path("/get")
     @Transactional
-    @CacheResult(cacheName = "contact-search")
-    public Response searchContacts() {
+    public Response getContacts() {
         List<ContactSearchDTO> results = contactRepository.searchContacts(null);
         return Response.ok(results).build();
     }

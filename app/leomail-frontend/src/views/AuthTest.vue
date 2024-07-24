@@ -2,7 +2,6 @@
 
 import HeaderComponent from "@/components/HeaderComponent.vue";
 import {onMounted, ref} from "vue";
-import * as http from "node:http";
 import axios from "axios";
 import {useAuthStore} from "@/stores/auth.store";
 
@@ -10,7 +9,7 @@ const jwt = ref("");
 const authStore = useAuthStore();
 
 const getJwt = () => {
-  axios.get("http://localhost:5173/api/auth/jwt", {
+  axios.get("/api/auth/jwt", {
     headers: {
       Authorization: "Bearer " + authStore.$state.accessToken
     }
