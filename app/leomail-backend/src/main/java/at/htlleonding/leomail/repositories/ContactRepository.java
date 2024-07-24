@@ -2,6 +2,7 @@ package at.htlleonding.leomail.repositories;
 
 import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.model.dto.contacts.ContactDTO;
+import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
 import at.htlleonding.leomail.services.KeycloakAdminService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -31,7 +32,7 @@ public class ContactRepository {
     public List<ContactDTO> searchContacts(String searchTerm) {
         CompletableFuture<List<Contact>> contactFuture = CompletableFuture.supplyAsync(() ->
                 Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1", "%" + searchTerm + "%")
-                        .page(0, 10)
+                        .page(0, maxResults)
                         .list(), managedExecutor
         );
 
@@ -60,5 +61,25 @@ public class ContactRepository {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error during parallel search", e);
         }
+    }
+
+    public ContactDTO addContact(ContactDTO contactDTO) {
+        if (!keycloakAdminService.searchUser(contactDTO.mailAddress(), 1).isEmpty())
+            throw new ContactExistsInKeycloakException("in keycloak");
+
+        if (Contact.find("mailAddress", contactDTO.mailAddress()).count() > 0)
+            throw new ContactExistsInKeycloakException("not in keycloak");
+
+        Contact contact = new Contact(contactDTO.id(), contactDTO.firstName(), contactDTO.lastName(), contactDTO.mailAddress());
+        contact.persist();
+        return new ContactDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress);
+    }
+
+    public void deleteContact(String id) {
+        Contact contact = Contact.findById(id);
+        if (contact == null) {
+            throw new IllegalArgumentException("Contact not found");
+        }
+        contact.delete();
     }
 }

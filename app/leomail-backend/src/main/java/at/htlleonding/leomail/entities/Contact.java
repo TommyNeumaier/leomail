@@ -28,6 +28,9 @@ public class Contact extends PanacheEntityBase {
 
     public String mailAddress;
 
+    @CreationTimestamp
+    public LocalDateTime created;
+
     @ManyToMany
     @JsonIgnore
     public List<Project> projects;

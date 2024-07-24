@@ -8,7 +8,7 @@ import at.htlleonding.leomail.model.dto.template.TemplateAccountInformationDTO;
 import at.htlleonding.leomail.model.dto.template.TemplateDateInformationDTO;
 import at.htlleonding.leomail.model.dto.template.TemplateMetaInformationDTO;
 import at.htlleonding.leomail.model.dto.template.mail.TemplateMailContactInformationDTO;
-import at.htlleonding.leomail.model.exceptions.account.NonExistingAccountException;
+import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
 import at.htlleonding.leomail.model.exceptions.greeting.NonExistingGreetingException;
 import at.htlleonding.leomail.model.exceptions.template.TemplateNameAlreadyExistsException;
 import io.quarkus.panache.common.Sort;
@@ -48,7 +48,7 @@ public class TemplateRepository {
 
         Contact account = Contact.find("userName", templateDTO.accountName()).firstResult();
         if (account == null) {
-            throw new NonExistingAccountException();
+            throw new ContactExistsInKeycloakException();
         }
 
         TemplateGreeting greeting = TemplateGreeting.findById(templateDTO.greeting());

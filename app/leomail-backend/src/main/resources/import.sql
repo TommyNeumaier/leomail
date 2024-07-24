@@ -29,11 +29,10 @@ VALUES (2, 'Liebe/r ... ,', '{#if personalized}
     Liebe Damen und Herren,
 {/if}
 ');
-
-INSERT INTO contact(kcuser, firstname, id, lastname, mailaddress)
-VALUES (false, 'Lana', '1', 'Sekerija (TEST)', 'sekerija.lana@gmail.com'),
-       (false, 'Tommy', '2', 'Neumaier (TEST)', 'neumaier.tommy@gmail.com'),
-       (false, 'Thomas', '3', 'Müller (TEST)', 't.m@esn.com');
+INSERT INTO contact(kcuser, firstname, id, lastname, mailaddress, created)
+VALUES (false, 'Lana', '1', 'Sekerija (TEST)', 'sekerija.lana@gmail.com', NOW()),
+       (false, 'Tommy', '2', 'Neumaier (TEST)', 'neumaier.tommy@gmail.com', NOW()),
+       (false, 'Thomas', '3', 'Müller (TEST)', 't.m@esn.com', NOW());
 
 insert into contact_attributes(id, key, val) VALUES
                                                  (1, 'sex', 'M'),

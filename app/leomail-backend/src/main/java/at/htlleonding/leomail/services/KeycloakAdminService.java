@@ -1,7 +1,9 @@
 package at.htlleonding.leomail.services;
 
 import at.htlleonding.leomail.contracts.IKeycloak;
+import at.htlleonding.leomail.model.dto.contacts.ContactDTO;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
+import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
@@ -43,8 +45,9 @@ public class KeycloakAdminService {
         String token = getAdminToken();
         Client client = ClientBuilder.newClient();
 
+        // TODO: Only get users with valid email addresses, valid firstnames, and valid lastnames
         Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
-                .queryParam("search", searchTerm)
+                .queryParam("search", searchTerm != null ? searchTerm : "")
                 .queryParam("max", maxSearchResults)
                 .request(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + token)
