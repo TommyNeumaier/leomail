@@ -9,11 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@SequenceGenerator(name = "seq_used_template", sequenceName = "seq_used_template", allocationSize = 2, initialValue = 2)
 public class UsedTemplate extends Template {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_used_template")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_template")
     public Long id;
 
     public LocalDateTime sentOn;

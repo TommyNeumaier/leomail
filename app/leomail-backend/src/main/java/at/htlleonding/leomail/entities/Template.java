@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@SequenceGenerator(name = "seq_template", sequenceName = "seq_template", allocationSize = 2, initialValue = 5)
+@SequenceGenerator(name = "seq_template", sequenceName = "seq_template", allocationSize = 1, initialValue = 5)
 public class Template extends PanacheEntityBase {
 
     @Id

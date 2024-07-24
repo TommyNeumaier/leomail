@@ -2,6 +2,7 @@ package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.model.SMTPInformation;
 import at.htlleonding.leomail.repositories.MailRepository;
+import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -17,6 +18,7 @@ public class MailResource {
     @POST
     @Path("sendByTemplate")
     @Transactional
+    @Authenticated
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     public Response sendMailByTemplate(SMTPInformation smtpInformation) {
