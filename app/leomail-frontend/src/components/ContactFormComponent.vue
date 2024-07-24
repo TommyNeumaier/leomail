@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
+import {Service} from "@/stores/service";
 
 const picked = ref<string>(''); // Holds the value of the selected gender
 const pickedEntity = ref<string>(''); // Holds the value of the selected entity
 const checkedUnternehmen = ref(false);
 const checkedPrivatperson = ref(false);
+const firstname = ref('');
+const lastname = ref('');
+const email = ref('');
 
 const handleGenderChange = (gender: string) => {
   picked.value = gender;
@@ -20,10 +24,27 @@ const handleEntities = (entity: string) => {
     checkedPrivatperson.value = true;
   }
 };
+
+const saveContact = async () => {
+  if (checkedPrivatperson){
+    try {
+      const contactForm = {
+        firstname: firstname.value,
+        lastname: lastname.value,
+        mailAddress: email.value
+    };
+      console.log(contactForm);
+      const response = await Service.getInstance().addContact(contactForm);
+      console.log('Erfolgreich gesendet:', response.data);
+    } catch (error) {
+      console.error('Fehler beim Senden der Daten:', error);
+    }
+  }
+}
 </script>
 
 <template>
-  <form>
+  <form @submit="saveContact">
     <div id="contentContainer">
       <h3 id="headline">Neue Person</h3>
       <div id="formular">
@@ -83,16 +104,16 @@ const handleEntities = (entity: string) => {
           <div id="nameBox">
             <div>
               <label for="firstName" class="personen-label">Vorname</label><br>
-              <input type="text" id="firstName" class="formPerson" required>
+              <input type="text" id="firstName" class="formPerson" v-model="firstname" required>
             </div>
             <div>
               <label for="lastName" class="personen-label">Nachname</label><br>
-              <input type="text" id="lastName" class="formPerson" required>
+              <input type="text" id="lastName" class="formPerson" v-model="lastname" required>
             </div>
           </div>
           <div>
             <label for="email" class="personen-label">Email</label><br>
-            <input type="email" id="email" class="formPerson" placeholder="z.Bsp. max.muster@gmail.com" required>
+            <input type="email" id="email" class="formPerson" placeholder="z.Bsp. max.muster@gmail.com" v-model="email" required>
           </div>
           <div>
             <div>

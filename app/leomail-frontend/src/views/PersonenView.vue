@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import HeaderComponent from "@/components/HeaderComponent.vue";
-import PersonenFormComponent from "@/components/PersonenFormComponent.vue";
+import PersonenFormComponent from "@/components/ContactFormComponent.vue";
 </script>
 
 <template>

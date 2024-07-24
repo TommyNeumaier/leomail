@@ -44,4 +44,8 @@ export class Service{
     public getSendEmails(){
         return axios.get(`/api/template/getUsedTemplates?scheduled=false`);
     }
+
+    public addContact(formData: any) {
+        return axios.post(`/api/users/add`, formData)
+    }
 }
