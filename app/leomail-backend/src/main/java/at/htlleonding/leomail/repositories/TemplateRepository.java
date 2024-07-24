@@ -48,7 +48,7 @@ public class TemplateRepository {
 
         Contact account = Contact.find("userName", templateDTO.accountName()).firstResult();
         if (account == null) {
-            throw new ContactExistsInKeycloakException();
+            throw new ContactExistsInKeycloakException("Account with username " + templateDTO.accountName() + " not found");
         }
 
         TemplateGreeting greeting = TemplateGreeting.findById(templateDTO.greeting());
