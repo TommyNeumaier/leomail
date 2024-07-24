@@ -2,7 +2,10 @@
 import {computed, onMounted, ref} from 'vue'
 import MailFormComponent from "@/components/MailFormComponent.vue";
 import {Service} from "@/stores/service";
+import { parseISO, format, isToday, isYesterday, subDays, isSameDay } from 'date-fns';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 
 interface MailMeta {
   templateName: string;
@@ -49,10 +52,24 @@ const endIndex = ref(10);
 const totalMails = ref(50);
 const limit = ref(10);
 const showEmailForm = ref(false);
+const checkAllMails = ref(false);
 
 const getMails = async () => {
   const response = await Service.getInstance().getSendEmails();
-  fetchedMails.value = response.data.map((mail: any) => ({
+  fetchedMails.value = response.data.map((mail: any) => {
+    const sentOnDate = parseISO(mail.keyDates.sentOn);
+    let formattedSentOn;
+
+    if(isToday(sentOnDate)){
+    formattedSentOn = format(sentOnDate, 'HH:mm');}
+  else if (isYesterday(sentOnDate)) {
+    formattedSentOn = 'gestern';
+  } else if (isSameDay(sentOnDate, subDays(new Date(), 2))) {
+    formattedSentOn = 'vorgestern';
+  } else {
+    formattedSentOn = format(sentOnDate, 'yyyy-MM-dd');
+  }
+  return {
     id: mail.id,
     meta: {
       templateName: mail.meta.templateName,
@@ -62,7 +79,7 @@ const getMails = async () => {
     },
     keyDates: {
       created: mail.keyDates.created,
-      sentOn: mail.keyDates.sentOn,
+      sentOn: formattedSentOn,
       scheduledAt: mail.keyDates.scheduledAt,
     },
     accountInformation: {
@@ -78,16 +95,18 @@ const getMails = async () => {
       },
       content: mailDetail.content,
     }))
-  }))
+  }
+})
   console.log(fetchedMails.value);
 }
 
-onMounted(()=> {
+onMounted(() => {
   getMails();
 })
 
 const clickedEmailForm = () => {
-  showEmailForm.value = true;
+  //showEmailForm.value = true;
+  router.push({ name: 'neu' });
 }
 
 const decrement = () => {
@@ -108,8 +127,8 @@ const increment = () => {
   }
 };
 
-const handleEmailClick = (mailAddress: string) => {
-  console.log('Clicked email:', mailAddress);
+const handleEmailClick = (mailId: number) => {
+  console.log('Clicked email id:', mailId);
   // Add your logic here to handle the email click event, e.g., navigate to a detailed view or open a modal
 };
 
@@ -139,7 +158,7 @@ const handleEmailClick = (mailAddress: string) => {
     <div id="bigFeaturesContainer">
       <div id="mailFeaturesContainer">
         <div>
-          <input type="checkbox" id="checkbox"/> <!--checkbox when all mails should be checked-->
+          <input type="checkbox" v-model="checkAllMails" id="checkbox"/> <!--checkbox when all mails should be checked-->
         </div>
         <div>
           <img src="../assets/reload.png" alt="Reload" id="reload-icon" width="auto" height="12">
@@ -172,10 +191,13 @@ const handleEmailClick = (mailAddress: string) => {
 
     <div id="mailsBox">
       <div id="mailContentBox">
-        <div v-for="email in fetchedMails" :key="email.id">
-          <a v-for="mailDetail in email.mails" :key="mailDetail.contact.id" @click="handleEmailClick(mailDetail.contact.mailAddress)">
-            {{ mailDetail.contact.mailAddress }} - {{ email.meta.mailHeadline }}<br>
-          </a>
+        <div v-for="email in fetchedMails" :key="email.id" @click="handleEmailClick(email.id)" class="emailElement">
+          <input type="checkbox" id="checkbox"/>
+          <p v-for="mailDetail in email.mails" :key="mailDetail.contact.id">
+            {{ mailDetail.contact.lastName }} {{ mailDetail.contact.firstName }},
+          </p>
+          <p>{{ email.meta.mailHeadline }}</p>
+          <p>{{ email.keyDates.sentOn }}</p>
         </div>
       </div>
     </div>
@@ -183,6 +205,12 @@ const handleEmailClick = (mailAddress: string) => {
 </template>
 
 <style scoped>
+.emailElement {
+  display: flex;
+  flex-direction: row;
+  border: black solid 1px;
+}
+
 #form {
   width: 86vw;
   margin-top: 4vh;

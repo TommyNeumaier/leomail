@@ -1,13 +1,26 @@
 <script setup lang="ts">
 
 import HeaderComponent from "@/components/HeaderComponent.vue";
+import {useRouter} from 'vue-router';
+
+const router = useRouter();
+const clickedNewProject = () => {
+  //showEmailForm.value = true;
+  router.push({name: 'neueProjekte'});
+}
 </script>
 
 <template>
   <header-component></header-component>
   <div id="bigContainer">
     <div id="listContainer">
-      <h3 id="headline">Projekte</h3>
+
+      <div id="flexHeadline">
+        <div>
+          <h3 id="headline">Projekte</h3></div>
+        <div><div @click="clickedNewProject" id="newMailButton"><img src="../assets/icons/newMail-white.png"></div></div>
+      </div>
+
       <div id="search-container">
         <div id="searchIconBox">
           <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
@@ -17,26 +30,65 @@ import HeaderComponent from "@/components/HeaderComponent.vue";
     </div>
 
     <div id="contentContainer">
-        <div id="infoLeoMail">
-          <h3 id="headlineInfo">LeoMail</h3>
-          <p>LeoMail ist eine innovative Softwarelösung, die es Ihnen ermöglicht, personalisierte E-Mails an Gruppen zu versenden und Projekte effizient zu verwalten.<br><br>
+      <div id="infoLeoMail">
+        <h3 id="headlineInfo">LeoMail</h3>
+        <p>LeoMail ist eine innovative Softwarelösung, die es Ihnen ermöglicht, personalisierte E-Mails an Gruppen zu
+          versenden und Projekte effizient zu verwalten.<br><br>
 
-            Mit LeoMail können Sie ganz einfach individuelle E-Mails erstellen, die auf die Bedürfnisse und Interessen Ihrer Empfänger zugeschnitten sind.<br><br>
+          Mit LeoMail können Sie ganz einfach individuelle E-Mails erstellen, die auf die Bedürfnisse und Interessen
+          Ihrer Empfänger zugeschnitten sind.<br><br>
 
-            Die benutzerfreundliche Oberfläche erlaubt es, verschiedene Gruppen zu definieren und spezifische Nachrichten an jede Gruppe zu senden, was die Kommunikation erheblich verbessert.</p>
-        </div>
+          Die benutzerfreundliche Oberfläche erlaubt es, verschiedene Gruppen zu definieren und spezifische Nachrichten
+          an jede Gruppe zu senden, was die Kommunikation erheblich verbessert.</p>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-#headlineInfo{
+#flexHeadline{
+  display: flex;
+  flex-direction: row;
+}
+
+#flexHeadline *{
+  width: 50%;
+}
+#newMailButton {
+  background-color: #0086D4;
+  border-radius: 25%;
+  border-color: #0086D4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 18%;
+  margin-left: 70%;
+  margin-top: 2vh;
+}
+
+#newMailButton:focus{
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+#newMailButton:hover{
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+#newMailButton img {
+  width: 100%;
+  height: auto;
+  padding: 10%;
+}
+
+#headlineInfo {
   font-weight: var(--font-weight-medium);
 }
-#infoLeoMail p{
+
+#infoLeoMail p {
   font-size: 0.8rem;
 }
-#infoLeoMail{
+
+#infoLeoMail {
   width: 90%;
   height: auto;
   padding: 4%;
@@ -47,10 +99,12 @@ import HeaderComponent from "@/components/HeaderComponent.vue";
   margin: auto;
   margin-top: 5%;
 }
-#headline{
+
+#headline {
   font-weight: var(--font-weight-medium);
   padding: 2vh 0 1vh 1.5vw;
 }
+
 #searchIconBox {
   display: flex;
   align-items: center;
@@ -75,7 +129,7 @@ import HeaderComponent from "@/components/HeaderComponent.vue";
   font-size: 0.3rem;
 }
 
-#bigContainer{
+#bigContainer {
   width: 80%;
   height: 80vh;
   display: flex;
@@ -84,11 +138,13 @@ import HeaderComponent from "@/components/HeaderComponent.vue";
   margin-top: 4vh;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 }
-#listContainer{
+
+#listContainer {
   width: 25%;
   border-right: rgba(0, 0, 0, 0.20) solid 2px;
 }
-#contentContainer{
+
+#contentContainer {
   width: 75%;
 }
 </style>

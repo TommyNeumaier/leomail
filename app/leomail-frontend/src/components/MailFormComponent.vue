@@ -3,6 +3,7 @@ import {computed, nextTick, onMounted, onUnmounted, ref, watch} from "vue";
 import {Quill, QuillEditor} from "@vueup/vue-quill";
 import {Service} from "@/stores/service";
 import '@vuepic/vue-datepicker/dist/main.css';
+import {format} from "date-fns";
 
 interface Template {
   id: number;
@@ -16,8 +17,8 @@ interface Template {
 const filter = ref('');
 const dropdownVisible = ref(false);
 const selectedTemplate = ref<Template | null>(null);
-const receiverInput = ref(''); // Eingabewert als String
-const receiver = ref<number[]>([]); // Array von Nummern
+const receiverInput = ref('');
+const receiver = ref<number[]>([]);
 const checked = ref(false);
 const fetchedTemplates = ref<Template[]>([]);
 const editor = ref<Quill | null>(null);
@@ -57,13 +58,24 @@ const date = ref({
 });
 
 const time = ref({
-  hours: new Date().getHours(),
+  hours: new Date().getHours().toString().padStart(2,"0"),
   minutes: new Date().getMinutes().toString().padStart(2,"0"),
 });
 
 const scheduledAt = ref({
   ...date.value,
   ...time.value
+});
+
+watch(date, (newDate) => {
+  scheduledAt.value.year = newDate.getFullYear().toString();
+  scheduledAt.value.month = (newDate.getMonth() + 1).toString().padStart(2, "0");
+  scheduledAt.value.day = newDate.getDate().toString().padStart(2, "0");
+});
+
+watch(time, (newTime) => {
+  scheduledAt.value.hours = newTime.getHours().toString().padStart(2,"0");
+  scheduledAt.value.minutes = newTime.getMinutes().toString().padStart(2,"0")
 });
 
 const filterFunction = () => {
@@ -116,7 +128,7 @@ const parseReceiverInput = () => {
 };
 
 const parseDate = () => {
-  if(checked == ref(false)){
+  if(checked.value){
     return `${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z`;
   } else{
     return null;
@@ -137,6 +149,7 @@ const sendMail = async () => {
       scheduledAt: parseDate(),
     };
     console.log(mailForm);
+    console.log(parseDate());
     const response = await Service.getInstance().sendEmails(mailForm);
     console.log('Erfolgreich gesendet:', response.data);
     //emitEvents('template-added', formData);
@@ -178,9 +191,9 @@ const handleSubmit = () => {
             <div id="datepickerFlexBox">
               <VueDatePicker v-if="checked" locale="de-AT" v-model="date" class="datepicker" id="datepicker"
                              now-button-label="Current" format="dd-mm-yyyy" :enable-time-picker="false"
-                             placeholder='Date' date-picker></VueDatePicker>
+                             placeholder='Date' date-picker :min-date="format(new Date(), 'yyyy-MM-dd')" ></VueDatePicker>
               <!--https://vue3datepicker.com/props/localization/-->
-              <VueDatePicker v-if="checked" v-model="time" class="datepicker" time-picker placeholder='Time'/>
+              <VueDatePicker v-if="checked" v-model="time" class="datepicker" time-picker placeholder='Time' :min-time="format(new Date(), 'HH:mm')" />
             </div>
           </div>
 
