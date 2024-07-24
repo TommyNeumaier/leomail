@@ -64,6 +64,7 @@ public class Contact extends PanacheEntityBase {
 
     public Contact(String firstName, String lastName, String mailAddress) {
         super();
+        this.id= id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.mailAddress = mailAddress;

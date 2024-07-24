@@ -5,7 +5,7 @@ import {Service} from "@/stores/service";
 const picked = ref<string>(''); // Holds the value of the selected gender
 const pickedEntity = ref<string>(''); // Holds the value of the selected entity
 const checkedUnternehmen = ref(false);
-const checkedPrivatperson = ref(false);
+const checkedPrivatperson = ref(true);
 const firstname = ref('');
 const lastname = ref('');
 const email = ref('');
@@ -26,7 +26,7 @@ const handleEntities = (entity: string) => {
 };
 
 const saveContact = async () => {
-  if (checkedPrivatperson){
+  if (checkedPrivatperson) {
     try {
       const contactForm = {
         firstName: firstname.value,
@@ -49,25 +49,31 @@ const saveContact = async () => {
     <div id="contentContainer">
       <h3 id="headline">Neue Person</h3>
       <div id="formular">
-        <label for="checkboxUnternehmen">juristische Person</label>
-        <input
-            type="checkbox"
-            class="checkbox"
-            id="checkboxUnternehmen"
-            value="unternehmen"
-            v-model="checkedUnternehmen"
-            @change="handleEntities('unternehmen')"
-        />
 
-        <label for="checkboxPrivatperson">natürliche Person</label>
-        <input
-            type="checkbox"
-            class="checkbox"
-            id="checkboxPrivatperson"
-            value="privatperson"
-            v-model="checkedPrivatperson"
-            @change="handleEntities('privatperson')"
-        />
+        <div class="personContainer">
+          <div class="personBox">
+            <label for="checkboxPrivatperson">natürliche Person</label>
+            <input
+                type="checkbox"
+                class="checkbox"
+                id="checkboxPrivatperson"
+                value="privatperson"
+                v-model="checkedPrivatperson"
+                @change="handleEntities('privatperson')"
+            /></div>
+
+          <div class="personBox">
+            <label for="checkboxUnternehmen">juristische Person</label>
+            <input
+                type="checkbox"
+                class="checkbox"
+                id="checkboxUnternehmen"
+                value="unternehmen"
+                v-model="checkedUnternehmen"
+                @change="handleEntities('unternehmen')"
+            />
+          </div>
+        </div>
 
         <div v-if="checkedPrivatperson">
           <div id="checkBoxGenderContainer">
@@ -98,11 +104,18 @@ const saveContact = async () => {
             </div>
           </div>
 
-          <div>
-            <label for="titel" class="personen-label">Titel (optional)</label><br>
-            <input type="text" id="titel" class="formPerson">
+          <div id="titleBox" class="inputBox">
+            <div>
+              <label for="titelPrefix" class="personen-label">Titel prefix</label><br>
+              <input type="text" id="titelPrefix" class="formPerson" placeholder="z.Bsp. Dr.">
+            </div>
+            <div>
+              <label for="titelSuffix" class="personen-label">Titel suffix</label><br>
+              <input type="text" id="titelSuffix" class="formPerson" placeholder="z.Bsp. PhD">
+            </div>
           </div>
-          <div id="nameBox">
+
+          <div id="nameBox" class="inputBox">
             <div>
               <label for="firstName" class="personen-label">Vorname</label><br>
               <input type="text" id="firstName" class="formPerson" v-model="firstname" required>
@@ -112,16 +125,18 @@ const saveContact = async () => {
               <input type="text" id="lastName" class="formPerson" v-model="lastname" required>
             </div>
           </div>
-          <div>
+
+          <div class="inputBox">
             <label for="email" class="personen-label">Email</label><br>
-            <input type="email" id="email" class="formPerson" placeholder="z.Bsp. max.muster@gmail.com" v-model="email" required>
+            <input type="email" id="email" class="formPerson" placeholder="z.Bsp. max.muster@gmail.com" v-model="email"
+                   required>
           </div>
           <div>
-            <div>
+            <div class="inputBox">
               <label for="company" class="personen-label">Firma (optional)</label><br>
               <input type="text" id="company" class="formPerson">
             </div>
-            <div>
+            <div class="inputBox">
               <label for="position" class="personen-label">Position (optional)</label><br>
               <input type="text" id="position" class="formPerson">
             </div>
@@ -139,7 +154,7 @@ const saveContact = async () => {
           </div>
         </div>
         <div id="buttonBox">
-          <button type="submit">Person erstellen</button>
+          <button type="submit" id="submitButton">Person erstellen</button>
         </div>
       </div>
     </div>
@@ -147,27 +162,54 @@ const saveContact = async () => {
 </template>
 
 <style scoped>
-button {
-  all: unset;
-  background-color: #78A6FF;
-  border-radius: 10px;
-  padding: 1% 3%;
-  font-size: 0.5rem;
-  color: white;
+.inputBox{
+  margin-top: 1vh;
 }
-
-button:hover {
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
-}
-
-#buttonBox {
+#titleBox{
   display: flex;
-  justify-content: right;
+  flex-direction: row;
+  width: 100%;
+}
+#titleBox div{
+  width: 15%;
+}
+
+#titelPrefix, #titelSuffix{
+  width: 60%;
+}
+
+#email,#company,#position{
+  width: 28%;
+}
+
+.personBox {
+  display: flex;
+  flex-direction: row;
+  width: 20%;
+}
+
+.personBox label {
+  margin-right: 5%;
+}
+
+.personContainer {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
 }
 
 #nameBox {
   display: flex;
   flex-direction: row;
+  width: 100%;
+}
+
+#nameBox div {
+  width: 30%;
+}
+
+#firstName, #lastName {
+  width: 80%;
 }
 
 .personen-label {
@@ -199,15 +241,20 @@ button:hover {
 }
 
 #checkBox div {
-  align-items: center;
+  width: 15%;
 }
 
 #checkBox div label {
-  margin-right: 10%;
+  margin-right: 5%;
+}
+
+#checkBoxGenderContainer {
+  margin-top: 2%;
 }
 
 #formular {
   margin-top: 5%;
+  height: 60vh;
 }
 
 #headline {
@@ -216,5 +263,40 @@ button:hover {
 
 #contentContainer {
   padding: 3% 5%;
+}
+
+#buttonBox {
+  position: absolute; /* Added */
+  top: 80vh; /* Adjust as needed */
+  right: 15vw; /* Adjust as needed */
+  width: 12vw;
+  margin-top: 0; /* Removed margin-top */
+}
+
+#submitButton {
+  all: unset;
+  border-radius: 12px;
+  padding: 1vh 0;
+  background-color: #78A6FF;
+  color: white;
+  width: 100%;
+  border: #78A6FF solid 1px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+#submitButton:hover {
+  background-color: rgba(75, 129, 253, 0.86);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+#submitButton:disabled {
+  background-color: lightgray;
+  border-color: lightgray;;
+}
+
+#submitButton:disabled:hover {
+  border-color: lightgray;
+  box-shadow: none;
 }
 </style>
