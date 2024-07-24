@@ -2,17 +2,17 @@
 import {onMounted, ref} from "vue";
 import {Service} from "@/stores/service";
 
-const picked = ref<string>(''); // Holds the value of the selected gender
+const picked = ref<string>('W'); // Holds the value of the selected gender
 const pickedEntity = ref<string>(''); // Holds the value of the selected entity
 const checkedUnternehmen = ref(false);
 const checkedPrivatperson = ref(true);
 const firstname = ref('');
 const lastname = ref('');
 const email = ref('');
-
-const handleGenderChange = (gender: string) => {
-  picked.value = gender;
-};
+const positionAtCompany = ref<string | null>();
+const company = ref<string | null>();
+const prefixTitle = ref<string | null>();
+const suffixTitle = ref<string | null>();
 
 const handleEntities = (entity: string) => {
   pickedEntity.value = entity;
@@ -29,10 +29,14 @@ const saveContact = async () => {
   if (checkedPrivatperson) {
     try {
       const contactForm = {
+        company: company.value,
+        positionAtCompany: positionAtCompany.value,
+        prefixTitle: prefixTitle.value,
+        suffixTitle: suffixTitle.value,
+        gender: picked.value,
         firstName: firstname.value,
         lastName: lastname.value,
         mailAddress: email.value
-        // TODO: add prefixTitle, suffixTitle, company, positionAtCompany, gender (M/W)
     };
       console.log(contactForm);
       const response = await Service.getInstance().addContact(contactForm);
@@ -85,7 +89,7 @@ const saveContact = async () => {
                     type="radio"
                     class="radio"
                     id="checkboxMale"
-                    value="male"
+                    value="M"
                     v-model="picked"
                     required
                 />
@@ -96,7 +100,7 @@ const saveContact = async () => {
                     type="radio"
                     class="radio"
                     id="checkboxFemale"
-                    value="female"
+                    value="W"
                     v-model="picked"
                     required
                 />
@@ -107,11 +111,11 @@ const saveContact = async () => {
           <div id="titleBox" class="inputBox">
             <div>
               <label for="titelPrefix" class="personen-label">Titel prefix</label><br>
-              <input type="text" id="titelPrefix" class="formPerson" placeholder="z.Bsp. Dr.">
+              <input type="text" id="titelPrefix" class="formPerson" placeholder="z.Bsp. Dr." v-model="prefixTitle">
             </div>
             <div>
               <label for="titelSuffix" class="personen-label">Titel suffix</label><br>
-              <input type="text" id="titelSuffix" class="formPerson" placeholder="z.Bsp. PhD">
+              <input type="text" id="titelSuffix" class="formPerson" placeholder="z.Bsp. PhD" v-model="suffixTitle">
             </div>
           </div>
 
@@ -134,11 +138,11 @@ const saveContact = async () => {
           <div>
             <div class="inputBox">
               <label for="company" class="personen-label">Firma (optional)</label><br>
-              <input type="text" id="company" class="formPerson">
+              <input type="text" id="company" class="formPerson" v-model="company">
             </div>
             <div class="inputBox">
               <label for="position" class="personen-label">Position (optional)</label><br>
-              <input type="text" id="position" class="formPerson">
+              <input type="text" id="position" class="formPerson" v-model="positionAtCompany">
             </div>
           </div>
         </div>

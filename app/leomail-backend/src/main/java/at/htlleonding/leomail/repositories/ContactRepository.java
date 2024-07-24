@@ -72,7 +72,7 @@ public class ContactRepository {
         if (Contact.find("mailAddress", contactDTO.mailAddress()).count() > 0)
             throw new ContactExistsInKeycloakException("mail already database entry");
 
-        List<String> nullFields = Utilities.listNullFields(contactDTO, List.of("id"));
+        List<String> nullFields = Utilities.listNullFields(contactDTO, List.of("id", "suffixTitle", "prefixTitle", "positionAtCompany", "company"));
         if(!nullFields.isEmpty()) {
             throw new ObjectContainsNullAttributesException(nullFields);
         }
