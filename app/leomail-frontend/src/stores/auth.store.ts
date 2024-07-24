@@ -37,9 +37,9 @@ export const useAuthStore = defineStore('auth', {
             }
         },
         logout() {
-            console.log('Logging out');
             this.accessToken = '';
             this.refreshToken = '';
+            delete axios.defaults.headers.common['Authorization'];
             routerConfig.push("/login").then(() => {});
         }
     },

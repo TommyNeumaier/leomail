@@ -51,7 +51,7 @@ router.beforeEach(async (to, from, next) => {
         console.log('Access token is invalid, attempting to refresh');
         const newToken = await refreshToken();
         if (newToken) {
-          const newIsValid = await validateToken(newToken);
+          const newIsValid = await validateToken(newToken.access_token);
           if (newIsValid) {
             console.log('New access token is valid, proceeding to', to.name);
             return next();

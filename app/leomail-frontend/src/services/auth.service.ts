@@ -38,7 +38,7 @@ export const refreshToken = async () => {
 
             const { access_token, refresh_token: new_refresh_token } = response.data;
             authStore.setTokens(access_token, new_refresh_token);
-            return access_token;
+            return {access_token, new_refresh_token};
         } catch (error) {
             authStore.logout();
         }

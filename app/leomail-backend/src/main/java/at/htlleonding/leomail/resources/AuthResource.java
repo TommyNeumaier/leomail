@@ -1,8 +1,7 @@
 package at.htlleonding.leomail.resources;
 
-import at.htlleonding.leomail.model.dto.KeycloakTokenIntrospectionResponse;
-import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
 import at.htlleonding.leomail.contracts.IKeycloak;
+import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
 import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
@@ -79,23 +78,15 @@ public class AuthResource {
 
     @GET
     @Path("/validate")
-    @PermitAll
+    @Authenticated
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response validateToken() {
-        try {
-            KeycloakTokenIntrospectionResponse introspectionResponse = IKeycloak.introspectToken(
-                    clientId,
-                    clientSecret,
-                    jwt.getRawToken()
-            );
-            if (introspectionResponse.active()) {
-                return Response.ok().build();
-            } else {
-                return Response.status(Response.Status.UNAUTHORIZED).build();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.status(Response.Status.UNAUTHORIZED).build();
-        }
+        long exp = Long.parseLong(jwt.getExpirationTime() + "000");
+        long iat = jwt.getIssuedAtTime();
+
+        if (exp > System.currentTimeMillis() && iat < System.currentTimeMillis())
+            return Response.ok().build();
+        else
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Expired").build();
     }
 }
