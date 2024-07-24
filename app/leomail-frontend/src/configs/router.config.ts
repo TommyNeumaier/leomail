@@ -12,6 +12,7 @@ import { refreshToken, validateToken } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import MailFormComponent from "@/components/MailFormComponent.vue";
 import NewProject from "@/views/NewProject.vue";
+import AuthTest from "@/views/AuthTest.vue";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -25,6 +26,7 @@ const routes = [
   { path: '/projekte/neu', name: 'neueProjekte', component: NewProject, meta: { requiresAuth: true } },
   { path: '/personen', name: 'personen', component: PersonenView, meta: { requiresAuth: true } },
   { path: '/profil', name: 'profil', component: ProfilView, meta: { requiresAuth: true } },
+  { path: '/authtest', name: 'authtest', component: AuthTest, meta: { requiresAuth: true}}
 ];
 
 const router = createRouter({

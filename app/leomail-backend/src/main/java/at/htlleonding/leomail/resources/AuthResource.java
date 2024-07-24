@@ -1,20 +1,22 @@
 package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.contracts.IKeycloak;
+import at.htlleonding.leomail.model.dto.authtest.JwtClaimTest;
+import at.htlleonding.leomail.model.dto.authtest.JwtTest;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
 import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.annotations.jaxrs.FormParam;
+
+import java.util.LinkedList;
+import java.util.List;
 
 @Path("/auth")
 public class AuthResource {
@@ -31,6 +33,20 @@ public class AuthResource {
 
     @Inject
     JsonWebToken jwt;
+
+    @GET
+    @Path("jwt")
+    @Authenticated
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getJwt() {
+        List<JwtClaimTest> claims = new LinkedList<>();
+        jwt.getClaimNames().forEach((claim) -> {
+            claims.add(new JwtClaimTest(claim, jwt.claim(claim).get().toString()));
+
+        });
+
+        return Response.ok(new JwtTest(jwt.getAudience(), claims, jwt.getExpirationTime(), jwt.getGroups(), jwt.getIssuedAtTime(), jwt.getIssuer(), jwt.getName(), jwt.getRawToken(), jwt.getSubject(), jwt.getTokenID())).build();
+    }
 
     @POST
     @Path("/login")

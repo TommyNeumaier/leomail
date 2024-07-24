@@ -8,6 +8,7 @@ import {logout} from "@/services/auth.service";
     <div id="HeaderLinkBox">
       <RouterLink to="/projekte" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
       <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
+      <RouterLink to="/authtest" activeClass="highlight" class="HeaderLinks">JWT</RouterLink>
     </div>
     <div id="profilBox">
       <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">
