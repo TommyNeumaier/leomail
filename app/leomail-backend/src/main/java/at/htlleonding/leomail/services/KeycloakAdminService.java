@@ -1,9 +1,7 @@
 package at.htlleonding.leomail.services;
 
 import at.htlleonding.leomail.contracts.IKeycloak;
-import at.htlleonding.leomail.model.dto.contacts.ContactDTO;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
-import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;

@@ -1,9 +1,12 @@
 package at.htlleonding.leomail.repositories;
 
 import at.htlleonding.leomail.entities.Contact;
-import at.htlleonding.leomail.model.dto.contacts.ContactDTO;
+import at.htlleonding.leomail.model.dto.contacts.ContactAddDTO;
+import at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO;
+import at.htlleonding.leomail.model.exceptions.ObjectContainsNullAttributesException;
 import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
 import at.htlleonding.leomail.services.KeycloakAdminService;
+import at.htlleonding.leomail.services.Utilities;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -28,8 +31,7 @@ public class ContactRepository {
     @ConfigProperty(name = "leomail.user.search.max")
     int maxResults;
 
-    @Transactional
-    public List<ContactDTO> searchContacts(String searchTerm) {
+    public List<ContactSearchDTO> searchContacts(String searchTerm) {
         CompletableFuture<List<Contact>> contactFuture = CompletableFuture.supplyAsync(() ->
                 Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1", "%" + searchTerm + "%")
                         .page(0, maxResults)
@@ -44,8 +46,8 @@ public class ContactRepository {
             List<Contact> contacts = contactFuture.get();
             List<Object> keycloakUsers = keycloakFuture.get();
 
-            List<ContactDTO> combinedResults = contacts.stream()
-                    .map(contact -> new ContactDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress))
+            List<ContactSearchDTO> combinedResults = contacts.stream()
+                    .map(contact -> new ContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress))
                     .collect(Collectors.toList());
 
             for (Object keycloakUser : keycloakUsers) {
@@ -54,7 +56,7 @@ public class ContactRepository {
                  String firstName = (String) userMap.get("firstName");
                  String lastName = (String) userMap.get("lastName");
                  String mailAddress = (String) userMap.get("email");
-            combinedResults.add(new ContactDTO(id, firstName, lastName, mailAddress));
+            combinedResults.add(new ContactSearchDTO(id, firstName, lastName, mailAddress));
              }
 
             return combinedResults;
@@ -63,16 +65,20 @@ public class ContactRepository {
         }
     }
 
-    public ContactDTO addContact(ContactDTO contactDTO) {
+    public void addContact(ContactAddDTO contactDTO) {
         if (!keycloakAdminService.searchUser(contactDTO.mailAddress(), 1).isEmpty())
             throw new ContactExistsInKeycloakException("in keycloak");
 
         if (Contact.find("mailAddress", contactDTO.mailAddress()).count() > 0)
-            throw new ContactExistsInKeycloakException("not in keycloak");
+            throw new ContactExistsInKeycloakException("mail already database entry");
 
-        Contact contact = new Contact(contactDTO.id(), contactDTO.firstName(), contactDTO.lastName(), contactDTO.mailAddress());
+        List<String> nullFields = Utilities.listNullFields(contactDTO, List.of("id"));
+        if(!nullFields.isEmpty()) {
+            throw new ObjectContainsNullAttributesException(nullFields);
+        }
+
+        Contact contact = new Contact(contactDTO.firstName(), contactDTO.lastName(), contactDTO.mailAddress(), contactDTO.prefixTitle(), contactDTO.suffixTitle(), contactDTO.company(), contactDTO.positionAtCompany(), contactDTO.gender());
         contact.persist();
-        return new ContactDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress);
     }
 
     public void deleteContact(String id) {

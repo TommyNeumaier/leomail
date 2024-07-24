@@ -1,10 +1,8 @@
 package at.htlleonding.leomail.model.dto.contacts;
 
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-public record ContactDTO(
+public record ContactSearchDTO(
         String id,
         String firstName,
         String lastName,

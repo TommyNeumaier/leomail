@@ -29,9 +29,10 @@ const saveContact = async () => {
   if (checkedPrivatperson){
     try {
       const contactForm = {
-        firstname: firstname.value,
-        lastname: lastname.value,
+        firstName: firstname.value,
+        lastName: lastname.value,
         mailAddress: email.value
+        // TODO: add prefixTitle, suffixTitle, company, positionAtCompany, gender (M/W)
     };
       console.log(contactForm);
       const response = await Service.getInstance().addContact(contactForm);
@@ -44,7 +45,7 @@ const saveContact = async () => {
 </script>
 
 <template>
-  <form @submit="saveContact">
+  <form @submit.prevent="saveContact">
     <div id="contentContainer">
       <h3 id="headline">Neue Person</h3>
       <div id="formular">
