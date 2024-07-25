@@ -15,6 +15,7 @@ import org.eclipse.microprofile.context.ManagedExecutor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -79,7 +80,7 @@ public class ContactRepository {
 
         Utilities.setEmptyStringsToNull(contactDTO);
 
-        Contact contact = new Contact(contactDTO.firstName().trim(), contactDTO.lastName().trim(), contactDTO.mailAddress().trim(), contactDTO.prefixTitle().trim(), contactDTO.suffixTitle().trim(), contactDTO.company().trim(), contactDTO.positionAtCompany().trim(), contactDTO.gender());
+        Contact contact = new Contact(contactDTO.firstName().trim(), contactDTO.lastName().trim(), contactDTO.mailAddress().trim(), contactDTO.prefixTitle() == null ? null : contactDTO.prefixTitle().trim(), contactDTO.suffixTitle() == null ? null : contactDTO.suffixTitle().trim(), contactDTO.positionAtCompany() == null ? null : contactDTO.positionAtCompany().trim(), contactDTO.company() == null ? null : contactDTO.company().trim(), contactDTO.gender());
         contact.persist();
     }
 

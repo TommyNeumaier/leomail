@@ -29,7 +29,7 @@ public class ProjectRepository {
             throw new ObjectContainsNullAttributesException(List.of("**ALL NULL**"));
         }
 
-        List<String> nullFields = Utilities.listNullFields(projectAddDTO, List.of("id"));
+        List<String> nullFields = Utilities.listNullFields(projectAddDTO, List.of("id", "description", "mailInformation", "members"));
         if(!nullFields.isEmpty()) {
             throw new ObjectContainsNullAttributesException(nullFields);
         }

@@ -45,9 +45,6 @@ public class KeycloakAdminService {
 
         Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
                 .queryParam("search", searchTerm)
-                .queryParam("firstName", "")
-                .queryParam("lastName", "")
-                .queryParam("email", "@")
                 .queryParam("max", maxSearchResults)
                 .request(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + token)
