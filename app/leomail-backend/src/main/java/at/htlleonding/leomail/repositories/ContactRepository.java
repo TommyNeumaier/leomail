@@ -2,6 +2,7 @@ package at.htlleonding.leomail.repositories;
 
 import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.model.dto.contacts.ContactAddDTO;
+import at.htlleonding.leomail.model.dto.contacts.ContactDetailDTO;
 import at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO;
 import at.htlleonding.leomail.model.exceptions.ObjectContainsNullAttributesException;
 import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
@@ -90,5 +91,13 @@ public class ContactRepository {
             throw new IllegalArgumentException("Contact not found");
         }
         contact.delete();
+    }
+
+    public ContactDetailDTO getContact(String id) {
+        Optional<Contact> contact = Contact.findByIdOptional(id);
+        if (contact.isEmpty()) {
+            throw new IllegalArgumentException("Contact not found");
+        }
+        return new ContactDetailDTO(contact.get().id, contact.get().firstName, contact.get().lastName, contact.get().mailAddress, contact.get().gender, contact.get().suffixTitle, contact.get().prefixTitle, contact.get().company, contact.get().positionAtCompany);
     }
 }
