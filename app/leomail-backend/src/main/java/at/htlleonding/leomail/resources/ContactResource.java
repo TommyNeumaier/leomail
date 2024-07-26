@@ -1,6 +1,7 @@
 package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.model.dto.contacts.ContactAddDTO;
+import at.htlleonding.leomail.model.dto.contacts.ContactDetailDTO;
 import at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO;
 import at.htlleonding.leomail.model.exceptions.ObjectContainsNullAttributesException;
 import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
@@ -68,6 +69,19 @@ public class ContactResource {
     public Response deleteContact(@QueryParam("id") String id) {
         try {
             contactRepository.deleteContact(id);
+            return Response.ok().build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/update")
+    @Transactional
+    @Authenticated
+    public Response updateContact(ContactDetailDTO contactDTO) {
+        try {
+            contactRepository.updateContact(contactDTO);
             return Response.ok().build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();

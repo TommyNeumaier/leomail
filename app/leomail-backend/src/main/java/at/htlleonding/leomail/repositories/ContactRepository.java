@@ -101,6 +101,25 @@ public class ContactRepository {
         if (contact.isEmpty()) {
             throw new IllegalArgumentException("Contact not found");
         }
-        return new ContactDetailDTO(contact.get().id, contact.get().firstName, contact.get().lastName, contact.get().mailAddress, contact.get().gender, contact.get().suffixTitle, contact.get().prefixTitle, contact.get().company, contact.get().positionAtCompany);
+        return new ContactDetailDTO(contact.get().id, contact.get().firstName, contact.get().lastName, contact.get().mailAddress, contact.get().gender, contact.get().suffixTitle, contact.get().prefixTitle, contact.get().company, contact.get().positionAtCompany, contact.get().kcUser);
+    }
+
+    public ContactDetailDTO updateContact(ContactDetailDTO contactDTO) {
+        Contact contact = Contact.findById(contactDTO.id());
+        if (contact == null) {
+            throw new IllegalArgumentException("Contact not found");
+        }
+        if (contact.kcUser) {
+            throw new IllegalArgumentException("Cannot update keycloak user");
+        }
+        contact.firstName = contactDTO.firstName();
+        contact.lastName = contactDTO.lastName();
+        contact.mailAddress = contactDTO.mailAddress();
+        contact.gender = contactDTO.gender();
+        contact.suffixTitle = contactDTO.suffixTitle();
+        contact.prefixTitle = contactDTO.prefixTitle();
+        contact.company = contactDTO.company();
+        contact.positionAtCompany = contactDTO.positionAtCompany();
+        return contactDTO;
     }
 }
