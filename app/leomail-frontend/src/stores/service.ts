@@ -48,4 +48,29 @@ export class Service{
     public addContact(formData: any) {
         return axios.post(`/api/users/add`, formData)
     }
+
+    public async searchContacts(query: string) {
+        console.log('query: ' + query)
+        return axios.get(`/api/users/search`, {
+            params: {
+                "query": query
+            }})};
+
+    public getContacts(){
+        return axios.get(`/api/users/get`);
+    }
+
+    public updateContact(id: any, formData: any){
+        return axios.post(`/api/users/update?id=${formData}`, formData);
+    }
+
+    public deleteContact(id: any){
+        return axios.post(`/api/users/delete`, {
+            params: {
+                "id": id
+            }
+        });
+    }
+
+
 }

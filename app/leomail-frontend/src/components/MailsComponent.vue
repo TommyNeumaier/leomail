@@ -105,7 +105,6 @@ onMounted(() => {
 })
 
 const clickedEmailForm = () => {
-  //showEmailForm.value = true;
   router.push({ name: 'neu' });
 }
 
@@ -129,16 +128,12 @@ const increment = () => {
 
 const handleEmailClick = (mailId: number) => {
   console.log('Clicked email id:', mailId);
-  // Add your logic here to handle the email click event, e.g., navigate to a detailed view or open a modal
 };
 
 </script>
 
 <template>
-  <div v-if="showEmailForm" id="form">
-    <MailFormComponent/>
-  </div>
-  <div v-else id="bigVGContainer">
+  <div id="bigVGContainer">
     <div id="VGHeaderBox">
       <h1 id="vgHeading">Emails</h1>
 

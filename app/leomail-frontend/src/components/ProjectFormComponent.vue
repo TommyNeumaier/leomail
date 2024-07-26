@@ -20,14 +20,24 @@ const handleBack = () => {
       <form>
 
         <div class="boxLabel">
-          <label for="name" class="project-label">Name des Projekts</label><br>
+          <label for="name" class="project-label">Name des Projekts (max. 40 Zeichen)</label><br>
         </div>
         <input type="text" id="name" class="projectForm" placeholder="z.Bsp. Maturaball-2025">
+
+        <div class="boxLabel">
+          <label for="description" class="project-label">Kurzbeschreibung (max. 240 Zeichen)</label><br>
+        </div>
+        <textarea id="description" class="projectForm"></textarea>
 
         <div class="boxLabel">
           <label for="mail" class="project-label">Mail-Adresse</label><br>
         </div>
         <input type="email" id="mail" class="projectForm" placeholder="z.Bsp. maturaball-2025@gmail.com">
+
+        <div class="boxLabel">
+          <label for="password" class="project-label">Passwort</label><br>
+        </div>
+        <input type="password" id="password" class="projectForm">
 
         <div id="buttonBox">
           <button type="button" @click="handleSubmit" id="submitButton">Projekt erstellen</button>

@@ -6,18 +6,19 @@ import Vorlagen from "@/views/TemplateView.vue";
 import Settings from "@/views/SettingsView.vue";
 import Login from "@/views/Login.vue";
 import ProjekteView from "@/views/ProjekteView.vue";
-import PersonenView from "@/views/PersonenView.vue";
+import PersonenView from "@/views/ContactView.vue";
 import ProfilView from "@/views/ProfilView.vue";
 import { refreshToken, validateToken } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import MailFormComponent from "@/components/MailFormComponent.vue";
 import NewProject from "@/views/NewProject.vue";
 import AuthTest from "@/views/AuthTest.vue";
+import NewMail from "@/views/NewMail.vue";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
   { path: '/', name: 'mail', component: MailView, meta: { requiresAuth: true } },
-  { path: '/mail/neu', name: 'neu', component: MailFormComponent, meta: { requiresAuth: true } },
+  { path: '/mail/neu', name: 'neu', component: NewMail, meta: { requiresAuth: true } },
   { path: '/geplanteMails', name: 'geplant', component: GeplanteMails, meta: { requiresAuth: true } },
   { path: '/gruppen', name: 'gruppen', component: Gruppe, meta: { requiresAuth: true } },
   { path: '/vorlagen', name: 'vorlagen', component: Vorlagen, meta: { requiresAuth: true } },

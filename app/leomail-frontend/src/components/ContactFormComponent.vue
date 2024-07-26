@@ -1,8 +1,20 @@
 <script setup lang="ts">
-import {onMounted, ref} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import {Service} from "@/stores/service";
 
-const picked = ref<string>('W'); // Holds the value of the selected gender
+interface Contact {
+  id: string,
+  firstName: string,
+  lastName: string,
+  mailAddress: string,
+  gender?: string,
+  positionAtCompany?: string;
+  company?: string;
+  prefixTitle?: string;
+  suffixTitle?: string;
+}
+
+const picked = ref<string | null>(); // Holds the value of the selected gender
 const pickedEntity = ref<string>(''); // Holds the value of the selected entity
 const checkedUnternehmen = ref(false);
 const checkedPrivatperson = ref(true);
@@ -13,7 +25,38 @@ const positionAtCompany = ref<string | null>();
 const company = ref<string | null>();
 const prefixTitle = ref<string | null>();
 const suffixTitle = ref<string | null>();
+const propsSelected = defineProps<{ selectedContact: Contact | null }>();
+const emit = defineEmits(['contact-deleted', 'contact-updated']);
 
+watch(
+    () => propsSelected.selectedContact,
+    (newContact) => {
+      clearForm();
+      if (newContact) {
+        console.log(newContact);
+        firstname.value = newContact.firstName;
+        lastname.value = newContact.lastName;
+        email.value = newContact.mailAddress;
+        if (newContact.gender) picked.value = newContact.gender;
+        if (newContact.positionAtCompany) positionAtCompany.value = newContact.positionAtCompany;
+        if (newContact.company) company.value = newContact.company;
+        if (newContact.prefixTitle) prefixTitle.value = newContact.prefixTitle;
+        if (newContact.suffixTitle) suffixTitle.value = newContact.suffixTitle;
+      }
+    }
+);
+
+
+const clearForm = () => {
+  firstname.value = '';
+  lastname.value = '';
+  email.value = '';
+  picked.value = null;
+  positionAtCompany.value = null;
+  company.value = null;
+  prefixTitle.value = null;
+  suffixTitle.value = null;
+}
 const handleEntities = (entity: string) => {
   pickedEntity.value = entity;
   if (entity === 'unternehmen') {
@@ -25,8 +68,8 @@ const handleEntities = (entity: string) => {
   }
 };
 
-const saveContact = async () => {
-  if (checkedPrivatperson) {
+/*const saveContact = async () => {
+  if (checkedPrivatperson && picked.value != null) {
     try {
       const contactForm = {
         company: company.value,
@@ -41,17 +84,65 @@ const saveContact = async () => {
       console.log(contactForm);
       const response = await Service.getInstance().addContact(contactForm);
       console.log('Erfolgreich gesendet:', response.data);
+      clearForm();
     } catch (error) {
       console.error('Fehler beim Senden der Daten:', error);
     }
   }
+}*/
+
+const saveOrUpdateContact = async () => {
+  try {
+    const contactForm = {
+      company: company.value,
+      positionAtCompany: positionAtCompany.value,
+      prefixTitle: prefixTitle.value,
+      suffixTitle: suffixTitle.value,
+      gender: picked.value,
+      firstName: firstname.value,
+      lastName: lastname.value,
+      mailAddress: email.value
+    };
+    if (propsSelected.selectedContact) {
+      await Service.getInstance().updateContact(propsSelected.selectedContact.id, contactForm);
+      console.log('Kontakt erfolgreich aktualisiert');
+      emit('contact-updated');
+    } else {
+      await Service.getInstance().addContact(contactForm);
+      console.log('Kontakt erfolgreich erstellt');
+    }
+    clearForm();
+  } catch (error) {
+    console.error('Fehler beim Speichern der Daten:', error);
+  }
 }
+
+
+const deleteContact = async () => {
+  if (propsSelected.selectedContact) {
+    const confirmed = confirm('Möchten Sie diesen Kontakt wirklich löschen?');
+    if (confirmed) {
+      try {
+        await Service.getInstance().deleteContact(propsSelected.selectedContact.id);
+        console.log('Kontakt erfolgreich gelöscht');
+        clearForm();
+        emit('contact-deleted'); // Notify parent component
+      } catch (error) {
+        console.error('Fehler beim Löschen des Kontakts:', error);
+      }
+    }
+  }
+}
+
+  const contactName = computed(() => {
+    return propsSelected.selectedContact ? `${propsSelected.selectedContact.firstName} ${propsSelected.selectedContact.lastName}` : 'Neue Person';
+  });
 </script>
 
 <template>
-  <form @submit.prevent="saveContact">
+  <form @submit.prevent="saveOrUpdateContact">
     <div id="contentContainer">
-      <h3 id="headline">Neue Person</h3>
+      <h3 id="headline"> {{ contactName }}</h3>
       <div id="formular">
 
         <div class="personContainer">
@@ -158,7 +249,12 @@ const saveContact = async () => {
           </div>
         </div>
         <div id="buttonBox">
-          <button type="submit" id="submitButton">Person erstellen</button>
+          <button type="submit" id="submitButton">
+            {{ propsSelected.selectedContact ? 'Person aktualisieren' : 'Person erstellen' }}
+          </button>
+          <button type="button" id="deleteButton" @click="deleteContact" v-if="propsSelected.selectedContact">Person
+            löschen
+          </button>
         </div>
       </div>
     </div>
@@ -166,23 +262,25 @@ const saveContact = async () => {
 </template>
 
 <style scoped>
-.inputBox{
+.inputBox {
   margin-top: 1vh;
 }
-#titleBox{
+
+#titleBox {
   display: flex;
   flex-direction: row;
   width: 100%;
 }
-#titleBox div{
+
+#titleBox div {
   width: 15%;
 }
 
-#titelPrefix, #titelSuffix{
+#titelPrefix, #titelSuffix {
   width: 60%;
 }
 
-#email,#company,#position{
+#email, #company, #position {
   width: 28%;
 }
 

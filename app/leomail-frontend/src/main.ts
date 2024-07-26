@@ -10,6 +10,8 @@ import routerConfig from "@/configs/router.config";
 import setupAxiosInterceptors from "@/configs/interceptor.config";
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
 
 const app = createApp(App);
 app.component('QuillEditor', QuillEditor)
@@ -18,6 +20,11 @@ app.component('VueDatePicker', VueDatePicker);
 const pinia = createPinia();
 app.use(pinia);
 app.use(routerConfig);
+app.use(PrimeVue, {
+    theme: {
+        preset: Aura
+    }
+})
 
 pinia.use(piniaPersist);
 
