@@ -34,14 +34,17 @@ public class ContactRepository {
     int maxResults;
 
     public List<ContactSearchDTO> searchContacts(String searchTerm) {
+        if(searchTerm == null) searchTerm = "";
+
+        String finalSearchTerm = searchTerm;
         CompletableFuture<List<Contact>> contactFuture = CompletableFuture.supplyAsync(() ->
-                Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1", "%" + searchTerm + "%")
+                Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1", "%" + finalSearchTerm + "%")
                         .page(0, maxResults)
                         .list(), managedExecutor
         );
 
         CompletableFuture<List<Object>> keycloakFuture = CompletableFuture.supplyAsync(() ->
-                keycloakAdminService.searchUser(searchTerm, maxResults), managedExecutor
+                keycloakAdminService.searchUser(finalSearchTerm, maxResults), managedExecutor
         );
 
         try {
