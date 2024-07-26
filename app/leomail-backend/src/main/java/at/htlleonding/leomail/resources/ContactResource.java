@@ -32,7 +32,7 @@ public class ContactResource {
     }
 
     @GET
-    @Path("/get")
+    @Path("/single")
     public Response getContact(@QueryParam("id") String id) {
         return Response.ok(contactRepository.getContact(id)).build();
     }
