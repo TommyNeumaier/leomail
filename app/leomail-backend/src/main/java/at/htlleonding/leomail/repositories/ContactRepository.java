@@ -10,6 +10,7 @@ import at.htlleonding.leomail.services.KeycloakAdminService;
 import at.htlleonding.leomail.services.Utilities;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
@@ -32,7 +33,7 @@ public class ContactRepository {
     @ConfigProperty(name = "leomail.user.search.max")
     int maxResults;
 
-    public List<ContactSearchDTO> searchContacts(String searchTerm, boolean keycloakOnly) {
+    public List<ContactSearchDTO> searchContacts(String searchTerm, boolean keycloakOnly, String own) {
         if(searchTerm == null) searchTerm = "";
 
         String finalSearchTerm = searchTerm;
@@ -50,11 +51,12 @@ public class ContactRepository {
                         String mailAddress = (String) userMap.get("email");
                         return new ContactSearchDTO(id, firstName, lastName, mailAddress);
                     })
+                    .filter(contact -> !contact.id().equals(own))
                     .toList());
 
             if (keycloakOnly) return list;
 
-            List<Contact> contacts = Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1", "%" + searchTerm + "%").list();
+            List<Contact> contacts = Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1 and kcUser is false", "%" + searchTerm + "%").list();
             List<ContactSearchDTO> contactList = contacts.stream()
                     .map(contact -> new ContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress))
                     .toList();
@@ -95,7 +97,12 @@ public class ContactRepository {
     public ContactDetailDTO getContact(String id) {
         Optional<Contact> contact = Contact.findByIdOptional(id);
         if (contact.isEmpty()) {
-            throw new IllegalArgumentException("Contact not found");
+            Object user = keycloakAdminService.findUser(id);
+            Map<String, Object> userMap = (Map<String, Object>) user;
+            String firstName = (String) userMap.get("firstName");
+            String lastName = (String) userMap.get("lastName");
+            String mailAddress = (String) userMap.get("email");
+            return new ContactDetailDTO(id, firstName, lastName, mailAddress, null, null, null, null, null, true);
         }
         return new ContactDetailDTO(contact.get().id, contact.get().firstName, contact.get().lastName, contact.get().mailAddress, contact.get().gender, contact.get().suffixTitle, contact.get().prefixTitle, contact.get().company, contact.get().positionAtCompany, contact.get().kcUser);
     }
@@ -116,5 +123,11 @@ public class ContactRepository {
         contact.prefixTitle = contactDTO.prefixTitle();
         contact.company = contactDTO.company();
         contact.positionAtCompany = contactDTO.positionAtCompany();
+    }
+
+    @Transactional
+    public void saveKeycloakUserLocally(String id, String firstName, String lastName, String mailAddress) {
+        Contact contact = new Contact(id, firstName, lastName, mailAddress, true);
+        contact.persist();
     }
 }

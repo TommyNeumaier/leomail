@@ -54,6 +54,10 @@ public class ProjectRepository {
         }
 
         Contact creatorContact = em.find(Contact.class, creator);
+        if(creatorContact == null) {
+            throw new ObjectContainsNullAttributesException(List.of("creator"));
+        }
+        members.add(creatorContact);
 
         Project project = new Project(projectAddDTO.name(), projectAddDTO.description(), creatorContact, projectAddDTO.mailInformation().mailAddress(), projectAddDTO.mailInformation().password(), members);
         em.persist(project);

@@ -65,4 +65,21 @@ public class KeycloakAdminService {
                 .limit(maxSearchResults)
                 .collect(Collectors.toList());
     }
+
+    public Object findUser(String userId) {
+        String token = getAdminToken();
+        Client client = ClientBuilder.newClient();
+
+        Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users/" + userId)
+                .request(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .get();
+
+        if (response.getStatus() != 200) {
+            String responseBody = response.readEntity(String.class);
+            throw new RuntimeException("Failed to find user: " + responseBody);
+        }
+
+        return response.readEntity(Object.class);
+    }
 }

@@ -1,9 +1,11 @@
 package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.contracts.IKeycloak;
+import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.model.dto.authtest.JwtClaimTest;
 import at.htlleonding.leomail.model.dto.authtest.JwtTest;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
+import at.htlleonding.leomail.repositories.ContactRepository;
 import at.htlleonding.leomail.repositories.UserRepository;
 import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.PermitAll;
@@ -26,6 +28,9 @@ public class AuthResource {
     @RestClient
     IKeycloak IKeycloak;
 
+    @Inject
+    ContactRepository contactRepository;
+
     @ConfigProperty(name = "quarkus.oidc.client-id")
     String clientId;
 
@@ -46,9 +51,7 @@ public class AuthResource {
         List<JwtClaimTest> claims = new LinkedList<>();
         jwt.getClaimNames().forEach((claim) -> {
             claims.add(new JwtClaimTest(claim, jwt.claim(claim).get().toString()));
-
         });
-
         return Response.ok(new JwtTest(jwt.getAudience(), claims, jwt.getExpirationTime(), jwt.getGroups(), jwt.getIssuedAtTime(), jwt.getIssuer(), jwt.getName(), jwt.getRawToken(), jwt.getSubject(), jwt.getTokenID())).build();
     }
 
@@ -68,8 +71,6 @@ public class AuthResource {
                     username,
                     password,
                     "openid");
-
-
             return Response.ok(tokenResponse).build();
         } catch (Exception e) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -105,9 +106,12 @@ public class AuthResource {
         long exp = Long.parseLong(jwt.getExpirationTime() + "000");
         long iat = jwt.getIssuedAtTime();
 
-        if (exp > System.currentTimeMillis() && iat < System.currentTimeMillis())
+        if (exp > System.currentTimeMillis() && iat < System.currentTimeMillis()) {
+            if(Contact.findById(jwt.getClaim("sub")) == null) {
+                contactRepository.saveKeycloakUserLocally(jwt.getClaim("sub"), jwt.getClaim("given_name"), jwt.getClaim("family_name"), jwt.getClaim("email"));
+            }
             return Response.ok(true).build();
-        else
+        }  else
             return Response.status(Response.Status.UNAUTHORIZED).entity(false).build();
     }
 }

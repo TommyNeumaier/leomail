@@ -32,7 +32,7 @@ const getContacts = async () => {
 };
 
 const handleClickedContact = async (item:Contact) => {
-  const response = await Service.getInstance().getContact();
+  const response = await Service.getInstance().getContact(item.id);
   selectedContact.value = response.data;
   console.log(selectedContact.value);
 }
