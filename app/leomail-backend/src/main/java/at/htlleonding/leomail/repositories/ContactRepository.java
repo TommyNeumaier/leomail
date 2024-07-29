@@ -10,7 +10,6 @@ import at.htlleonding.leomail.services.KeycloakAdminService;
 import at.htlleonding.leomail.services.Utilities;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
@@ -61,7 +60,7 @@ public class ContactRepository {
                  String firstName = (String) userMap.get("firstName");
                  String lastName = (String) userMap.get("lastName");
                  String mailAddress = (String) userMap.get("email");
-            combinedResults.add(new ContactSearchDTO(id, firstName, lastName, mailAddress));
+                combinedResults.add(new ContactSearchDTO(id, firstName, lastName, mailAddress));
              }
 
             return combinedResults;
@@ -104,7 +103,7 @@ public class ContactRepository {
         return new ContactDetailDTO(contact.get().id, contact.get().firstName, contact.get().lastName, contact.get().mailAddress, contact.get().gender, contact.get().suffixTitle, contact.get().prefixTitle, contact.get().company, contact.get().positionAtCompany, contact.get().kcUser);
     }
 
-    public ContactDetailDTO updateContact(ContactDetailDTO contactDTO) {
+    public void updateContact(ContactDetailDTO contactDTO) {
         Contact contact = Contact.findById(contactDTO.id());
         if (contact == null) {
             throw new IllegalArgumentException("Contact not found");
@@ -120,6 +119,5 @@ public class ContactRepository {
         contact.prefixTitle = contactDTO.prefixTitle();
         contact.company = contactDTO.company();
         contact.positionAtCompany = contactDTO.positionAtCompany();
-        return contactDTO;
     }
 }

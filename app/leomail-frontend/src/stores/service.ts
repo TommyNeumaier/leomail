@@ -74,13 +74,11 @@ export class Service {
         return axios.post(`/api/users/update?id=${formData}`, formData);
     }
 
-    public deleteContact(id: any) {
-        return axios.post(`/api/users/delete`, {
+    public deleteContact(id: any){
+        return axios.post(`/api/users/delete`, {}, {
             params: {
                 "id": id
             }
         });
     }
-
-
 }
