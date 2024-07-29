@@ -12,10 +12,15 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
+import Tooltip from 'primevue/tooltip';
+
+
 
 const app = createApp(App);
 app.component('QuillEditor', QuillEditor)
 app.component('VueDatePicker', VueDatePicker);
+app.directive('tooltip', Tooltip);
+
 
 const pinia = createPinia();
 app.use(pinia);

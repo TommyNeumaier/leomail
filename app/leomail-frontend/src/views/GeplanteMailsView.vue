@@ -6,10 +6,16 @@ import HeaderComponent from "@/components/HeaderComponent.vue";
 
 <template>
   <header-component></header-component>
-  <NavComponent></NavComponent>
-  <MailsComponent></MailsComponent>
+  <div id="mail-mainBox">
+    <NavComponent></NavComponent>
+    <MailsComponent></MailsComponent>
+  </div>
 </template>
 
 <style>
-
+#mail-mainBox{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
 </style>

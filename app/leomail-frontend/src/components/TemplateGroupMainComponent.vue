@@ -144,21 +144,28 @@ watch(
 
 <style scoped>
 #vorlagenBoxContainer {
-  margin-top: 5%;
+  display: flex;
+  flex-direction: column;
+  margin-top: 2vh;
+  list-style-type: none; /* Entfernt die Aufzählungszeichen */
+  padding: 0; /* Entfernt Standard-Padding */
+  box-sizing: border-box; /* Stellt sicher, dass Padding und Border in die Größe eingerechnet werden */
 }
 
 .vorlagenItems {
-  font-size: 0.7rem;
+  border-bottom: 1px solid #ddd; /* Fügt einen unteren Rand zwischen den Listenelementen hinzu */
+  cursor: pointer; /* Zeigt an, dass die Elemente klickbar sind */
+  font-size: 0.8rem;
 }
 
 .vorlagenItems:hover {
-  color: darkgray;
-  cursor: pointer;
+  color: #9f9f9f;
 }
 
-.vorlagenItems.highlighted {
-  font-weight: bold;
+.highlighted {
+  font-weight: bold; /* Hebt das ausgewählte Element hervor */
 }
+
 
 #VGMainContainer {
   display: flex;

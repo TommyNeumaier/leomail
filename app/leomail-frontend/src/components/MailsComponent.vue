@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import MailFormComponent from "@/components/MailFormComponent.vue";
 import {Service} from "@/stores/service";
 import { parseISO, format, isToday, isYesterday, subDays, isSameDay } from 'date-fns';
 import { useRouter } from 'vue-router';
+import { useRoute } from "vue-router";
+import TemplateComponent from "@/components/TemplateComponent.vue";
+import GroupComponent from "@/components/GroupComponent.vue";
 
+const route = useRoute();
 const router = useRouter();
+const headline = ref('');
 
 interface MailMeta {
   templateName: string;
@@ -130,14 +135,25 @@ const handleEmailClick = (mailId: number) => {
   console.log('Clicked email id:', mailId);
 };
 
+watch(
+    () => route.path,
+    (newPath) => {
+      if (newPath.includes('geplanteMails')) {
+        headline.value = 'Geplante Emails';
+      } else {
+        headline.value = 'Emails';
+      }
+    },
+    { immediate: true }
+);
 </script>
 
 <template>
   <div id="bigVGContainer">
     <div id="VGHeaderBox">
-      <h1 id="vgHeading">Emails</h1>
+      <h1 id="vgHeading">{{ headline }}</h1>
 
-      <button id="neueMail" @click="clickedEmailForm">
+      <button v-if="!route.path.includes('geplanteMails')" id="neueMail" @click="clickedEmailForm">
         <p>Neue Email</p>
       </button>
     </div>

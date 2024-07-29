@@ -67,8 +67,8 @@ const updateTemplate = async () => {
       name: inputName.value,
       headline: inputHeading.value,
       content: content.value,
-      accountName: 'IT200274',
-      greeting: selectedGreeting.value
+      greeting: selectedGreeting.value,
+      accountName: 'IT200274'
     };
     console.log(updatedData);
     const response = await Service.getInstance().updateTemplate(updatedData);
@@ -165,6 +165,9 @@ onMounted(() => {
     <div class="editor-wrapper">
       <div id="editor" class="quill-editor"></div>
     </div>
+
+    <img src="../assets/icons/icons8-info-250.png" width="20" v-tooltip="{ value: '{{ firstname }}', showDelay: 200, hideDelay: 400 }" label="Save">
+
     <div id="buttonBox">
       <button v-if="!selectedTemplate" type="submit" class="saveTemplate" :disabled="selectedTemplate != null">
         Erstellen
