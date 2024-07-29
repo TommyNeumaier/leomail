@@ -3,7 +3,7 @@ import {computed, onMounted, ref, watch} from "vue";
 import {Service} from "@/stores/service";
 
 interface Contact {
-  id: string,
+  id: string | null,
   firstName: string,
   lastName: string,
   mailAddress: string,
@@ -26,12 +26,13 @@ const company = ref<string | null>();
 const prefixTitle = ref<string | null>();
 const suffixTitle = ref<string | null>();
 const propsSelected = defineProps<{ selectedContact: Contact | null }>();
-const emit = defineEmits(['contact-deleted', 'contact-updated']);
+const emit = defineEmits(['contact-deleted', 'contact-updated', 'contact-added']);
 
 watch(
     () => propsSelected.selectedContact,
     (newContact) => {
       clearForm();
+      console.log(newContact)
       if (newContact) {
         console.log(newContact);
         firstname.value = newContact.firstName;
@@ -94,6 +95,7 @@ const handleEntities = (entity: string) => {
 const saveOrUpdateContact = async () => {
   try {
     const contactForm = {
+      id: propsSelected.selectedContact?.id,
       company: company.value,
       positionAtCompany: positionAtCompany.value,
       prefixTitle: prefixTitle.value,
@@ -110,6 +112,7 @@ const saveOrUpdateContact = async () => {
     } else {
       await Service.getInstance().addContact(contactForm);
       console.log('Kontakt erfolgreich erstellt');
+      emit('contact-added');
     }
     clearForm();
   } catch (error) {

@@ -18,6 +18,7 @@ interface Contact {
   suffixTitle?: string
 }
 
+const kkc = ref(null);
 const selectedContact = ref<Contact | null>(null);
 let contactData = ref<Contact[]>([]);
 const searchQuery = ref();
@@ -27,11 +28,13 @@ const getContacts = async () => {
   const response = await Service.getInstance().getContacts();
   contactData.value = response.data;
   filteredContacts.value = response.data;
+  console.log(filteredContacts.value);
 };
 
-const handleClickedContact = (item:Contact) => {
-  console.log(item);
-  selectedContact.value = item;
+const handleClickedContact = async (item:Contact) => {
+  const response = await Service.getInstance().getContact();
+  selectedContact.value = response.data;
+  console.log(selectedContact.value);
 }
 
 const searchContacts = async (query: string) => {
@@ -69,6 +72,11 @@ const handleContactUpdated = async () => {
   await getContacts();
 };
 
+const handleAddedContact = () => {
+  getContacts();
+  selectedContact.value = null;
+};
+
 onMounted( () => {
   getContacts();
 })
@@ -94,7 +102,7 @@ onMounted( () => {
 
       <div id="contactsBoxContainer">
         <a v-for="(item, index) in filteredContacts" :key="index" @click="handleClickedContact(item)" class="contactItems" :id="String('contact-' + index)"
-           :class="{ highlighted: selectedContact && selectedContact.firstName === item.firstName && selectedContact.lastName === item.lastName }">
+           :class="{ highlighted: selectedContact }">
           {{ item.firstName }} {{ item.lastName }}<br>
         </a>
       </div>
@@ -102,7 +110,7 @@ onMounted( () => {
     </div>
 
     <div id="contentContainer">
-      <personen-form-component :selectedContact="selectedContact" @contact-deleted="handleContactDeleted" @contact-updated="handleContactUpdated"
+      <personen-form-component :selectedContact="selectedContact" @contact-deleted="handleContactDeleted" @contact-updated="handleContactUpdated" @contact-added="handleAddedContact"
       ></personen-form-component>
     </div>
   </div>
