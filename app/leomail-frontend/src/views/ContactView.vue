@@ -23,6 +23,8 @@ const selectedContact = ref<Contact | null>(null);
 let contactData = ref<Contact[]>([]);
 const searchQuery = ref();
 const filteredContacts = ref<Contact[]>([]);
+const selectedContactIndex = ref();
+
 
 const getContacts = async () => {
   const response = await Service.getInstance().getContacts();
@@ -31,8 +33,9 @@ const getContacts = async () => {
   console.log(filteredContacts.value);
 };
 
-const handleClickedContact = async (item:Contact) => {
-  const response = await Service.getInstance().getContact();
+const handleClickedContact = async (item:Contact, index: number) => {
+  selectedContactIndex.value = index;
+  const response = await Service.getInstance().getContact(item.id);
   selectedContact.value = response.data;
   console.log(selectedContact.value);
 }
@@ -61,20 +64,25 @@ watch(searchQuery, () => {
 
 const handleNewContact = () => {
   selectedContact.value = null;
+  selectedContactIndex.value = null;
 }
 
 const handleContactDeleted = () => {
   getContacts();
   selectedContact.value = null;
+  selectedContactIndex.value = null;
 }
 
 const handleContactUpdated = async () => {
   await getContacts();
+  selectedContact.value = null;
+  selectedContactIndex.value = null;
 };
 
 const handleAddedContact = () => {
   getContacts();
   selectedContact.value = null;
+  selectedContactIndex.value = null;
 };
 
 onMounted( () => {
@@ -101,8 +109,8 @@ onMounted( () => {
       </div>
 
       <div id="contactsBoxContainer">
-        <a v-for="(item, index) in filteredContacts" :key="index" @click="handleClickedContact(item)" class="contactItems" :id="String('contact-' + index)"
-           :class="{ highlighted: selectedContact }">
+        <a v-for="(item, index) in filteredContacts" :key="index" @click="handleClickedContact(item,index)" class="contactItems" :id="String('contact-' + index)"
+           :class="{ highlighted: selectedContactIndex === index, 'font-bold': selectedContactIndex === index }">
           {{ item.firstName }} {{ item.lastName }}<br>
         </a>
       </div>

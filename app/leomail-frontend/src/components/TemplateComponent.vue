@@ -32,9 +32,8 @@ const toolbarOptions = ref([
   ['link', 'image', 'clean']
 ]);
 const quillEditor = ref<Quill | null>(null);
-const emitEvents = defineEmits(['template-added', 'template-removed','template-saved']);
+const emitEvents = defineEmits(['template-added', 'template-removed', 'template-saved']);
 const props = defineProps<{ selectedTemplate: Template | null }>();
-
 
 
 const getGreetings = async () => {
@@ -82,13 +81,16 @@ const updateTemplate = async () => {
 };
 
 const removeTemplate = async () => {
-  try {
-    const response = await Service.getInstance().removeTemplate(props.selectedTemplate?.id);
-    console.log('Erfolgreich gesendet:', response.data);
-    emitEvents('template-removed', props.selectedTemplate);
-    clearForm();
-  } catch (error) {
-    console.error('Fehler beim Löschen der Daten:', error);
+  const confirmed = confirm('Möchten Sie diese Vorlage wirklich löschen?');
+  if (confirmed) {
+    try {
+      const response = await Service.getInstance().removeTemplate(props.selectedTemplate?.id);
+      console.log('Erfolgreich gesendet:', response.data);
+      emitEvents('template-removed', props.selectedTemplate);
+      clearForm();
+    } catch (error) {
+      console.error('Fehler beim Löschen der Daten:', error);
+    }
   }
 };
 
@@ -144,17 +146,17 @@ onMounted(() => {
     <div>
       <label for="name" class="template-label">Vorlage-Name</label><br>
       <input v-model="inputName" type="text" id="name" class="formTemplate"
-             placeholder="Geben Sie einen Namen für die Vorlage ...">
+             placeholder="Geben Sie einen Namen für die Vorlage ..." required>
     </div>
     <div id="formFlexBox">
       <div>
         <label for="betreff" class="template-label">Betreff</label><br>
         <input v-model="inputHeading" type="text" id="betreff" class="formTemplate"
-               placeholder="Geben Sie einen Betreff für die Vorlage ...">
+               placeholder="Geben Sie einen Betreff für die Vorlage ..." required>
       </div>
       <div id="anredeBox">
         <label for="anrede" class="template-label">Anrede</label><br>
-        <select id="anrede" class="formTemplate" v-model="selectedGreeting">
+        <select id="anrede" class="formTemplate" v-model="selectedGreeting" required>
           <option disabled value="">Wähle eine Anrede ...</option>
           <option v-for="item in greetingData" :key="item.id" :value="item.id">{{ item.content }}</option>
         </select>
@@ -164,34 +166,43 @@ onMounted(() => {
       <div id="editor" class="quill-editor"></div>
     </div>
     <div id="buttonBox">
-      <button type="submit" class="saveTemplate" :disabled="selectedTemplate != null">Erstellen</button>
-      <button type="button" @click=removeTemplate class="saveTemplate" :disabled="selectedTemplate == null">Löschen</button>
-      <button type="button" @click=updateTemplate class="saveTemplate" :disabled="selectedTemplate == null">Speichern</button>
+      <button v-if="!selectedTemplate" type="submit" class="saveTemplate" :disabled="selectedTemplate != null">
+        Erstellen
+      </button>
+      <button v-if="selectedTemplate" type="button" @click=removeTemplate class="saveTemplate" id="deleteButton"
+              :disabled="selectedTemplate == null">Löschen
+      </button>
+      <button v-if="selectedTemplate" type="button" @click=updateTemplate class="saveTemplate"
+              :disabled="selectedTemplate == null">Speichern
+      </button>
     </div>
   </form>
 </template>
 
 <style scoped>
-#formFlexBox{
+
+#formFlexBox {
   display: flex;
   flex-direction: row;
   margin-top: 1%;
   width: 100%;
 }
 
-#formFlexBox div{
+#formFlexBox div {
   width: 40%;
 }
 
-#formFlexBox div .formTemplate{
+#formFlexBox div .formTemplate {
   width: 100%;
 }
 
 #buttonBox {
   display: flex;
-  width: 50%;
+  flex-wrap: wrap;
+  width: 25%;
   margin-top: 2%;
-  margin-left: 65%;
+  margin-left: 51vw;
+  justify-content: flex-end; /* Align items to the right */
 }
 
 .saveTemplate {
@@ -210,12 +221,12 @@ onMounted(() => {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-.saveTemplate:disabled{
+.saveTemplate:disabled {
   background-color: lightgray;
   border-color: lightgray;;
 }
 
-.saveTemplate:disabled:hover{
+.saveTemplate:disabled:hover {
   border-color: lightgray;
   box-shadow: none;
 }
@@ -266,6 +277,17 @@ form {
 #placeholderSelectionTemplate {
   color: #5A5A5A;
   font-size: 0.5em;
+}
+
+#deleteButton {
+  background-color: #f5151c;
+  color: white;
+  border: #ff393f solid 1px;
+}
+
+#deleteButton:hover {
+  background-color: rgba(253, 75, 96, 0.86);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 </style>
 

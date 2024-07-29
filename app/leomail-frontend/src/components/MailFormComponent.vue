@@ -223,6 +223,13 @@ const handleSubmit = () => {
 </template>
 
 <style scoped>
+#bigContainer{
+  width: 86.5%;
+  margin-top: 2%;
+  margin-left: 1.5%;
+  display: flex;
+  flex-direction: column;
+}
 #date {
   margin-right: 2vw;
   margin-left: 1vw;
@@ -265,10 +272,6 @@ const handleSubmit = () => {
   align-items: center;
 }
 
-#bigContainer {
-  height: 100%;
-}
-
 form {
   padding: 1% 3%;
 }
@@ -302,7 +305,7 @@ body {
 
 #formBox {
   background-color: white;
-  height: 85%;
+  height: 87%;
   margin-top: 2vh;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 }

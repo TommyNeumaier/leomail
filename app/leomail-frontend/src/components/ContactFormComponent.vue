@@ -106,6 +106,7 @@ const saveOrUpdateContact = async () => {
       mailAddress: email.value
     };
     if (propsSelected.selectedContact) {
+      console.log(contactForm);
       await Service.getInstance().updateContact(propsSelected.selectedContact.id, contactForm);
       console.log('Kontakt erfolgreich aktualisiert');
       emit('contact-updated');
@@ -253,11 +254,11 @@ const deleteContact = async () => {
           </div>
         </div>
         <div id="buttonBox">
-          <button type="submit" id="submitButton">
-            {{ propsSelected.selectedContact ? 'Person aktualisieren' : 'Person erstellen' }}
-          </button>
           <button type="button" id="deleteButton" @click="deleteContact" v-if="propsSelected.selectedContact">Person
             löschen
+          </button>
+          <button type="submit" id="submitButton">
+            {{ propsSelected.selectedContact ? 'Speichern' : 'Person erstellen' }}
           </button>
         </div>
       </div>
@@ -389,6 +390,7 @@ const deleteContact = async () => {
   border: #78A6FF solid 1px;
   font-size: 0.8rem;
   text-align: center;
+  margin-left: 2%;
 }
 
 #submitButton:hover {
@@ -404,5 +406,28 @@ const deleteContact = async () => {
 #submitButton:disabled:hover {
   border-color: lightgray;
   box-shadow: none;
+}
+
+#deleteButton{
+  all: unset;
+  border-radius: 12px;
+  padding: 1vh 0;
+  background-color: #f5151c;
+  color: white;
+  width: 100%;
+  border: #ff393f solid 1px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+#deleteButton:hover{
+  background-color: rgba(253, 75, 96, 0.86);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+#buttonBox{
+  display: flex;
+  flex-direction: row;
+  width: 18%;
 }
 </style>
