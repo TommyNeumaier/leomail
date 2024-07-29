@@ -24,6 +24,15 @@ public class Project extends PanacheEntityBase {
     @ManyToOne
     public Contact createdBy;
 
+    @OneToMany(mappedBy = "project")
+    public List<Group> groups;
+
+    @OneToMany(mappedBy = "project")
+    public List<Template> templates;
+
+    @OneToMany(mappedBy = "project")
+    public List<SentTemplate> sentTemplates;
+
     @ManyToMany
     @JoinTable(
             name = "project_contact",
@@ -31,9 +40,6 @@ public class Project extends PanacheEntityBase {
             inverseJoinColumns = @JoinColumn(name = "contact_id")
     )
     public List<Contact> members;
-
-    @OneToMany
-    public Set<Group> groups;
 
     public Project() {
         this.createdOn = LocalDateTime.now();

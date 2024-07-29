@@ -28,12 +28,13 @@ public class TemplateRepository {
     @Inject
     EntityManager em;
 
-    public List<TemplateDTO> getAllTemplates() {
-        return em.createQuery("select t from Template t", Template.class)
+    public List<TemplateDTO> getProjectTemplates(String projectId) {
+        return em.createQuery("select t from Template t WHERE lower(:pid) = lower(t.project.id)", Template.class)
+                .setParameter("pid", projectId)
                 .getResultList()
                 .stream()
                 .filter(template -> template.getClass() == Template.class)
-                .map(template -> new TemplateDTO(template.id, template.name, template.headline, template.content, template.greeting.id, template.createdBy.id)).toList();
+                .map(template -> new TemplateDTO(template.id, template.name, template.headline, template.content, template.greeting.id, template.createdBy.id, template.project.id)).toList();
     }
 
     public Set<TemplateGreeting> getAllGreetings() {
@@ -41,14 +42,9 @@ public class TemplateRepository {
     }
 
     @Transactional
-    public TemplateDTO addTemplate(TemplateDTO templateDTO) {
+    public TemplateDTO addTemplate(TemplateDTO templateDTO, String creator) {
         if (Template.find("name", templateDTO.name()).count() > 0) {
             throw new TemplateNameAlreadyExistsException();
-        }
-
-        Contact account = Contact.find("userName", templateDTO.accountName()).firstResult();
-        if (account == null) {
-            throw new ContactExistsInKeycloakException("Account with username " + templateDTO.accountName() + " not found");
         }
 
         TemplateGreeting greeting = TemplateGreeting.findById(templateDTO.greeting());
@@ -56,7 +52,7 @@ public class TemplateRepository {
             throw new NonExistingGreetingException();
         }
 
-        Template template = new Template(templateDTO.name(), templateDTO.headline(), templateDTO.content(), account, greeting);
+        Template template = new Template(templateDTO.name(), templateDTO.headline(), templateDTO.content(), Contact.findById(creator), greeting, templateDTO.projectId());
         template.persist();
 
         return templateDTO;
@@ -75,14 +71,15 @@ public class TemplateRepository {
         if (template == null) {
             throw new IllegalArgumentException("Template with id " + templateDTO.id() + " not found");
         }
-        deleteById(templateDTO.id());
-        template = new Template(templateDTO.id(), templateDTO.name(), templateDTO.headline(), templateDTO.content(), Contact.find("userName", templateDTO.accountName()).firstResult(), TemplateGreeting.findById(templateDTO.greeting()));
-        em.merge(template);
+        template.name = templateDTO.name();
+        template.headline = templateDTO.headline();
+        template.content = templateDTO.content();
+        template.greeting = TemplateGreeting.findById(templateDTO.greeting());
         return templateDTO;
     }
 
-    public List<UsedTemplateDTO> getUsedTemplates(boolean scheduled) {
-        List<SentTemplate> usedTemplateList = SentTemplate.listAll();
+    public List<UsedTemplateDTO> getUsedTemplates(boolean scheduled, String pid) {
+        List<SentTemplate> usedTemplateList = SentTemplate.list("project.id", pid);
         List<UsedTemplateDTO> dtoList = new ArrayList<>();
 
         for(SentTemplate template : usedTemplateList) {

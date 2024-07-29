@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {QuillEditor} from "@vueup/vue-quill";
-import {Service} from "@/stores/service";
+import {Service} from "@/services/service";
 import {ref} from "vue";
 
 

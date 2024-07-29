@@ -1,5 +1,6 @@
 package at.htlleonding.leomail.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,6 +17,9 @@ public class Template extends PanacheEntityBase {
 
     @Column(length = 128, nullable = false, unique = true)
     public String name;
+
+    @ManyToOne
+    public Project project;
 
     @CreationTimestamp
     public LocalDateTime created;
@@ -45,8 +49,8 @@ public class Template extends PanacheEntityBase {
         this.greeting = greeting;
     }
 
-    public Template(Long id, String name, String headline, String content, Contact createdBy, TemplateGreeting greeting) {
+    public Template(String name, String headline, String content, Contact createdBy, TemplateGreeting greeting, String projectId) {
         this(name, headline, content, createdBy, greeting);
-        this.id = id;
+        this.project = Project.findById(projectId);
     }
 }

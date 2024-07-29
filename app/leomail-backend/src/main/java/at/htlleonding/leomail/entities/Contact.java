@@ -41,10 +41,6 @@ public class Contact extends PanacheEntityBase {
     @CreationTimestamp
     public LocalDateTime created;
 
-    @ManyToMany(mappedBy = "members")
-    @JsonIgnore
-    public List<Project> projects;
-
     @ElementCollection
     @CollectionTable(name = "contact_attributes", joinColumns = @JoinColumn(name = "id"))
     @MapKeyColumn(name = "key")

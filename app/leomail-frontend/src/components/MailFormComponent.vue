@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, nextTick, onMounted, onUnmounted, ref, watch} from "vue";
 import {Quill, QuillEditor} from "@vueup/vue-quill";
-import {Service} from "@/stores/service";
+import {Service} from "@/services/service";
 import '@vuepic/vue-datepicker/dist/main.css';
 import {format} from "date-fns";
 

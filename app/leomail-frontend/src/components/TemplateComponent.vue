@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {onMounted, ref, watch} from 'vue';
-import {Service} from '@/stores/service';
+import {Service} from '@/services/service';
 import {Quill, QuillEditor} from '@vueup/vue-quill';
+import {useAppStore} from "@/stores/app.store";
 
 interface Greeting {
   id: number;
@@ -16,6 +17,7 @@ interface Template {
   content: string;
 }
 
+const appStore = useAppStore();
 const inputName = ref('');
 const inputHeading = ref('');
 const selectedGreeting = ref('');
@@ -47,8 +49,8 @@ const addTemplate = async () => {
       name: inputName.value,
       headline: inputHeading.value,
       content: content.value,
-      accountName: 'IT200274',
-      greeting: selectedGreeting.value
+      greeting: selectedGreeting.value,
+      projectId: appStore.$state.project
     };
     console.log(formData);
     const response = await Service.getInstance().addTemplate(formData);
@@ -68,7 +70,7 @@ const updateTemplate = async () => {
       headline: inputHeading.value,
       content: content.value,
       greeting: selectedGreeting.value,
-      accountName: 'IT200274'
+      projectId: appStore.$state.project
     };
     console.log(updatedData);
     const response = await Service.getInstance().updateTemplate(updatedData);
@@ -84,7 +86,7 @@ const removeTemplate = async () => {
   const confirmed = confirm('Möchten Sie diese Vorlage wirklich löschen?');
   if (confirmed) {
     try {
-      const response = await Service.getInstance().removeTemplate(props.selectedTemplate?.id);
+      const response = await Service.getInstance().removeTemplate(props.selectedTemplate?.id, appStore.$state.project);
       console.log('Erfolgreich gesendet:', response.data);
       emitEvents('template-removed', props.selectedTemplate);
       clearForm();

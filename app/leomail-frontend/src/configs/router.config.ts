@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import {createRouter, createWebHistory} from 'vue-router';
 import MailView from "@/views/MailView.vue";
 import GeplanteMails from "@/views/GeplanteMailsView.vue";
 import Gruppe from "@/views/GruppeView.vue";
@@ -8,12 +8,12 @@ import Login from "@/views/Login.vue";
 import ProjekteView from "@/views/ProjekteView.vue";
 import PersonenView from "@/views/ContactView.vue";
 import ProfilView from "@/views/ProfilView.vue";
-import { refreshToken, validateToken } from "@/services/auth.service";
-import { useAuthStore } from "@/stores/auth.store";
-import MailFormComponent from "@/components/MailFormComponent.vue";
+import {refreshToken, validateToken} from "@/services/auth.service";
+import {useAuthStore} from "@/stores/auth.store";
 import NewProject from "@/views/NewProject.vue";
 import AuthTest from "@/views/AuthTest.vue";
 import NewMail from "@/views/NewMail.vue";
+import {useAppStore} from '@/stores/app.store';
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -37,6 +37,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
+  let authOk = false;
 
   if (to.meta.requiresAuth) {
     const accessToken = authStore.$state.accessToken;
@@ -52,8 +53,7 @@ router.beforeEach(async (to, from, next) => {
       });
 
       if (isValid) {
-        console.log('Access token is valid, proceeding to', to.name);
-        return next();
+        authOk = true;
       } else {
         console.log('Access token is invalid, attempting to refresh');
         const newToken = await refreshToken();
@@ -61,7 +61,7 @@ router.beforeEach(async (to, from, next) => {
           const newIsValid = await validateToken(newToken.access_token);
           if (newIsValid) {
             console.log('New access token is valid, proceeding to', to.name);
-            return next();
+            authOk = true;
           }
         }
         console.log('New access token is invalid, redirecting to login');
@@ -74,6 +74,26 @@ router.beforeEach(async (to, from, next) => {
       return next({ name: 'login' });
     }
   } else {
+    authOk = true;
+  }
+
+  if (authOk) {
+    const exceptions = ["/projekte", "/projekte/neu", "/login", "/personen", "/authtest", "/settings", "/profil"];
+
+    const appStore = useAppStore();
+    if (appStore.$state.project === '' && !exceptions.includes(to.path)) {
+      return next({name: "projekte"});
+    }
+
+    // TODO: Check if user has permission for this project, if not, then return him to the project view
+    /*
+        let hasPermission = Service.getInstance().checkPermission(appStore.$state.project).then((value: boolean) => {
+          return value;
+        });
+
+        if(!hasPermission){
+          return next({ name: "projekte"});
+        }*/
     return next();
   }
 });

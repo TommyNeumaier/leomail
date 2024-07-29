@@ -2,20 +2,22 @@
 import HeaderComponent from "@/components/HeaderComponent.vue";
 import {useRouter} from 'vue-router';
 import {onMounted, type Ref, ref} from 'vue';
-import {Service} from "@/stores/service";
-import {appStore} from "@/stores/app.store";
+import {Service} from "@/services/service";
+import {useAppStore} from "@/stores/app.store";
 
 const router = useRouter();
+const appStore = useAppStore();
 const projects = ref([]) as Ref<ProjectOverview[]>;
-const store = appStore()
 
 const clickedNewProject = () => {
   router.push({name: 'neueProjekte'});
 }
 
 const clickedProject = (project: ProjectOverview) => {
-  store.$state.project = project.id;
-  router.push("/");
+  appStore.project = project.id;
+  router.push(`/?pid=${project.id}`).then(() => {
+    console.log('Navigated to project with id ' + project.id);
+  });
 }
 
 interface ProjectOverview {

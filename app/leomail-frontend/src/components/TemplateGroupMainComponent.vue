@@ -2,11 +2,13 @@
 import NavComponent from "@/components/NavComponent.vue";
 import axios from "axios";
 import { onMounted, ref, shallowRef, watch, computed } from "vue";
-import { Service } from "@/stores/service";
+import { Service } from "@/services/service";
 import VorlageMainContentComponent from "@/components/TemplateComponent.vue";
 import { useRoute } from "vue-router";
 import GroupComponent from "@/components/GroupComponent.vue";
 import TemplateComponent from "@/components/TemplateComponent.vue";
+import { stdout } from "process";
+import {useAppStore} from "@/stores/app.store";
 
 const route = useRoute();
 
@@ -17,6 +19,7 @@ let newVGButton = ref('');
 let formVG = shallowRef(null);
 
 const searchQuery = ref('');
+const appStore = useAppStore();
 
 const filteredTemplates = computed(() => {
   if (!searchQuery.value) return fetchedData.value;
@@ -26,11 +29,12 @@ const filteredTemplates = computed(() => {
 const getData = async () => {
   let response;
   if (route.path.includes('vorlagen')) {
-    response = await Service.getInstance().getVorlagen();
+    response = await Service.getInstance().getVorlagen(appStore.$state.project);
   } else if (route.path.includes('gruppen')) {
-    //response = await Service.getInstance().getGruppen();
+    // response = await Service.getInstance().getGruppen();
     response = '';
   }
+  console.log(response);
   fetchedData.value = response.data;
 };
 
