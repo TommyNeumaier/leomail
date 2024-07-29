@@ -24,7 +24,7 @@ public class ProjectRepository {
                 .getResultList();
     }
 
-    public ProjectAddDTO addProject(ProjectAddDTO projectAddDTO, String creator) {
+    public void addProject(ProjectAddDTO projectAddDTO, String creator) {
         if(projectAddDTO == null) {
             throw new ObjectContainsNullAttributesException(List.of("**ALL NULL**"));
         }
@@ -36,6 +36,5 @@ public class ProjectRepository {
 
         Project project = new Project(projectAddDTO.name(), projectAddDTO.description(), Contact.findById(creator), projectAddDTO.mailInformation().mailAddress(), projectAddDTO.mailInformation().password(), projectAddDTO.members());
         project.persist();
-        return projectAddDTO;
     }
 }

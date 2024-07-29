@@ -50,7 +50,7 @@ public class ContactResource {
     @POST
     @Path("/add")
     @Transactional
-   // @Authenticated
+    @Authenticated
     public Response addContact(ContactAddDTO contactDTO) {
         try {
             contactRepository.addContact(contactDTO);

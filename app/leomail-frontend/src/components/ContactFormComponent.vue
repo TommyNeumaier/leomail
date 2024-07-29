@@ -123,6 +123,7 @@ const deleteContact = async () => {
     const confirmed = confirm('Möchten Sie diesen Kontakt wirklich löschen?');
     if (confirmed) {
       try {
+        console.log(propsSelected.selectedContact)
         await Service.getInstance().deleteContact(propsSelected.selectedContact.id);
         console.log('Kontakt erfolgreich gelöscht');
         clearForm();

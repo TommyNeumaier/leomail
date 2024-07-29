@@ -65,7 +65,7 @@ export class Service{
     }
 
     public deleteContact(id: any){
-        return axios.post(`/api/users/delete`, {
+        return axios.post(`/api/users/delete`, {}, {
             params: {
                 "id": id
             }
