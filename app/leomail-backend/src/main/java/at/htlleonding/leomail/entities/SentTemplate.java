@@ -32,6 +32,9 @@ public class SentTemplate extends PanacheEntityBase {
     public Contact createdBy;
 
     @ManyToOne
+    public Project project;
+
+    @ManyToOne
     public TemplateGreeting greeting;
 
     public LocalDateTime sentOn;

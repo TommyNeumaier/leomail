@@ -2,7 +2,7 @@
 
 import HeaderComponent from "@/components/HeaderComponent.vue";
 import PersonenFormComponent from "@/components/ContactFormComponent.vue";
-import {Service} from "@/stores/service";
+import {Service} from "@/services/service";
 import {computed, onMounted, ref, watch} from "vue";
 import Paginator from 'primevue/paginator';
 

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue'
 import MailFormComponent from "@/components/MailFormComponent.vue";
-import {Service} from "@/stores/service";
+import {Service} from "@/services/service";
 import { parseISO, format, isToday, isYesterday, subDays, isSameDay } from 'date-fns';
 import { useRouter } from 'vue-router';
+import {useAppStore} from "@/stores/app.store";
 
 const router = useRouter();
 
@@ -53,9 +54,10 @@ const totalMails = ref(50);
 const limit = ref(10);
 const showEmailForm = ref(false);
 const checkAllMails = ref(false);
+const appStore = useAppStore()
 
 const getMails = async () => {
-  const response = await Service.getInstance().getSendEmails();
+  const response = await Service.getInstance().getUsedTemplates(false, appStore.$state.project);
   fetchedMails.value = response.data.map((mail: any) => {
     const sentOnDate = parseISO(mail.keyDates.sentOn);
     let formattedSentOn;

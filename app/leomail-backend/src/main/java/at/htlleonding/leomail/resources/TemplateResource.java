@@ -7,11 +7,13 @@ import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakEx
 import at.htlleonding.leomail.model.exceptions.greeting.NonExistingGreetingException;
 import at.htlleonding.leomail.model.exceptions.template.TemplateNameAlreadyExistsException;
 import at.htlleonding.leomail.repositories.TemplateRepository;
+import at.htlleonding.leomail.services.PermissionService;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 @Path("template")
 public class TemplateResource {
@@ -19,11 +21,17 @@ public class TemplateResource {
     @Inject
     TemplateRepository templateRepository;
 
+    @Inject
+    JsonWebToken jwt;
+
+    @Inject
+    PermissionService permissionService;
+
     @GET
-    @Path("all")
+    @Path("/get")
     @Authenticated
-    public Response getAllTemplates() {
-        return Response.ok(templateRepository.getAllTemplates()).build();
+    public Response getProjectTemplates(@QueryParam("pid") String projectId) {
+        return Response.ok(templateRepository.getProjectTemplates(projectId)).build();
     }
 
     @GET
@@ -46,13 +54,15 @@ public class TemplateResource {
     @Authenticated
     public Response addTemplate(TemplateDTO templateDTO) {
         try {
-            return Response.ok(templateRepository.addTemplate(templateDTO)).build();
+            return Response.ok(templateRepository.addTemplate(templateDTO, jwt.getClaim("sub"))).build();
         } catch (TemplateNameAlreadyExistsException excp) {
             return Response.status(409).entity("E-Template-01").build();
         } catch (ContactExistsInKeycloakException excp) {
             return Response.status(409).entity("E-Template-02").build();
         } catch (NonExistingGreetingException excp) {
             return Response.status(409).entity("E-Template-03").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(418).entity(e.getMessage()).build();
         }
     }
 
@@ -61,7 +71,10 @@ public class TemplateResource {
     @Authenticated
     public Response getById(Long id) {
         try {
-            return Response.ok(Template.findById(id)).build();
+            if(permissionService.hasPermission(id, jwt.getClaim("sub"))) {
+                return Response.ok(Template.findById(id)).build();
+            }
+            return Response.status(403).build();
         } catch (IllegalArgumentException e) {
             return Response.status(418).build();
         }
@@ -71,9 +84,13 @@ public class TemplateResource {
     @Transactional
     @Path("delete")
     @Authenticated
-    public Response deleteById(@QueryParam("tid") Long id) {
+    public Response deleteById(@QueryParam("tid") Long tid, @QueryParam("pid") String pid) {
         try {
-            templateRepository.deleteById(id);
+            if (permissionService.hasPermission(pid, jwt.getClaim("sub"), tid)) {
+                templateRepository.deleteById(tid);
+            } else {
+                return Response.status(403).build();
+            }
         } catch (IllegalArgumentException e) {
             return Response.status(418).build();
         }
@@ -86,7 +103,11 @@ public class TemplateResource {
     @Authenticated
     public Response updateTemplate(TemplateDTO templateDTO) {
         try {
-            return Response.ok(templateRepository.updateTemplate(templateDTO)).build();
+            if (permissionService.hasPermission(templateDTO.projectId(), jwt.getClaim("sub"), templateDTO.id())) {
+                return Response.ok(templateRepository.updateTemplate(templateDTO)).build();
+            } else {
+                return Response.status(403).build();
+            }
         } catch (IllegalArgumentException e) {
             return Response.status(418).build();
         }
@@ -94,7 +115,11 @@ public class TemplateResource {
 
     @GET
     @Path("getUsedTemplates")
-    public Response getScheduledUsedTemplates(@QueryParam("scheduled") boolean scheduled) {
-        return Response.ok(templateRepository.getUsedTemplates(scheduled)).build();
+    @Authenticated
+    public Response getScheduledUsedTemplates(@QueryParam("scheduled") boolean scheduled, @QueryParam("pid") String pid) {
+        if(!permissionService.hasPermission(pid, jwt.getClaim("sub"))){
+            return Response.status(403).build();
+        }
+        return Response.ok(templateRepository.getUsedTemplates(scheduled, pid)).build();
     }
 }
