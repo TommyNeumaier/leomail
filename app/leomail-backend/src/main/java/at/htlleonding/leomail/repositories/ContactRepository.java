@@ -32,40 +32,37 @@ public class ContactRepository {
     @ConfigProperty(name = "leomail.user.search.max")
     int maxResults;
 
-    public List<ContactSearchDTO> searchContacts(String searchTerm) {
+    public List<ContactSearchDTO> searchContacts(String searchTerm, boolean keycloakOnly) {
         if(searchTerm == null) searchTerm = "";
 
         String finalSearchTerm = searchTerm;
-        CompletableFuture<List<Contact>> contactFuture = CompletableFuture.supplyAsync(() ->
-                Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1", "%" + finalSearchTerm + "%")
-                        .page(0, maxResults)
-                        .list(), managedExecutor
-        );
-
         CompletableFuture<List<Object>> keycloakFuture = CompletableFuture.supplyAsync(() ->
                 keycloakAdminService.searchUser(finalSearchTerm, maxResults), managedExecutor
         );
 
         try {
-            List<Contact> contacts = contactFuture.get();
-            List<Object> keycloakUsers = keycloakFuture.get();
+            List<ContactSearchDTO> list = new java.util.ArrayList<>(keycloakFuture.get().stream()
+                    .map(user -> {
+                        Map<String, Object> userMap = (Map<String, Object>) user;
+                        String id = (String) userMap.get("id");
+                        String firstName = (String) userMap.get("firstName");
+                        String lastName = (String) userMap.get("lastName");
+                        String mailAddress = (String) userMap.get("email");
+                        return new ContactSearchDTO(id, firstName, lastName, mailAddress);
+                    })
+                    .toList());
 
-            List<ContactSearchDTO> combinedResults = contacts.stream()
+            if (keycloakOnly) return list;
+
+            List<Contact> contacts = Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1", "%" + searchTerm + "%").list();
+            List<ContactSearchDTO> contactList = contacts.stream()
                     .map(contact -> new ContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress))
-                    .collect(Collectors.toList());
+                    .toList();
+            list.addAll(contactList);
 
-            for (Object keycloakUser : keycloakUsers) {
-                 Map<String, Object> userMap = (Map<String, Object>) keycloakUser;
-                 String id = (String) userMap.get("id");
-                 String firstName = (String) userMap.get("firstName");
-                 String lastName = (String) userMap.get("lastName");
-                 String mailAddress = (String) userMap.get("email");
-                combinedResults.add(new ContactSearchDTO(id, firstName, lastName, mailAddress));
-             }
-
-            return combinedResults;
+            return list;
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error during parallel search", e);
+            throw new RuntimeException(e);
         }
     }
 

@@ -13,12 +13,9 @@ import java.util.Map;
 import java.util.Objects;
 
 @Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@SequenceGenerator(name = "seq_contact", sequenceName = "seq_contact", allocationSize = 1, initialValue = 3)
 public class Contact extends PanacheEntityBase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     public String id;
 
     @Column(nullable = false)
@@ -59,12 +56,10 @@ public class Contact extends PanacheEntityBase {
     public List<Group> groups;
 
     public Contact() {
-
+        this.id = java.util.UUID.randomUUID().toString();
     }
 
     public Contact(String firstName, String lastName, String mailAddress) {
-        super();
-        this.id= id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.mailAddress = mailAddress;
@@ -73,6 +68,11 @@ public class Contact extends PanacheEntityBase {
     public Contact(String firstName, String lastName, String mailAddress, boolean kcUser) {
         this(firstName, lastName, mailAddress);
         this.kcUser = kcUser;
+    }
+
+    public Contact(String id, String firstName, String lastName, String mailAddress, boolean kcUser) {
+        this(firstName, lastName, mailAddress, kcUser);
+        this.id = id;
     }
 
     public Contact(String firstName, String lastName, String mailAddress, String prefixTitle, String suffixTitle, String company, String position, Gender gender) {
@@ -86,6 +86,10 @@ public class Contact extends PanacheEntityBase {
 
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+
+    public String getId() {
+        return id;
     }
 
     @Override

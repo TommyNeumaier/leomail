@@ -68,7 +68,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 7vh; /* Feste Größe für den kreisförmigen Hintergrund */
-  height: 7vh; /* Feste Größe für den kreisförmigen Hintergrund */
+  width: 7vh;
+  height: 7vh;
 }
+
+
 </style>

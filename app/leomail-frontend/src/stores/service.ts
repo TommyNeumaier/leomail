@@ -81,4 +81,7 @@ export class Service {
             }
         });
     }
+    public getPersonalProjects(){
+        return axios.get(`/api/project/get/personal`);
+    }
 }

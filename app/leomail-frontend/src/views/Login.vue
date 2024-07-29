@@ -31,7 +31,7 @@ const handleLogin = async () => {
   try {
     const loginSuccess = await login(username.value, password.value);
     if (loginSuccess) {
-      router.push('/gruppen').then(() => {});
+      router.push('/').then(() => {});
     }
   } catch (error) {
     errorMessage.value = error.message;

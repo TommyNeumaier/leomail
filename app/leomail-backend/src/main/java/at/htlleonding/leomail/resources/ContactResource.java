@@ -28,7 +28,7 @@ public class ContactResource {
     @Path("/get")
     @Transactional
     public Response getContacts() {
-        List<ContactSearchDTO> results = contactRepository.searchContacts(null);
+        List<ContactSearchDTO> results = contactRepository.searchContacts(null, false);
         return Response.ok(results).build();
     }
 
@@ -42,8 +42,8 @@ public class ContactResource {
     @Path("/search")
     @Transactional
     @CacheResult(cacheName = "contact-search")
-    public Response searchContacts(@QueryParam("query") String searchTerm) {
-        List<ContactSearchDTO> results = contactRepository.searchContacts(searchTerm);
+    public Response searchContacts(@QueryParam("query") String searchTerm, @QueryParam("kc") boolean keycloakOnly) {
+        List<ContactSearchDTO> results = contactRepository.searchContacts(searchTerm, keycloakOnly);
         return Response.ok(results).build();
     }
 

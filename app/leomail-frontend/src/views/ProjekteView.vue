@@ -1,24 +1,48 @@
 <script setup lang="ts">
-
 import HeaderComponent from "@/components/HeaderComponent.vue";
 import {useRouter} from 'vue-router';
+import {onMounted, type Ref, ref} from 'vue';
+import {Service} from "@/stores/service";
+import {appStore} from "@/stores/app.store";
 
 const router = useRouter();
+const projects = ref([]) as Ref<ProjectOverview[]>;
+const store = appStore()
+
 const clickedNewProject = () => {
-  //showEmailForm.value = true;
   router.push({name: 'neueProjekte'});
 }
+
+const clickedProject = (project: ProjectOverview) => {
+  store.$state.project = project.id;
+  router.push("/");
+}
+
+interface ProjectOverview {
+  id: number;
+  name: string;
+}
+
+onMounted(() => {
+  Service.getInstance().getPersonalProjects().then((response) => {
+    projects.value = response.data;
+  });
+});
 </script>
 
 <template>
   <header-component></header-component>
   <div id="bigContainer">
     <div id="listContainer">
-
       <div id="flexHeadline">
         <div>
-          <h3 id="headline">Projekte</h3></div>
-        <div><div @click="clickedNewProject" id="newMailButton"><img src="../assets/icons/newMail-white.png"></div></div>
+          <h3 id="headline">Projekte</h3>
+        </div>
+        <div>
+          <div @click="clickedNewProject" id="newMailButton">
+            <img src="../assets/icons/newMail-white.png">
+          </div>
+        </div>
       </div>
 
       <div id="search-container">
@@ -26,6 +50,12 @@ const clickedNewProject = () => {
           <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
         </div>
         <input type="text" id="search" placeholder="suche">
+      </div>
+
+      <div id="project-list">
+        <div v-for="project in projects" :key="project.id" class="project-item" @click="clickedProject(project)">
+          {{ project.name }}
+        </div>
       </div>
     </div>
 
@@ -146,5 +176,14 @@ const clickedNewProject = () => {
 
 #contentContainer {
   width: 75%;
+}
+
+#project-list {
+  margin-top: 20px;
+}
+
+.project-item {
+  padding: 10px;
+  border-bottom: 1px solid #ECECEC;
 }
 </style>
