@@ -33,8 +33,9 @@ const getContacts = async () => {
   console.log(filteredContacts.value);
 };
 
-const handleClickedContact = async (item:Contact, index: number) => {
+const handleClickedContact = async (item:Contact, index : number) => {
   selectedContactIndex.value = index;
+
   const response = await Service.getInstance().getContact(item.id);
   selectedContact.value = response.data;
   console.log(selectedContact.value);

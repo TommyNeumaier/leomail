@@ -15,6 +15,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.List;
 
@@ -24,11 +25,14 @@ public class ContactResource {
     @Inject
     ContactRepository contactRepository;
 
+    @Inject
+    JsonWebToken jwt;
+
     @GET
     @Path("/get")
     @Transactional
     public Response getContacts() {
-        List<ContactSearchDTO> results = contactRepository.searchContacts(null, false);
+        List<ContactSearchDTO> results = contactRepository.searchContacts(null, false, jwt.getClaim("sub"));
         return Response.ok(results).build();
     }
 
@@ -43,7 +47,7 @@ public class ContactResource {
     @Transactional
     @CacheResult(cacheName = "contact-search")
     public Response searchContacts(@QueryParam("query") String searchTerm, @QueryParam("kc") boolean keycloakOnly) {
-        List<ContactSearchDTO> results = contactRepository.searchContacts(searchTerm, keycloakOnly);
+        List<ContactSearchDTO> results = contactRepository.searchContacts(searchTerm, keycloakOnly, jwt.getClaim("sub"));
         return Response.ok(results).build();
     }
 
