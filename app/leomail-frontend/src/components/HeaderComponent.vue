@@ -4,7 +4,7 @@ import {logout} from "@/services/auth.service";
 
 <template>
   <div id="headerNav">
-    <RouterLink to="/"><img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45"></RouterLink>
+    <RouterLink to="/projekte"><img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45"></RouterLink>
     <div id="HeaderLinkBox">
       <RouterLink to="/projekte" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
       <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import {onMounted, ref, watch} from 'vue';
-import {Service} from '@/services/service';
-import {Quill, QuillEditor} from '@vueup/vue-quill';
-import {useAppStore} from "@/stores/app.store";
+import { onMounted, ref, watch } from 'vue';
+import Quill from 'quill'; // Stellen Sie sicher, dass Quill importiert ist
+import { Service } from '@/services/service';
+import 'quill/dist/quill.snow.css';
+import AutocompleteModule from '../autocompleteModule'; // Pfad zu Ihrer Datei
+import { useAppStore } from "@/stores/app.store";
 
 interface Greeting {
   id: number;
@@ -20,23 +22,23 @@ interface Template {
 const appStore = useAppStore();
 const inputName = ref('');
 const inputHeading = ref('');
-const selectedGreeting = ref('');
+const selectedGreeting = ref<string | null>('');
 const content = ref('');
-const greetingData = ref<Greeting[]>([]); // Ref-Typ für greetingData geändert
+const greetingData = ref<Greeting[]>([]);
 const toolbarOptions = ref([
-  [{'font': []}],
-  [{'size': ['small', false, 'large', 'huge']}],
+  [{ 'font': [] }],
+  [{ 'size': ['small', false, 'large', 'huge'] }],
   ['bold', 'italic', 'underline', 'strike'],
-  [{'color': []}, {'background': []}],
-  [{'align': []}],
-  [{'list': 'ordered'}, {'list': 'bullet'}, {'list': 'check'}],
+  [{ 'color': [] }, { 'background': [] }],
+  [{ 'align': [] }],
+  [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
   ['blockquote'],
   ['link', 'image', 'clean']
 ]);
+
 const quillEditor = ref<Quill | null>(null);
 const emitEvents = defineEmits(['template-added', 'template-removed', 'template-saved']);
 const props = defineProps<{ selectedTemplate: Template | null }>();
-
 
 const getGreetings = async () => {
   const response = await Service.getInstance().getGreetings();
@@ -75,7 +77,7 @@ const updateTemplate = async () => {
     console.log(updatedData);
     const response = await Service.getInstance().updateTemplate(updatedData);
     console.log('Erfolgreich gesendet:', response.data);
-    emitEvents('template-saved', updatedData)
+    emitEvents('template-saved', updatedData);
     clearForm();
   } catch (error) {
     console.error('Fehler beim Speichern der Daten:', error);
@@ -102,45 +104,45 @@ const clearForm = () => {
   selectedGreeting.value = '';
   content.value = '';
   if (quillEditor.value) {
-    quillEditor.value.setContents('');
+    quillEditor.value.setText('');
   }
 };
 
 onMounted(() => {
   getGreetings();
+
+  const editor = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: toolbarOptions.value
+    }
+  });
+
+  quillEditor.value = editor;
+  new AutocompleteModule(editor); // Initialisieren Sie das Autocomplete-Modul
+
+  editor.on('text-change', () => {
+    content.value = editor.root.innerHTML;
+  });
 });
 
 watch(
     () => props.selectedTemplate,
     (newTemplate) => {
-      console.log('selected Temp');
-      console.log(props.selectedTemplate);
-      clearForm();
       if (newTemplate) {
         inputName.value = newTemplate.name;
         inputHeading.value = newTemplate.headline;
-        selectedGreeting.value = newTemplate.greeting;
-        console.log(selectedGreeting.value)
+        selectedGreeting.value = newTemplate.greeting?.id ?? '';
         content.value = newTemplate.content;
+
         if (quillEditor.value) {
           quillEditor.value.root.innerHTML = newTemplate.content;
         }
-        console.log('newTemplate' + newTemplate.id);
+      } else {
+        clearForm();
       }
     }
 );
-
-const onEditorReady = (editor: Quill) => {
-  quillEditor.value = editor;
-  editor.on('text-change', () => {
-    content.value = editor.root.innerHTML;
-  });
-};
-
-onMounted(() => {
-  const editor = new Quill('#editor', {theme: 'snow', modules: {toolbar: toolbarOptions.value}});
-  onEditorReady(editor);
-});
 </script>
 
 <template>
@@ -168,7 +170,8 @@ onMounted(() => {
       <div id="editor" class="quill-editor"></div>
     </div>
 
-    <img src="../assets/icons/icons8-info-250.png" width="20" v-tooltip="{ value: '{{ firstname }}', showDelay: 200, hideDelay: 400 }" label="Save">
+    <img src="../assets/icons/icons8-info-250.png" width="20" v-tooltip="{ value: 'Vorname: {firstname} Nachname: {lastname} Email-Adresse: {mailAddress}', showDelay: 200, hideDelay: 400 }" label="Save">
+
 
     <div id="buttonBox">
       <button v-if="!selectedTemplate" type="submit" class="saveTemplate" :disabled="selectedTemplate != null">

@@ -129,7 +129,7 @@ const parseReceiverInput = () => {
 
 const parseDate = () => {
   if(checked.value){
-    return `${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z`;
+    return '${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z';
   } else{
     return null;
   }
@@ -223,6 +223,22 @@ const handleSubmit = () => {
 </template>
 
 <style scoped>
+.ql-autocomplete-list {
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  background: white;
+  z-index: 1000;
+}
+
+.ql-autocomplete-list li {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.ql-autocomplete-list li:hover {
+  background: #ddd;
+}
 #bigContainer{
   width: 86.5%;
   margin-top: 2%;
