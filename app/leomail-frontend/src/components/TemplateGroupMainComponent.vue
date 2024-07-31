@@ -29,7 +29,7 @@ const filteredTemplates = computed(() => {
 const getData = async () => {
   let response;
   if (route.path.includes('vorlagen')) {
-    response = await Service.getInstance().getVorlagen(appStore.$state.project);
+    response = await Service.getInstance().getTemplates(appStore.$state.project);
   } else if (route.path.includes('gruppen')) {
     // response = await Service.getInstance().getGruppen();
     response = '';

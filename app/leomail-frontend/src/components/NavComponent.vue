@@ -6,7 +6,7 @@
 <div id="bigNavBox">
   <div id="iconLinks">
     <div class="iconBox">
-      <RouterLink to="/" activeClass="highlight"><img src="../assets/icons/mail.svg" alt="Mail Icon" /></RouterLink>
+      <RouterLink to="/mail" activeClass="highlight"><img src="../assets/icons/mail.svg" alt="Mail Icon" /></RouterLink>
     </div>
     <div class="iconBox">
       <RouterLink to="/geplanteMails" activeClass="highlight"><img src="../assets/icons/sceduled-mail.svg" alt="Sceduled Mail Icon" /></RouterLink>

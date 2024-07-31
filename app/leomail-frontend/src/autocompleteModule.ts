@@ -28,7 +28,6 @@ class AutocompleteModule {
     }
 
     private createSuggestionBox() {
-        console.log('created box');
         this.suggestionBox = document.createElement('div');
         this.suggestionBox.className = 'autocomplete';
         document.body.appendChild(this.suggestionBox);
@@ -92,7 +91,6 @@ class AutocompleteModule {
     }
 
     private hideSuggestions() {
-        console.log('hide sugg');
         if (this.suggestionBox) {
             this.suggestionBox.style.display = 'none';
         }

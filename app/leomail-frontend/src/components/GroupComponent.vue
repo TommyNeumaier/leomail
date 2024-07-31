@@ -6,9 +6,9 @@ import {ref} from "vue";
 
 const addGroup = async () => {
   try {
-    /*const formData = {
+    const formData = {
       name: inputName.value,
-      headline: inputHeading.value,
+      headline: inputGroupDescription.value,
       content: content.value,
       accountName: 'IT200274',
       greeting: selectedGreeting.value

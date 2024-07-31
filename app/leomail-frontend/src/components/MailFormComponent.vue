@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import {computed, nextTick, onMounted, onUnmounted, ref, watch} from "vue";
+import {computed, nextTick, onMounted, onUnmounted, type Ref, ref, watch} from "vue";
 import {Quill, QuillEditor} from "@vueup/vue-quill";
 import {Service} from "@/services/service";
 import '@vuepic/vue-datepicker/dist/main.css';
 import {format} from "date-fns";
+import {useAppStore} from "@/stores/app.store";
+import axios from "axios";
 
 interface Template {
   id: number;
@@ -14,6 +16,14 @@ interface Template {
   visible: boolean;
 }
 
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  mailAddress: string;
+}
+
+const appStore = useAppStore()
 const filter = ref('');
 const dropdownVisible = ref(false);
 const selectedTemplate = ref<Template | null>(null);
@@ -22,6 +32,29 @@ const receiver = ref<number[]>([]);
 const checked = ref(false);
 const fetchedTemplates = ref<Template[]>([]);
 const editor = ref<Quill | null>(null);
+
+const selectedUsers = ref<User[]>([]) as Ref<User[]>;
+const searchTerm = ref('');
+const users = ref<User[]>([]) as Ref<User[]>;
+const loading = ref(false);
+const personalized = ref(false);
+
+
+const formState = ref({
+  name: '',
+  description: '',
+  mailAddress: '',
+  password: '',
+  members: selectedUsers.value
+});
+
+const errors = ref({
+  name: '',
+  description: '',
+  email: '',
+  password: '',
+  selectedUsers: ''
+});
 
 const closeDropdown = () => {
   dropdownVisible.value = false;
@@ -58,8 +91,8 @@ const date = ref({
 });
 
 const time = ref({
-  hours: new Date().getHours().toString().padStart(2,"0"),
-  minutes: new Date().getMinutes().toString().padStart(2,"0"),
+  hours: new Date().getHours().toString().padStart(2, "0"),
+  minutes: new Date().getMinutes().toString().padStart(2, "0"),
 });
 
 const scheduledAt = ref({
@@ -74,8 +107,8 @@ watch(date, (newDate) => {
 });
 
 watch(time, (newTime) => {
-  scheduledAt.value.hours = newTime.getHours().toString().padStart(2,"0");
-  scheduledAt.value.minutes = newTime.getMinutes().toString().padStart(2,"0")
+  scheduledAt.value.hours = newTime.getHours().toString().padStart(2, "0");
+  scheduledAt.value.minutes = newTime.getMinutes().toString().padStart(2, "0")
 });
 
 const filterFunction = () => {
@@ -116,11 +149,18 @@ const selectTemplate = (template: Template) => {
 };
 
 const getTemplates = async () => {
-  const response = await Service.getInstance().getVorlagen();
-  fetchedTemplates.value = response.data.map((template: { id: number; name: string; headline: string; greeting: string; content: string }) => ({
+  const response = await Service.getInstance().getTemplates(appStore.$state.project);
+  fetchedTemplates.value = response.data.map((template: {
+    id: number;
+    name: string;
+    headline: string;
+    greeting: string;
+    content: string
+  }) => ({
     ...template,
     visible: true
   }));
+  console.log(fetchedTemplates.value);
 };
 
 const parseReceiverInput = () => {
@@ -128,25 +168,27 @@ const parseReceiverInput = () => {
 };
 
 const parseDate = () => {
-  if(checked.value){
+  if (checked.value) {
     return '${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z';
-  } else{
+  } else {
     return null;
   }
 }
-
+const sortSelectedUsers = (selectedUsers : User[]): number[] => {
+  return selectedUsers.map(user => user.id).sort((a, b) => a - b);
+}
 const sendMail = async () => {
   try {
     parseReceiverInput();
     console.log(receiver);
     const mailForm = {
       receiver: {
-        contacts: receiver.value,
+        contacts: sortSelectedUsers(selectedUsers.value),
         groups: []
       },
       templateId: selectedTemplate.value?.id,
-      personalized: true,  //todo: must be optimized if bauer wants the checkbox
-      scheduledAt: parseDate(),
+      personalized: personalized.value,  //todo: must be optimized if bauer wants the checkbox
+      scheduledAt: parseDate()
     };
     console.log(mailForm);
     console.log(parseDate());
@@ -156,12 +198,48 @@ const sendMail = async () => {
   } catch (error) {
     console.error('Fehler beim Senden der Daten:', error);
   }
+  selectedUsers.value = [];
 };
 
 const handleSubmit = () => {
   sendMail();
 }
 
+
+const fetchUsers = async (query: string) => {
+  loading.value = true;
+  try {
+    const response = await axios.get(`/api/users/search?query=${query}&kc=true`);
+    users.value = response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    users.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+watch(searchTerm, (newTerm) => {
+  if (newTerm.length > 0) {
+    fetchUsers(newTerm);
+  } else {
+    users.value = [];
+  }
+});
+
+const filteredUsers = computed(() => users.value);
+
+const selectUser = (user: User) => {
+  if (!selectedUsers.value.find(u => u.id === user.id)) {
+    selectedUsers.value.push(user);
+  }
+  searchTerm.value = '';
+  users.value = [];
+};
+
+const removeUser = (user: User) => {
+  selectedUsers.value = selectedUsers.value.filter(u => u.id !== user.id);
+};
 </script>
 
 <template>
@@ -171,12 +249,30 @@ const handleSubmit = () => {
     </div>
     <div id="formBox">
       <form>
-        <div id="receiverFlexBox">
+        <div id="userBox">
           <div class="boxLabel">
-            <label for="an" class="mail-label">An:</label><br>
+            <label for="users" class="mail-label">An:</label><br>
           </div>
-          <input type="text" id="an" class="mailForm" v-model="receiverInput">
+          <div class="multiselect">
+            <input type="text" v-model="searchTerm" class="mailForm" placeholder="Benutzer suchen">
+            <ul v-if="searchTerm.length > 0 && filteredUsers.length">
+              <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
+                <div class="user-info">
+                  <span>{{ user.firstName }} {{ user.lastName }}</span>
+                  <small>{{ user.mailAddress }}</small>
+                </div>
+              </li>
+              <li v-if="loading">Laden...</li>
+            </ul>
+          </div>
+
+          <div id="selectedUserBox">
+            <div class="selected" v-for="user in selectedUsers" :key="user.id">
+              {{ user.firstName }} {{ user.lastName }} <span class="remove" @click="removeUser(user)"></span>
+            </div>
+          </div>
         </div>
+        <span class="error">{{ errors.selectedUsers }}</span>
 
 
         <div id="formFlexBox">
@@ -191,12 +287,16 @@ const handleSubmit = () => {
             <div id="datepickerFlexBox">
               <VueDatePicker v-if="checked" locale="de-AT" v-model="date" class="datepicker" id="datepicker"
                              now-button-label="Current" format="dd-mm-yyyy" :enable-time-picker="false"
-                             placeholder='Date' date-picker :min-date="format(new Date(), 'yyyy-MM-dd')" ></VueDatePicker>
+                             placeholder='Date' date-picker
+                             :min-date="format(new Date(), 'yyyy-MM-dd')"></VueDatePicker>
               <!--https://vue3datepicker.com/props/localization/-->
-              <VueDatePicker v-if="checked" v-model="time" class="datepicker" time-picker placeholder='Time' :min-time="format(new Date(), 'HH:mm')" />
+              <VueDatePicker v-if="checked" v-model="time" class="datepicker" time-picker placeholder='Time'
+                             :min-time="format(new Date(), 'HH:mm')"/>
             </div>
           </div>
+        </div>
 
+        <div id="flexBoxContainer">
           <div id="templateBox">
             <div class="boxLabel">
               <label for="template" class="mail-label">Vorlagen:</label></div>
@@ -212,9 +312,14 @@ const handleSubmit = () => {
               </div>
             </div>
           </div>
-          <div class="editor-wrapper">
-            <div id="editor" class="quill-editor"></div>
+          <div id="checkBoxContainer">
+            <input type="checkbox" v-model="personalized">
+            <label>personalisieren</label>
           </div>
+        </div>
+
+        <div class="editor-wrapper">
+          <div id="editor" class="quill-editor"></div>
         </div>
         <button type="button" @click="handleSubmit">Absenden</button>
       </form>
@@ -223,29 +328,141 @@ const handleSubmit = () => {
 </template>
 
 <style scoped>
-.ql-autocomplete-list {
-  border: 1px solid #ccc;
-  max-height: 150px;
-  overflow-y: auto;
-  background: white;
+#selectedUserBox {
+  width: 50vw;
+  margin-left: 2%;
+  height: 12vh;
+  border: black solid 1px;
+  overflow-y: scroll;
+}
+
+#userBox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-info small {
+  color: #B3B3B3;
+}
+
+li:hover {
+  background-color: rgba(75, 129, 253, 0.86);
+  color: white;
+}
+
+li:hover .user-info small {
+  color: white;
+}
+
+.multiselect {
+  display: block;
+  border: solid 1px #BEBEBE;
+  border-radius: 5px;
+  width: 25vw;
+  font-size: 0.5em;
+}
+
+.multiselect::placeholder {
+  color: #B3B3B3;
+}
+
+.multiselect:focus {
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.selected {
+  display: inline-flex;
+  align-items: center;
+  background-color: blue;
+  color: white;
+  border-radius: 3px;
+  padding: 0.2vh 0.3vw;
+  margin-right: 0.5vw;
+  margin-bottom: 0.1vh;
+  font-size: 0.5rem;
+}
+
+.remove {
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.remove:after {
+  content: '×';
+  color: white;
+  font-weight: bold;
+}
+
+.multiselect input[type="text"] {
+  all: unset;
+  width: 100%;
+  padding: 0.6vw;
+  box-sizing: border-box;
+  border-radius: 5px;
+}
+
+.multiselect input:focus {
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  background-color: #FFF;
+  border: solid 1px #BEBEBE;
+  border-top: none;
+  position: absolute;
+  width: 100%;
   z-index: 1000;
 }
 
-.ql-autocomplete-list li {
-  padding: 5px;
+li {
+  padding: 10px;
   cursor: pointer;
 }
 
-.ql-autocomplete-list li:hover {
-  background: #ddd;
+.error {
+  color: red;
+  font-size: 0.7em;
 }
-#bigContainer{
+
+#checkBoxContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-left: 5%;
+}
+
+#checkBoxContainer label {
+  padding-left: 1vw;
+}
+
+#formFlexBox {
+  width: 50%;
+}
+
+#flexBoxContainer {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+#bigContainer {
   width: 86.5%;
   margin-top: 2%;
   margin-left: 1.5%;
   display: flex;
   flex-direction: column;
 }
+
 #date {
   margin-right: 2vw;
   margin-left: 1vw;
@@ -306,9 +523,9 @@ form {
   all: unset;
   border: solid 1px #BEBEBE;
   border-radius: 5px;
-  padding: 0.6vw;
-  width: 35%;
   font-size: 0.5em;
+  width: 100%;
+  padding: 0.6vw;
 }
 
 .mailForm:focus {
@@ -343,8 +560,7 @@ body {
 #searchSelectBox {
   display: flex;
   flex-direction: column;
-  border-radius: 20px;
-  width: 35%;
+  width: 25vw;
 }
 
 #myInput {

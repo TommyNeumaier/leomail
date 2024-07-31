@@ -17,13 +17,13 @@ import {useAppStore} from '@/stores/app.store';
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
-  { path: '/', name: 'mail', component: MailView, meta: { requiresAuth: true } },
+  { path: '/mail', name: 'mail', component: MailView, meta: { requiresAuth: true } },
   { path: '/mail/neu', name: 'neu', component: NewMail, meta: { requiresAuth: true } },
   { path: '/geplanteMails', name: 'geplant', component: GeplanteMails, meta: { requiresAuth: true } },
   { path: '/gruppen', name: 'gruppen', component: Gruppe, meta: { requiresAuth: true } },
   { path: '/vorlagen', name: 'vorlagen', component: Vorlagen, meta: { requiresAuth: true } },
   { path: '/settings', name: 'settings', component: Settings, meta: { requiresAuth: true } },
-  { path: '/projekte', name: 'projekte', component: ProjekteView, meta: { requiresAuth: true } },
+  { path: '/', name: 'projekte', component: ProjekteView, meta: { requiresAuth: true } },
   { path: '/projekte/neu', name: 'neueProjekte', component: NewProject, meta: { requiresAuth: true } },
   { path: '/personen', name: 'personen', component: PersonenView, meta: { requiresAuth: true } },
   { path: '/profil', name: 'profil', component: ProfilView, meta: { requiresAuth: true } },

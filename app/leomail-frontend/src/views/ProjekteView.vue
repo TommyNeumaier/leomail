@@ -15,7 +15,7 @@ const clickedNewProject = () => {
 
 const clickedProject = (project: ProjectOverview) => {
   appStore.project = project.id;
-  router.push(`/?pid=${project.id}`).then(() => {
+  router.push(`/mail?pid=${project.id}`).then(() => {
     console.log('Navigated to project with id ' + project.id);
   });
 }

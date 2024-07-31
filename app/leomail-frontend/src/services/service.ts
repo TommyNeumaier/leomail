@@ -16,7 +16,7 @@ export class Service {
         return axios.post(`/api/template/add`, formData);
     }
 
-    public getVorlagen(projectId: string) {
+    public getTemplates(projectId: string) {
         return axios.get(`/api/template/get`, {
             params: {
                 "pid": projectId

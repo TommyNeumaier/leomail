@@ -4,9 +4,9 @@ import {logout} from "@/services/auth.service";
 
 <template>
   <div id="headerNav">
-    <RouterLink to="/projekte"><img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45"></RouterLink>
+    <RouterLink to="/"><img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45"></RouterLink>
     <div id="HeaderLinkBox">
-      <RouterLink to="/projekte" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
+      <RouterLink to="/" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
       <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
       <RouterLink to="/authtest" activeClass="highlight" class="HeaderLinks">JWT</RouterLink>
     </div>
