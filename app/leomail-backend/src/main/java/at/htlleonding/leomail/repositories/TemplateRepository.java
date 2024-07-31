@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 @ApplicationScoped
+// TODO: Permission checks in this class are missing
 public class TemplateRepository {
 
     @Inject

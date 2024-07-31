@@ -78,14 +78,14 @@ public class AuthResource {
     }
 
     @POST
+    @PermitAll
     @Path("/refresh")
-    @Authenticated
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response refreshToken(
-            @FormParam("refresh_token") String refreshToken) {
-
+            String refreshToken) {
         try {
-            KeycloakTokenResponse tokenResponse = IKeycloak.refreshToken(
+            System.out.println("hallo");
+            Object tokenResponse = IKeycloak.refreshToken(
                     clientId,
                     clientSecret,
                     "refresh_token",
@@ -93,8 +93,7 @@ public class AuthResource {
             );
             return Response.ok(tokenResponse).build();
         } catch (Exception e) {
-            e.printStackTrace();
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+            return Response.status(Response.Status.fromStatusCode(401)).entity(e.getMessage()).build();
         }
     }
 

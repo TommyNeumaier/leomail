@@ -27,7 +27,7 @@ public interface IKeycloak {
     @POST
     @Path("/token")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    KeycloakTokenResponse refreshToken(@FormParam("client_id") String clientId,
+    Object refreshToken(@FormParam("client_id") String clientId,
                                        @FormParam("client_secret") String clientSecret,
                                        @FormParam("grant_type") String grantType,
                                        @FormParam("refresh_token") String refreshToken);

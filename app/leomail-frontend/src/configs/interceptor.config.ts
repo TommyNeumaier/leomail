@@ -27,12 +27,17 @@ const setupAxiosInterceptors = (store: any) => {
             const originalRequest = error.config;
             const authStore = useAuthStore(store);
 
-            if (error.response.status === 401 && !originalRequest._retry && !originalRequest.isLoginRequest) {
+            if (originalRequest._retry || originalRequest.isRefreshRequest) {
+                return Promise.reject(error);
+            }
+
+            if (error.response.status === 401 && !originalRequest._retry) {
                 originalRequest._retry = true;
+                originalRequest.isRefreshRequest = true;
                 try {
                     const newToken = await refreshToken();
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-                    originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken.access_token}`;
+                    originalRequest.headers['Authorization'] = `Bearer ${newToken.access_token}`;
                     return axios(originalRequest);
                 } catch (err) {
                     console.error('Refresh token error:', err);

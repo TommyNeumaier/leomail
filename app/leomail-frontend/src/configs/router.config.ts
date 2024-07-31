@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory} from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import MailView from "@/views/MailView.vue";
 import GeplanteMails from "@/views/GeplanteMailsView.vue";
 import Gruppe from "@/views/GruppeView.vue";
@@ -8,12 +8,14 @@ import Login from "@/views/Login.vue";
 import ProjekteView from "@/views/ProjekteView.vue";
 import PersonenView from "@/views/ContactView.vue";
 import ProfilView from "@/views/ProfilView.vue";
-import {refreshToken, validateToken} from "@/services/auth.service";
-import {useAuthStore} from "@/stores/auth.store";
+import { useAuthStore } from "@/stores/auth.store";
 import NewProject from "@/views/NewProject.vue";
 import AuthTest from "@/views/AuthTest.vue";
 import NewMail from "@/views/NewMail.vue";
-import {useAppStore} from '@/stores/app.store';
+import { useAppStore } from '@/stores/app.store';
+import axios from 'axios';
+import {refreshToken, validateToken} from "@/services/auth.service";
+import {loadConfigFromFile} from "vite";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -27,7 +29,7 @@ const routes = [
   { path: '/projekte/neu', name: 'neueProjekte', component: NewProject, meta: { requiresAuth: true } },
   { path: '/personen', name: 'personen', component: PersonenView, meta: { requiresAuth: true } },
   { path: '/profil', name: 'profil', component: ProfilView, meta: { requiresAuth: true } },
-  { path: '/authtest', name: 'authtest', component: AuthTest, meta: { requiresAuth: true}}
+  { path: '/authtest', name: 'authtest', component: AuthTest, meta: { requiresAuth: true } }
 ];
 
 const router = createRouter({
@@ -37,10 +39,9 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
-  let authOk = false;
 
   if (to.meta.requiresAuth) {
-    const accessToken = authStore.$state.accessToken;
+    const accessToken = authStore.accessToken;
 
     if (!accessToken) {
       console.log('No access token found, redirecting to login');
@@ -48,54 +49,53 @@ router.beforeEach(async (to, from, next) => {
     }
 
     try {
-      const isValid = validateToken(accessToken).then((value: boolean) => {
-        return value;
-      });
-
+      const isValid = await validateToken(accessToken);
       if (isValid) {
-        authOk = true;
+        return proceedWithAuthorization(to, next);
       } else {
         console.log('Access token is invalid, attempting to refresh');
-        const newToken = await refreshToken();
-        if (newToken) {
-          const newIsValid = await validateToken(newToken.access_token);
-          if (newIsValid) {
-            console.log('New access token is valid, proceeding to', to.name);
-            authOk = true;
-          }
+        try {
+          const { access_token } = await refreshToken();
+          axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+          return proceedWithAuthorization(to, next);
+        } catch (refreshError) {
+          console.log('Failed to refresh token, redirecting to login');
+          return handleInvalidToken(authStore, next);
         }
-        console.log('New access token is invalid, redirecting to login');
-        authStore.logout();
-        return next({ name: 'login' });
       }
     } catch (error) {
       console.error('Error during token validation or refresh:', error);
-      authStore.logout();
-      return next({ name: 'login' });
+      return handleInvalidToken(authStore, next);
     }
   } else {
-    authOk = true;
-  }
-
-  if (authOk) {
-    const exceptions = ["/projekte", "/projekte/neu", "/login", "/personen", "/authtest", "/settings", "/profil"];
-
-    const appStore = useAppStore();
-    if (appStore.$state.project === '' && !exceptions.includes(to.path)) {
-      return next({name: "projekte"});
-    }
-
-    // TODO: Check if user has permission for this project, if not, then return him to the project view
-    /*
-        let hasPermission = Service.getInstance().checkPermission(appStore.$state.project).then((value: boolean) => {
-          return value;
-        });
-
-        if(!hasPermission){
-          return next({ name: "projekte"});
-        }*/
-    return next();
+    return proceedWithAuthorization(to, next);
   }
 });
+
+function handleInvalidToken(authStore, next) {
+  authStore.logout();
+  return next({ name: 'login' });
+}
+
+function proceedWithAuthorization(to, next) {
+  const exceptions = ["/projekte", "/projekte/neu", "/login", "/personen", "/authtest", "/settings", "/profil"];
+  const appStore = useAppStore();
+
+  if (appStore.project === '' && !exceptions.includes(to.path)) {
+    return next({ name: "projekte" });
+  }
+
+  // TODO: Check if user has permission for this project, if not, then return him to the project view
+  /*
+  let hasPermission = Service.getInstance().checkPermission(appStore.project).then((value: boolean) => {
+    return value;
+  });
+
+  if (!hasPermission) {
+    return next({ name: "projekte" });
+  }
+  */
+  return next();
+}
 
 export default router;

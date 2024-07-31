@@ -1,9 +1,11 @@
-import axios, {AxiosResponse} from 'axios';
+import axios from 'axios';
 import {useAuthStore} from '@/stores/auth.store';
+import {useAppStore} from "@/stores/app.store";
 
 export const login = async (username: string, password: string) => {
     try {
         const authStore = useAuthStore();
+        const appStore = useAppStore();
 
         await axios.post('/api/auth/login', new URLSearchParams({
             username,
@@ -14,6 +16,7 @@ export const login = async (username: string, password: string) => {
             },
             isLoginRequest: true
         }).then((response) => {
+            appStore.project = '';
             const {access_token, refresh_token} = response.data;
             authStore.setTokens(access_token, refresh_token);
         });
@@ -25,36 +28,40 @@ export const login = async (username: string, password: string) => {
 
 export const refreshToken = async () => {
     const authStore = useAuthStore();
-    const refresh_token = authStore.$state.refreshToken;
-    if (refresh_token) {
+    const refreshToken = authStore.$state._refreshToken;
+
+    if (refreshToken) {
+        console.log("Attempting to refresh token with:", refreshToken);
         try {
             const response = await axios.post('/api/auth/refresh', new URLSearchParams({
-                "refresh_token": refresh_token,
+                'refresh_token': refreshToken,
             }), {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Bearer ' + authStore.$state.accessToken,
                 },
+                isRefreshRequest: true
             });
 
+            console.log("Refresh token response:", response.data);
             const { access_token, refresh_token: new_refresh_token } = response.data;
             authStore.setTokens(access_token, new_refresh_token);
-            return {access_token, new_refresh_token};
+            return { access_token, refresh_token: new_refresh_token };
         } catch (error) {
+            console.error("Error refreshing token:", error);
             authStore.logout();
+            throw error;
         }
+    } else {
+        authStore.logout();
+        throw new Error('No refresh token available');
     }
 };
 
-export const validateToken = async (token: string) => {
+export const validateToken = async () => {
     try {
-        await axios.get('/api/auth/validate', {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        }).then((response: AxiosResponse<boolean, boolean>) => {
-            return response.data;
-        });
+        const response = await axios.get('/api/auth/validate');
+        return response.data;
     } catch (error) {
         return false;
     }

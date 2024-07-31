@@ -1,45 +1,29 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import routerConfig from "@/configs/router.config";
+import setupAxiosInterceptors from "@/configs/interceptor.config";
+import {useAppStore} from "@/stores/app.store";
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         accessToken: '',
-        refreshToken: '',
+        _refreshToken: '',
     }),
     actions: {
         setTokens(accessToken: string, refreshToken: string) {
             console.log('Setting tokens:', { accessToken, refreshToken }); // Debugging step
             this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-        },
-        async refreshToken() {
-            if (!this.refreshToken) {
-                throw new Error('No refresh token available');
-            }
-            try {
-                console.log('Attempting to refresh token with refresh token:', this.refreshToken); // Debugging step
-                const response = await axios.post('/api/auth/refresh', new URLSearchParams({
-                    refresh_token: this.refreshToken,
-                }), {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                });
+            this._refreshToken = refreshToken;
 
-                const { access_token, refresh_token: new_refresh_token } = response.data;
-                this.setTokens(access_token, new_refresh_token);
-                return access_token;
-            } catch (error) {
-                console.error('Error refreshing token:', error);
-                this.logout();
-                throw error;
-            }
+            setupAxiosInterceptors(this.$store);
         },
         logout() {
             this.accessToken = '';
-            this.refreshToken = '';
+            this._refreshToken = '';
             delete axios.defaults.headers.common['Authorization'];
+
+            const appStore = useAppStore();
+            appStore.project = '';
             routerConfig.push("/login").then(() => {});
         }
     },
