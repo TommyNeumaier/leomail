@@ -1,5 +1,6 @@
 package at.htlleonding.leomail.services;
 
+import at.htlleonding.leomail.entities.Group;
 import at.htlleonding.leomail.entities.Project;
 import at.htlleonding.leomail.entities.Template;
 import at.htlleonding.leomail.model.exceptions.projects.ProjectNotExistsException;
@@ -38,6 +39,19 @@ public class PermissionService {
     public boolean hasPermission(Long templateId, String userId) {
         Template template = Template.findById(templateId);
         if (template == null) return false;
-        return hasPermission(template.project.id, userId);
+        return hasPermission(template.project.id, userId) && template.createdBy.id.equals(userId);
+    }
+
+    /**
+     * Check if the user has permission to access the group
+     *
+     * @return true if the user has permission to the project AND the group belongs to the project, false otherwise
+     */
+
+    public boolean hasPermission(String projectId, String userId, String groupId) {
+        Group group = Group.findById(groupId);
+        if (group == null) return false;
+        return Objects.requireNonNull(group).members.stream().anyMatch(contact -> contact.id.equals(userId)
+                && hasPermission(projectId, userId));
     }
 }
