@@ -41,45 +41,47 @@ public class KeycloakAdminService {
 
     public List<Object> searchUser(String searchTerm, int maxSearchResults) {
         String token = getAdminToken();
-        Client client = ClientBuilder.newClient();
 
-        Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
-                .queryParam("search", searchTerm)
-                .queryParam("max", maxSearchResults)
-                .request(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + token)
-                .get();
+        try(Client client = ClientBuilder.newClient()) {
+            Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
+                    .queryParam("search", searchTerm)
+                    .queryParam("max", maxSearchResults)
+                    .request(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .get();
 
-        if (response.getStatus() != 200) {
-            String responseBody = response.readEntity(String.class);
-            throw new RuntimeException("Failed to search user: " + responseBody);
+            if (response.getStatus() != 200) {
+                String responseBody = response.readEntity(String.class);
+                throw new RuntimeException("Failed to search user: " + responseBody);
+            }
+
+            List<Map<String, Object>> users = response.readEntity(List.class);
+            return users.stream()
+                    .sorted((u1, u2) -> {
+                        Long createdTimestamp1 = Long.parseLong(String.valueOf(u1.get("createdTimestamp")));
+                        Long createdTimestamp2 = Long.parseLong(String.valueOf(u2.get("createdTimestamp")));
+                        return createdTimestamp2.compareTo(createdTimestamp1);
+                    })
+                    .limit(maxSearchResults)
+                    .collect(Collectors.toList());
         }
-
-        List<Map<String, Object>> users = response.readEntity(List.class);
-        return users.stream()
-                .sorted((u1, u2) -> {
-                    Long createdTimestamp1 = Long.parseLong(String.valueOf(u1.get("createdTimestamp")));
-                    Long createdTimestamp2 = Long.parseLong(String.valueOf(u2.get("createdTimestamp")));
-                    return createdTimestamp2.compareTo(createdTimestamp1);
-                })
-                .limit(maxSearchResults)
-                .collect(Collectors.toList());
     }
 
     public Object findUser(String userId) {
         String token = getAdminToken();
-        Client client = ClientBuilder.newClient();
 
-        Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users/" + userId)
-                .request(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + token)
-                .get();
+        try (Client client = ClientBuilder.newClient()) {
+            Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users/" + userId)
+                    .request(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .get();
 
-        if (response.getStatus() != 200) {
-            String responseBody = response.readEntity(String.class);
-            throw new RuntimeException("Failed to find user: " + responseBody);
+            if (response.getStatus() != 200) {
+                String responseBody = response.readEntity(String.class);
+                throw new RuntimeException("Failed to find user: " + responseBody);
+            }
+
+            return response.readEntity(Object.class);
         }
-
-        return response.readEntity(Object.class);
     }
 }

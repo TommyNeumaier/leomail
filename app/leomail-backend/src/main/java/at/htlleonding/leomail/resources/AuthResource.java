@@ -83,6 +83,7 @@ public class AuthResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response refreshToken(
             String refreshToken) {
+        System.out.println("Hallo");
         try {
             System.out.println("hallo");
             Object tokenResponse = IKeycloak.refreshToken(

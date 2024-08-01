@@ -36,9 +36,10 @@ VALUES (false, 'Lana', '1', 'Sekerija (TEST)', 'sekerija.lana@gmail.com', NOW())
        (false, 'Thomas', '3', 'Müller (TEST)', 't.m@esn.com', NOW()),
        (true, 'Tommy', '3e1d204f-fde9-4f3a-9fc6-b8b0d1a05600', 'Neumaier', 't.neumaier@students.htl-leonding.ac.at',
         NOW()),
+       (true, 'Tommy', 'b06fe6df-f4b3-4bbc-a119-51ce6eacfd6d', 'Neumaier', 'tn@tommyneumaier.at',
+        NOW()),
        (true, 'Lana', '3e2fe810-93c7-4276-b810-0a2edff476b4', 'Sekerija', 'l.sekerija@students.htl-leonding.ac.at',
         NOW());
-
 INSERT INTO project(id, name, description, createdOn, mailAddress, password, createdBy_id)
 VALUES ('123e4567-e89b-12d3-a456-426614174000', 'Test Project', 'This is a test project', NOW(), 'project@example.com',
         'password', '3e1d204f-fde9-4f3a-9fc6-b8b0d1a05600');
@@ -71,4 +72,5 @@ VALUES (1, 'Kontaktdateninformation (TEST)', 'Ihre Kontaktdaten',
 
 INSERT INTO project_contact(project_id, contact_id)
 VALUES ('123e4567-e89b-12d3-a456-426614174000', '3e1d204f-fde9-4f3a-9fc6-b8b0d1a05600'),
-       ('123e4567-e89b-12d3-a456-426614174000', '3e2fe810-93c7-4276-b810-0a2edff476b4');
+       ('123e4567-e89b-12d3-a456-426614174000', '3e2fe810-93c7-4276-b810-0a2edff476b4'),
+         ('123e4567-e89b-12d3-a456-426614174000', 'b06fe6df-f4b3-4bbc-a119-51ce6eacfd6d');

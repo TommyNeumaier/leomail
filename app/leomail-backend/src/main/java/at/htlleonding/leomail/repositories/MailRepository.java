@@ -22,12 +22,15 @@ public class MailRepository {
     @Inject
     Mailer mailer;
 
+    @Inject
+    GroupSplitter groupSplitter;
+
     public void sendMailsByTemplate(SMTPInformation smtpInformation) {
         if (smtpInformation.scheduledAt() != null && smtpInformation.scheduledAt().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Scheduled time is in the past");
         }
         Template template = Template.findById(smtpInformation.templateId());
-        List<Contact> receivers = GroupSplitter.getAllContacts(smtpInformation.receiver().groups().get(), smtpInformation.receiver().contacts().get());
+        List<Contact> receivers = groupSplitter.getAllContacts(smtpInformation.receiver().groups().get(), smtpInformation.receiver().contacts().get());
 
         List<String> renderedTemplates = templateBuilder.renderTemplates(template.id, receivers, smtpInformation.personalized());
         SentTemplate usedTemplate = new SentTemplate(template, smtpInformation.scheduledAt(), Contact.findById("1"));
