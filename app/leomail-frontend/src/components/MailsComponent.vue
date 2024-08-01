@@ -248,7 +248,7 @@ onMounted(() => {
 
 <style scoped>
 .notification-box {
-  background-color: #62e862;
+  background-color: green;
   display: flex;
   align-items: center;
   justify-content: center;
