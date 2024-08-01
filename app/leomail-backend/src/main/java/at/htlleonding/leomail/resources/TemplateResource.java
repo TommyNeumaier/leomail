@@ -122,4 +122,11 @@ public class TemplateResource {
         }
         return Response.ok(templateRepository.getUsedTemplates(scheduled, pid)).build();
     }
+
+    @GET
+    @Path("getUsedTemplate")
+    @Authenticated
+    public Response getUsedTemplate(@QueryParam("tid") Long tid, @QueryParam("pid") String pid) {
+        return Response.ok(templateRepository.getUsedTemplate(tid, pid, jwt.getClaim("sub"))).build();
+    }
 }

@@ -11,6 +11,7 @@ import at.htlleonding.leomail.model.dto.template.mail.TemplateMailContactInforma
 import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
 import at.htlleonding.leomail.model.exceptions.greeting.NonExistingGreetingException;
 import at.htlleonding.leomail.model.exceptions.template.TemplateNameAlreadyExistsException;
+import at.htlleonding.leomail.services.PermissionService;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -28,6 +29,9 @@ public class TemplateRepository {
 
     @Inject
     EntityManager em;
+
+    @Inject
+    PermissionService permissionService;
 
     public List<TemplateDTO> getProjectTemplates(String projectId) {
         return em.createQuery("select t from Template t WHERE lower(:pid) = lower(t.project.id)", Template.class)
@@ -104,5 +108,29 @@ public class TemplateRepository {
         }
 
         return dtoList;
+    }
+
+    public UsedTemplateDTO getUsedTemplate(Long templateId, String projectId, String accountId) {
+        SentTemplate template = SentTemplate.findById(templateId);
+        if (template == null) {
+            throw new IllegalArgumentException("Template with id " + templateId + " not found");
+        }
+
+        if (!permissionService.hasPermission(projectId, accountId)) {
+            throw new SecurityException("User has no permission to access this template");
+        }
+
+        TemplateAccountInformationDTO accountInformation = new TemplateAccountInformationDTO(template.createdBy.id.trim(), template.sentBy.id.trim());
+        TemplateDateInformationDTO dateInformation = new TemplateDateInformationDTO(template.created, template.sentOn, template.scheduledAt);
+        TemplateMetaInformationDTO metaInformation = new TemplateMetaInformationDTO(template.name.trim(), template.headline.trim(), template.content.trim(), template.greeting.id);
+
+        List<SentMailDTO> mailList = new ArrayList<>();
+        for(SentMail mail : template.mails) {
+            mailList.add(new SentMailDTO(new TemplateMailContactInformationDTO(mail.id, mail.contact.firstName.trim(), mail.contact.lastName.trim(), mail.contact.mailAddress.trim()), mail.actualContent.trim()));
+        }
+        SentMailDTO[] mails = mailList.toArray(new SentMailDTO[0]);
+
+        return new UsedTemplateDTO(template.id, metaInformation, dateInformation, accountInformation, mails);
+
     }
 }
