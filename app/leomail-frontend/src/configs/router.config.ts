@@ -78,7 +78,7 @@ function handleInvalidToken(authStore, next) {
 }
 
 function proceedWithAuthorization(to, next) {
-  const exceptions = ["/projekte", "/projekte/neu", "/login", "/personen", "/authtest", "/settings", "/profil"];
+  const exceptions = ["/", "/projekte/neu", "/login", "/personen", "/authtest", "/settings", "/profil"];
   const appStore = useAppStore();
 
   if (appStore.project === '' && !exceptions.includes(to.path)) {

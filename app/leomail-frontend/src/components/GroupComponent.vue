@@ -5,10 +5,10 @@ import {ref} from "vue";
 
 
 const addGroup = async () => {
-  try {
+  /*try {
     const formData = {
       name: inputName.value,
-      headline: inputGroupDescription.value,
+      headline: inputHeading.value,
       content: content.value,
       accountName: 'IT200274',
       greeting: selectedGreeting.value
@@ -17,10 +17,10 @@ const addGroup = async () => {
     const response = await Service.getInstance().addTemplate(formData);
     console.log('Erfolgreich gesendet:', response.data);
     clearForm();
-    emit('template-added', formData);*/
+    emit('template-added', formData);
   } catch (error) {
     console.error('Fehler beim Senden der Daten:', error);
-  }
+  }*/
 };
 
 const updateGroup = async () => {

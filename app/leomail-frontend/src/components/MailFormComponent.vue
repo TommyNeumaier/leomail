@@ -6,6 +6,9 @@ import '@vuepic/vue-datepicker/dist/main.css';
 import {format} from "date-fns";
 import {useAppStore} from "@/stores/app.store";
 import axios from "axios";
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 interface Template {
   id: number;
@@ -194,6 +197,18 @@ const sendMail = async () => {
     console.log(parseDate());
     const response = await Service.getInstance().sendEmails(mailForm);
     console.log('Erfolgreich gesendet:', response.data);
+    router.push({ name: 'mail' });
+
+    // Zeige die Erfolgsmeldung an
+    const successMessage = document.getElementById('success-message');
+    successMessage.classList.remove('hidden');
+    successMessage.classList.add('visible');
+
+    // Blende die Erfolgsmeldung nach 3 Sekunden wieder aus
+    setTimeout(() => {
+      successMessage.classList.remove('visible');
+      successMessage.classList.add('hidden');
+    }, 3000);
     //emitEvents('template-added', formData);
   } catch (error) {
     console.error('Fehler beim Senden der Daten:', error);
@@ -209,7 +224,7 @@ const handleSubmit = () => {
 const fetchUsers = async (query: string) => {
   loading.value = true;
   try {
-    const response = await axios.get(`/api/users/search?query=${query}&kc=true`);
+    const response = await axios.get(`/api/users/search?query=${query}&kc=false`);
     users.value = response.data;
   } catch (error) {
     console.error('Error fetching users:', error);

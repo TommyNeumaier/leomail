@@ -209,12 +209,30 @@ watch(
           <p>{{ email.meta.mailHeadline }}</p>
           <p>{{ email.keyDates.sentOn }}</p>
         </div>
+        <div id="success-message" class="hidden">
+          Die Mail wurde erfolgreich verschickt
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.hidden {
+  display: none;
+}
+
+.visible {
+  display: block;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: green;
+  color: white;
+  border-radius: 5px;
+  z-index: 1000;
+}
 .emailElement {
   display: flex;
   flex-direction: row;
