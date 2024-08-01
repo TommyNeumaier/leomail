@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import {computed, nextTick, onMounted, onUnmounted, type Ref, ref, watch} from "vue";
-import {Quill, QuillEditor} from "@vueup/vue-quill";
-import {Service} from "@/services/service";
-import '@vuepic/vue-datepicker/dist/main.css';
-import {format} from "date-fns";
-import {useAppStore} from "@/stores/app.store";
+import { computed, nextTick, onMounted, onUnmounted, type Ref, ref, watch } from "vue";
+import { Quill } from "@vueup/vue-quill";
+import { Service } from "@/services/service";
+import { useAppStore } from "@/stores/app.store";
 import axios from "axios";
 import { useRouter } from 'vue-router';
+import {format} from "date-fns";
 
 const router = useRouter();
 
@@ -26,7 +25,12 @@ interface User {
   mailAddress: string;
 }
 
-const appStore = useAppStore()
+interface Group {
+  id: number;
+  name: string;
+}
+
+const appStore = useAppStore();
 const filter = ref('');
 const dropdownVisible = ref(false);
 const selectedTemplate = ref<Template | null>(null);
@@ -37,11 +41,12 @@ const fetchedTemplates = ref<Template[]>([]);
 const editor = ref<Quill | null>(null);
 
 const selectedUsers = ref<User[]>([]) as Ref<User[]>;
+const selectedGroups = ref<Group[]>([]) as Ref<Group[]>;
 const searchTerm = ref('');
 const users = ref<User[]>([]) as Ref<User[]>;
+const groups = ref<Group[]>([]) as Ref<Group[]>;
 const loading = ref(false);
 const personalized = ref(false);
-
 
 const formState = ref({
   name: '',
@@ -64,7 +69,7 @@ const closeDropdown = () => {
 };
 
 onMounted(() => {
-  getTemplates()
+  getTemplates();
   editor.value = new Quill('#editor');
   nextTick(() => {
     if (selectedTemplate.value) {
@@ -177,7 +182,7 @@ const parseDate = () => {
     return null;
   }
 }
-const sortSelectedUsers = (selectedUsers : User[]): number[] => {
+const sortSelectedUsers = (selectedUsers: User[]): number[] => {
   return selectedUsers.map(user => user.id).sort((a, b) => a - b);
 }
 const sendMail = async () => {
@@ -187,7 +192,7 @@ const sendMail = async () => {
     const mailForm = {
       receiver: {
         contacts: sortSelectedUsers(selectedUsers.value),
-        groups: []
+        groups: selectedGroups.value.map(group => group.id)
       },
       templateId: selectedTemplate.value?.id,
       personalized: personalized.value,  //todo: must be optimized if bauer wants the checkbox
@@ -202,21 +207,25 @@ const sendMail = async () => {
     console.error('Fehler beim Senden der Daten:', error);
   }
   selectedUsers.value = [];
+  selectedGroups.value = [];
 };
 
 const handleSubmit = () => {
   sendMail();
 }
 
-
-const fetchUsers = async (query: string) => {
+const fetchUsersAndGroups = async (query: string) => {
   loading.value = true;
   try {
-    const response = await axios.get(`/api/users/search?query=${query}&kc=false`);
-    users.value = response.data;
+    const usersResponse = await Service.getInstance().searchContacts(query)
+    users.value = usersResponse.data;
+
+    const groupsResponse = await axios.get(`/api/groups/search?query=${query}&pid=${appStore.$state.project}`);
+    groups.value = groupsResponse.data;
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Error fetching users or groups:', error);
     users.value = [];
+    groups.value = [];
   } finally {
     loading.value = false;
   }
@@ -224,13 +233,15 @@ const fetchUsers = async (query: string) => {
 
 watch(searchTerm, (newTerm) => {
   if (newTerm.length > 0) {
-    fetchUsers(newTerm);
+    fetchUsersAndGroups(newTerm);
   } else {
     users.value = [];
+    groups.value = [];
   }
 });
 
 const filteredUsers = computed(() => users.value);
+const filteredGroups = computed(() => groups.value);
 
 const selectUser = (user: User) => {
   if (!selectedUsers.value.find(u => u.id === user.id)) {
@@ -238,10 +249,24 @@ const selectUser = (user: User) => {
   }
   searchTerm.value = '';
   users.value = [];
+  groups.value = [];
+};
+
+const selectGroup = (group: Group) => {
+  if (!selectedGroups.value.find(g => g.id === group.id)) {
+    selectedGroups.value.push(group);
+  }
+  searchTerm.value = '';
+  users.value = [];
+  groups.value = [];
 };
 
 const removeUser = (user: User) => {
   selectedUsers.value = selectedUsers.value.filter(u => u.id !== user.id);
+};
+
+const removeGroup = (group: Group) => {
+  selectedGroups.value = selectedGroups.value.filter(g => g.id !== group.id);
 };
 </script>
 
@@ -257,12 +282,19 @@ const removeUser = (user: User) => {
             <label for="users" class="mail-label">An:</label><br>
           </div>
           <div class="multiselect">
-            <input type="text" v-model="searchTerm" class="mailForm" placeholder="Benutzer suchen">
-            <ul v-if="searchTerm.length > 0 && filteredUsers.length">
+            <input type="text" v-model="searchTerm" class="mailForm" placeholder="Benutzer oder Gruppen suchen">
+            <ul v-if="searchTerm.length > 0 && (filteredUsers.length || filteredGroups.length)">
+              <!-- Display users -->
               <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
                 <div class="user-info">
                   <span>{{ user.firstName }} {{ user.lastName }}</span>
                   <small>{{ user.mailAddress }}</small>
+                </div>
+              </li>
+              <!-- Display groups -->
+              <li v-for="group in filteredGroups" :key="group.id" @click="selectGroup(group)">
+                <div class="group-info">
+                  <span>{{ group.name }}</span>
                 </div>
               </li>
               <li v-if="loading">Laden...</li>
@@ -273,10 +305,12 @@ const removeUser = (user: User) => {
             <div class="selected" v-for="user in selectedUsers" :key="user.id">
               {{ user.firstName }} {{ user.lastName }} <span class="remove" @click="removeUser(user)"></span>
             </div>
+            <div class="selected" v-for="group in selectedGroups" :key="group.id">
+              Gruppe: {{ group.name }} <span class="remove" @click="removeGroup(group)"></span>
+            </div>
           </div>
         </div>
         <span class="error">{{ errors.selectedUsers }}</span>
-
 
         <div id="formFlexBox">
           <div id="dateFlexBox">

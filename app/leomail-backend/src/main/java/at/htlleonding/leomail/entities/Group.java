@@ -23,7 +23,7 @@ public class Group extends PanacheEntityBase {
     @ManyToOne
     public Project project;
 
-    @ManyToMany
+    @ManyToMany()
     public List<Contact> members;
 
     public Group() {

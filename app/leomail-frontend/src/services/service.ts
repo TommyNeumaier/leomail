@@ -51,7 +51,7 @@ export class Service {
     }
 
     public getUsedTemplates(scheduled: boolean, projectId: string) {
-        return axios.get(`/api/template/getScheduledUsedTemplates`, {
+        return axios.get(`/api/template/getUsedTemplates`, {
             params: {
                 "scheduled": scheduled,
                 "pid": projectId
