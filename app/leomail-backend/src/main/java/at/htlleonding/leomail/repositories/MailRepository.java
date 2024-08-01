@@ -25,7 +25,7 @@ public class MailRepository {
     @Inject
     GroupSplitter groupSplitter;
 
-    public void sendMailsByTemplate(SMTPInformation smtpInformation) {
+    public void sendMailsByTemplate(String projectId, String accountId, SMTPInformation smtpInformation) {
         if (smtpInformation.scheduledAt() != null && smtpInformation.scheduledAt().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Scheduled time is in the past");
         }
@@ -33,7 +33,7 @@ public class MailRepository {
         List<Contact> receivers = groupSplitter.getAllContacts(smtpInformation.receiver().groups().get(), smtpInformation.receiver().contacts().get());
 
         List<String> renderedTemplates = templateBuilder.renderTemplates(template.id, receivers, smtpInformation.personalized());
-        SentTemplate usedTemplate = new SentTemplate(template, smtpInformation.scheduledAt(), Contact.findById("1"));
+        SentTemplate usedTemplate = new SentTemplate(template, smtpInformation.scheduledAt(), Project.findById(projectId), Contact.findById(accountId));
         for (int i = 0; i < renderedTemplates.size(); i++) {
             SentMail sentMail = new SentMail(receivers.get(i), usedTemplate, renderedTemplates.get(i));
             usedTemplate.mails.add(sentMail);

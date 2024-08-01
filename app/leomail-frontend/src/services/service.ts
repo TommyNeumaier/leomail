@@ -1,5 +1,4 @@
 import axios from "axios";
-import {useAppStore} from "@/stores/app.store";
 
 export class Service {
     private static instance: Service;
@@ -42,9 +41,13 @@ export class Service {
         return axios.post(`/api/template/update`, formData);
     }
 
-    public sendEmails(formData: any) {
+    public sendEmails(formData: any, projectId: string) {
         console.log("du schickst gleich die daten");
-        return axios.post(`/api/mail/sendByTemplate`, formData);
+        return axios.post(`/api/mail/sendByTemplate`, formData, {
+            params: {
+                "pid": projectId
+            }
+        });
     }
 
     public getUsedTemplates(scheduled: boolean, projectId: string) {
@@ -103,4 +106,45 @@ export class Service {
             }
         });
     }
+
+    async getPersonalGroups(projectId: string) {
+        return axios.get(`/api/groups/get/personal`, {
+            params: {
+                "pid": projectId
+            }
+        });
+    }
+
+    async addGroup(projectId: string, groupData: Group) {
+        return axios.post(`/api/groups/add`, groupData, {
+            params: {
+                "pid": projectId
+            }
+        });
+    }
+
+    async updateGroup(projectId: string, groupData: Group) {
+        return axios.post(`/api/groups/update`, groupData, {
+            params: {
+                "pid": projectId
+            }
+
+        });
+    }
+
+    async deleteGroup(projectId: string, groupId: string) {
+        return axios.delete(`/api/groups/delete`, {
+            params: {
+                "pid": projectId,
+                "gid": groupId
+            }
+        });
+    }
+}
+
+interface Group {
+    id: undefined | string;
+    name: string;
+    description: string;
+    members: string[];
 }
