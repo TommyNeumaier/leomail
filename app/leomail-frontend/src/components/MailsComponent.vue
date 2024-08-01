@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
 import {Service} from "@/services/service";
-import { parseISO, format, isToday, isYesterday, subDays, isSameDay } from 'date-fns';
-import { useRouter } from 'vue-router';
-import { useRoute } from "vue-router";
+import {parseISO, format, isToday, isYesterday, subDays, isSameDay} from 'date-fns';
+import {useRouter} from 'vue-router';
+import {useRoute} from "vue-router";
 import {useAppStore} from "@/stores/app.store";
 
 const route = useRoute();
 const router = useRouter();
 const headline = ref('');
+const isMailSent = ref(false);
 
 interface MailMeta {
   templateName: string;
@@ -56,51 +57,52 @@ const totalMails = ref(50);
 const limit = ref(10);
 const showEmailForm = ref(false);
 const checkAllMails = ref(false);
-const appStore = useAppStore()
+const appStore = useAppStore();
 
 const getMails = async () => {
   const response = await Service.getInstance().getUsedTemplates(false, appStore.$state.project);
+  console.log(response.data);
   fetchedMails.value = response.data.map((mail: any) => {
     const sentOnDate = parseISO(mail.keyDates.sentOn);
     let formattedSentOn;
 
-    if(isToday(sentOnDate)){
-    formattedSentOn = format(sentOnDate, 'HH:mm');}
-  else if (isYesterday(sentOnDate)) {
-    formattedSentOn = 'gestern';
-  } else if (isSameDay(sentOnDate, subDays(new Date(), 2))) {
-    formattedSentOn = 'vorgestern';
-  } else {
-    formattedSentOn = format(sentOnDate, 'yyyy-MM-dd');
-  }
-  return {
-    id: mail.id,
-    meta: {
-      templateName: mail.meta.templateName,
-      mailHeadline: mail.meta.mailHeadline,
-      mailContent: mail.meta.mailContent,
-      greetingId: mail.meta.greetingId,
-    },
-    keyDates: {
-      created: mail.keyDates.created,
-      sentOn: formattedSentOn,
-      scheduledAt: mail.keyDates.scheduledAt,
-    },
-    accountInformation: {
-      createdBy: mail.accountInformation.createdBy,
-      sentBy: mail.accountInformation.sentBy,
-    },
-    mails: mail.mails.map((mailDetail: any) => ({
-      contact: {
-        id: mailDetail.contact.id,
-        firstName: mailDetail.contact.firstName,
-        lastName: mailDetail.contact.lastName,
-        mailAddress: mailDetail.contact.mailAddress,
+    if (isToday(sentOnDate)) {
+      formattedSentOn = format(sentOnDate, 'HH:mm');
+    } else if (isYesterday(sentOnDate)) {
+      formattedSentOn = 'gestern';
+    } else if (isSameDay(sentOnDate, subDays(new Date(), 2))) {
+      formattedSentOn = 'vorgestern';
+    } else {
+      formattedSentOn = format(sentOnDate, 'yyyy-MM-dd');
+    }
+    return {
+      id: mail.id,
+      meta: {
+        templateName: mail.meta.templateName,
+        mailHeadline: mail.meta.mailHeadline,
+        mailContent: mail.meta.mailContent,
+        greetingId: mail.meta.greetingId,
       },
-      content: mailDetail.content,
-    }))
-  }
-})
+      keyDates: {
+        created: mail.keyDates.created,
+        sentOn: formattedSentOn,
+        scheduledAt: mail.keyDates.scheduledAt,
+      },
+      accountInformation: {
+        createdBy: mail.accountInformation.createdBy,
+        sentBy: mail.accountInformation.sentBy,
+      },
+      mails: mail.mails.map((mailDetail: any) => ({
+        contact: {
+          id: mailDetail.contact.id,
+          firstName: mailDetail.contact.firstName,
+          lastName: mailDetail.contact.lastName,
+          mailAddress: mailDetail.contact.mailAddress,
+        },
+        content: mailDetail.content,
+      }))
+    }
+  })
   console.log(fetchedMails.value);
 }
 
@@ -109,7 +111,7 @@ onMounted(() => {
 })
 
 const clickedEmailForm = () => {
-  router.push({ name: 'neu' });
+  router.push({name: 'neu'});
 }
 
 const decrement = () => {
@@ -145,6 +147,31 @@ watch(
     },
     { immediate: true }
 );
+
+watch(() => route.query.mailsend, (newValue) => {
+  if (newValue === 'true') {
+    isMailSent.value = true;
+    startTimeout();
+  }
+});
+
+const startTimeout = () => {
+  setTimeout(() => {
+    isMailSent.value = false;
+
+    const query = { ...route.query }; // Kopiere die aktuellen Query-Parameter
+    delete query.mailsend; // Entferne den 'mailsend' Parameter
+    router.replace({ path: route.path, query }); // Aktualisiere die URL
+  }, 2000); // 5 Sekunden Timeout
+};
+
+onMounted(() => {
+  if (route.query.mailsend === 'true') {
+    isMailSent.value = true;
+    startTimeout();
+  }
+});
+
 </script>
 
 <template>
@@ -168,7 +195,7 @@ watch(
     <div id="bigFeaturesContainer">
       <div id="mailFeaturesContainer">
         <div>
-          <input type="checkbox" v-model="checkAllMails" id="checkbox"/> <!--checkbox when all mails should be checked-->
+          <input type="checkbox" v-model="checkAllMails" id="checkbox"/>
         </div>
         <div>
           <img src="../assets/reload.png" alt="Reload" id="reload-icon" width="auto" height="12">
@@ -209,30 +236,42 @@ watch(
           <p>{{ email.meta.mailHeadline }}</p>
           <p>{{ email.keyDates.sentOn }}</p>
         </div>
-        <div id="success-message" class="hidden">
-          Die Mail wurde erfolgreich verschickt
-        </div>
+        <transition name="fade" @after-enter="startTimeout">
+          <div v-if="isMailSent" class="notification-box">
+            <p>E-Mail wurde erfolgreich gesendet!</p>
+          </div>
+        </transition>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.hidden {
-  display: none;
+.notification-box {
+  background-color: #62e862;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20vw;
+  border-radius: 10px;
+  position: absolute;
+  top: 85vh;
+  left: 75vw;
 }
 
-.visible {
-  display: block;
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 10px 20px;
-  background-color: green;
-  color: white;
-  border-radius: 5px;
-  z-index: 1000;
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 1s; /* Dauer der Einblendung/Ausblendung */
 }
+
+.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */
+{
+  opacity: 0;
+}
+
+.notification-box p {
+  padding: 0.6vw;
+}
+
 .emailElement {
   display: flex;
   flex-direction: row;
