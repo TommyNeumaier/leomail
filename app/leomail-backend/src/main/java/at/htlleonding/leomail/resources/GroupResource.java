@@ -9,6 +9,8 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.util.List;
+
 @Path("groups")
 public class GroupResource {
 
@@ -40,6 +42,7 @@ public class GroupResource {
         try {
             return Response.ok(groupRepository.getGroupDetails(projectId, jwt.getClaim("sub"), groupId)).build();
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(409).entity("E-Group-01").build();
         }
     }
@@ -88,4 +91,21 @@ public class GroupResource {
             return Response.status(409).entity("E-Group-01").build();
         }
     }
+
+    // In GroupResource.java
+
+    @GET
+    @Path("/search")
+    @Produces("application/json")
+    @Authenticated
+    public Response searchGroups(@QueryParam("query") String searchTerm, @QueryParam("pid") String projectId) {
+        try {
+            List<GroupDetailDTO> results = groupRepository.searchGroups(searchTerm, projectId, jwt.getClaim("sub"));
+            return Response.ok(results).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(409).entity("E-Group-01").build();
+        }
+    }
+
 }

@@ -1,25 +1,22 @@
 <script setup lang="ts">
 import NavComponent from "@/components/NavComponent.vue";
-import axios from "axios";
 import { onMounted, ref, shallowRef, watch, computed } from "vue";
 import { Service } from "@/services/service";
-import VorlageMainContentComponent from "@/components/TemplateComponent.vue";
 import { useRoute } from "vue-router";
 import GroupComponent from "@/components/GroupComponent.vue";
 import TemplateComponent from "@/components/TemplateComponent.vue";
-import { stdout } from "process";
-import {useAppStore} from "@/stores/app.store";
+import { useAppStore } from "@/stores/app.store";
 
 const route = useRoute();
+const appStore = useAppStore();
 
-const fetchedData = ref<{ name: string, headline: string, greeting: string, content: string }[]>([]);
-const selectedTemplate = ref<{ name: string, headline: string, greeting: string, content: string } | null>(null);
+const fetchedData = ref([]);
+const selectedTemplate = ref(null);
 let headlineVG = ref('');
 let newVGButton = ref('');
 let formVG = shallowRef(null);
 
 const searchQuery = ref('');
-const appStore = useAppStore();
 
 const filteredTemplates = computed(() => {
   if (!searchQuery.value) return fetchedData.value;
@@ -41,7 +38,6 @@ const getData = async () => {
   }
 };
 
-
 const handleCreate = () => {
   selectedTemplate.value = null; // Clear the selected template
   if (route.path.includes('vorlagen')) {
@@ -51,28 +47,34 @@ const handleCreate = () => {
   }
 };
 
-const handleClick = (item: { name: string, headline: string, greeting: string, content: string }) => {
+const handleClick = (item) => {
   selectedTemplate.value = item;
+  if(route.path.includes('gruppen')) {
+    Service.getInstance().getGroupDetails(item.id, appStore.$state.project).then((response) => {
+      selectedTemplate.value = response.data;
+      console.log(response)
+    });
+  }
 };
 
-const emittedNewObject = ref<{ name: string }[]>([]);
-
-const handleNewAddedObject = (newObject: { name: string }) => {
-  emittedNewObject.value.push(newObject);
+const handleNewAddedObject = (newObject) => {
+  fetchedData.value.push(newObject);
   getData();
 };
 
-const handleRemovedObject = (removedObject: { name: string }) => {
+const handleRemovedObject = (removedObject) => {
   selectedTemplate.value = null; // Clear the selected template
-  emittedNewObject.value = emittedNewObject.value.filter((obj) => removedObject.name !== obj.name);
+  fetchedData.value = fetchedData.value.filter((obj) => removedObject.id !== obj.id);
   getData();
 };
 
-const handleSavedObject = (savedObject: { name: string }) => {
-    const index = emittedNewObject.value.findIndex(obj => obj.name === savedObject.name);
-    emittedNewObject.value[index] = savedObject;
-    selectedTemplate.value = null;
-    getData();
+const handleSavedObject = (savedObject) => {
+  const index = fetchedData.value.findIndex(obj => obj.id === savedObject.id);
+  if (index !== -1) {
+    fetchedData.value[index] = savedObject;
+  }
+  selectedTemplate.value = null;
+  getData();
 };
 
 onMounted(() => {
@@ -96,6 +98,7 @@ watch(
     { immediate: true }
 );
 </script>
+
 <template>
   <div id="VGMainContainer">
     <nav-component></nav-component>
@@ -106,7 +109,6 @@ watch(
         <h3 id="headlineDataVG">{{ headlineVG }}</h3>
 
         <div id="getVGBox">
-          <!--suche nach Vorlagen-->
           <div id="search-container">
             <div id="searchIconBox">
               <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
@@ -117,7 +119,7 @@ watch(
           <ul id="vorlagenBoxContainer">
             <li v-for="(item, index) in filteredTemplates" :key="index" :id="String('template-' + index)"
                 @click="handleClick(item)" class="vorlagenItems"
-                :class="{ highlighted: selectedTemplate && selectedTemplate.name === item.name }">
+                :class="{ highlighted: selectedTemplate && selectedTemplate.id === item.id }">
               {{ item.name }}
             </li>
           </ul>
@@ -128,7 +130,6 @@ watch(
           <button id="newVGButton" @click="handleCreate()">
             <img src="../assets/icons/newMail-grau.svg" width="auto" height="10">
             {{ newVGButton }}
-            <!--<img src="../assets/icons/newMail-grau.svg" width="auto" height="10">-->
           </button>
         </div>
       </div>
@@ -140,7 +141,7 @@ watch(
 
         <div id="VGFormBox">
           <router-view>
-            <component :is="formVG" @template-added="handleNewAddedObject" @template-removed="handleRemovedObject" @template-saved="handleSavedObject"
+            <component :is="formVG" @group-added="handleNewAddedObject" @group-removed="handleRemovedObject" @group-saved="handleSavedObject"
                        :selected-template="selectedTemplate"></component>
           </router-view>
         </div>
@@ -155,14 +156,14 @@ watch(
   display: flex;
   flex-direction: column;
   margin-top: 2vh;
-  list-style-type: none; /* Entfernt die Aufzählungszeichen */
-  padding: 0; /* Entfernt Standard-Padding */
-  box-sizing: border-box; /* Stellt sicher, dass Padding und Border in die Größe eingerechnet werden */
+  list-style-type: none;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .vorlagenItems {
-  border-bottom: 1px solid #ddd; /* Fügt einen unteren Rand zwischen den Listenelementen hinzu */
-  cursor: pointer; /* Zeigt an, dass die Elemente klickbar sind */
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
   font-size: 0.8rem;
 }
 
@@ -171,9 +172,8 @@ watch(
 }
 
 .highlighted {
-  font-weight: bold; /* Hebt das ausgewählte Element hervor */
+  font-weight: bold;
 }
-
 
 #VGMainContainer {
   display: flex;
@@ -190,7 +190,7 @@ watch(
 }
 
 #newVGButton {
-  all: unset; /* Entfernt alle CSS-Eigenschaften */
+  all: unset;
   color: #A3A3A3;
   font-size: 0.8rem;
   padding-left: 0.5vw;
@@ -238,7 +238,7 @@ watch(
 }
 
 input[type="text"] {
-  all: unset; /* Entfernt alle CSS-Eigenschaften */
+  all: unset;
   width: 60%;
 }
 
@@ -265,7 +265,7 @@ input[type="text"] {
   font-size: 0.3rem;
 }
 
-#search-container:focus{
+#search-container:focus {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 

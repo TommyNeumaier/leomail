@@ -15,7 +15,8 @@ import jakarta.persistence.EntityManager;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+
+import static io.quarkus.hibernate.orm.panache.PanacheEntityBase.find;
 
 @ApplicationScoped
 public class GroupRepository {
@@ -59,7 +60,7 @@ public class GroupRepository {
                 .getSingleResult() == 0)
             throw new ProjectNotExistsException();
 
-        if (!permissionService.hasPermission(projectId, accountId, groupId)) {
+        if (!permissionService.hasPermission(projectId, accountId)) {
             throw new SecurityException("User has no permission to access this group");
         }
 
@@ -68,13 +69,11 @@ public class GroupRepository {
                 .getSingleResult();
 
         CreatorDTO createdBy = em.createQuery("SELECT NEW at.htlleonding.leomail.model.dto.contacts.CreatorDTO(g.createdBy.id, g.createdBy.firstName, g.createdBy.lastName, g.createdBy.mailAddress) FROM Group g WHERE g.id = :groupId", CreatorDTO.class)
-                .setParameter("groupId", dto.createdBy().id())
+                .setParameter("groupId", groupId)
                 .getSingleResult();
 
-        List<ContactSearchDTO> members = em.createQuery("SELECT NEW at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO(c.id, c.firstName, c.lastName, c.mailAddress) FROM Contact c JOIN c.groups g WHERE g.id = :groupId", ContactSearchDTO.class)
-                .setParameter("groupId", groupId)
-                .getResultList();
-
+        Group group = Group.findById(groupId);
+        List<ContactSearchDTO> members = group.members != null ? group.members.stream().map(contact -> new ContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress)).toList() : Collections.emptyList();
         return new GroupDetailDTO(dto.id(), dto.name(), dto.description(), createdBy, members);
     }
 
@@ -100,7 +99,6 @@ public class GroupRepository {
                 .setParameter("memberIds", members.stream().map(ContactSearchDTO::id).toList())
                 .getResultList();
 
-        memberList.add(Contact.findById(accountId));
         addKeycloakUsers(memberList, members);
 
         em.persist(new Group(name, description, Contact.findById(accountId), Project.findById(projectId), memberList));
@@ -128,7 +126,7 @@ public class GroupRepository {
                 .getSingleResult() == 0)
             throw new ProjectNotExistsException();
 
-        if (!permissionService.hasPermission(projectId, accountId, groupId)) {
+        if (!permissionService.hasPermission(projectId, accountId)) {
             throw new SecurityException("User has no permission to access this group");
         }
 
@@ -152,7 +150,7 @@ public class GroupRepository {
                 .getSingleResult() == 0)
             throw new ProjectNotExistsException();
 
-        if (!permissionService.hasPermission(projectId, accountId, groupId)) {
+        if (!permissionService.hasPermission(projectId, accountId)) {
             throw new SecurityException("User has no permission to access this group");
         }
 
@@ -166,4 +164,12 @@ public class GroupRepository {
 
         addKeycloakUsers(group.members, members != null ? members : List.of());
     }
+
+    public List<GroupDetailDTO> searchGroups(String searchTerm, String projectId, String userId) {
+        return em.createQuery("SELECT NEW at.htlleonding.leomail.model.dto.groups.GroupDetailDTO(g.id, g.name, g.description) FROM Group g WHERE g.project.id = :projectId AND g.name LIKE :searchTerm", GroupDetailDTO.class)
+                .setParameter("projectId", projectId)
+                .setParameter("searchTerm", "%" + searchTerm + "%")
+                .getResultList();
+    }
+
 }

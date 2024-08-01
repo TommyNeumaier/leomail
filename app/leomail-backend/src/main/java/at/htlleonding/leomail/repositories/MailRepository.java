@@ -29,6 +29,7 @@ public class MailRepository {
         if (smtpInformation.scheduledAt() != null && smtpInformation.scheduledAt().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Scheduled time is in the past");
         }
+
         Template template = Template.findById(smtpInformation.templateId());
         List<Contact> receivers = groupSplitter.getAllContacts(smtpInformation.receiver().groups().get(), smtpInformation.receiver().contacts().get());
 

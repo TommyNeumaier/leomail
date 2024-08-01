@@ -18,7 +18,7 @@ public class GroupSplitter {
     @Inject
     ContactRepository contactRepository;
 
-    public List<Contact> getAllContacts(List<Group> groups, List<String> contacts) {
+    public List<Contact> getAllContacts(List<String> groups, List<String> contacts) {
         List<Contact> contactList = new LinkedList<>();
         for (String contactId : contacts) {
             Contact contact = Contact.findById(contactId);
@@ -33,8 +33,9 @@ public class GroupSplitter {
         }
 
         List<Contact> allContacts = new LinkedList<>(contactList);
-        for (Group group : groups) {
-            for (Contact contact : group.members) {
+        for (String group : groups) {
+            Group groupEntity = Group.findById(group);
+            for (Contact contact : groupEntity.members) {
                 if (!allContacts.contains(contact)) {
                     allContacts.add(contact);
                 }

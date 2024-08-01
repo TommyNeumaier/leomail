@@ -47,7 +47,7 @@ public class Contact extends PanacheEntityBase {
     @Column(name = "val")
     public Map<String, String> attributes = new HashMap<>();
 
-    @ManyToMany
+    @ManyToMany()
     @JsonIgnore
     public List<Group> groups;
 
