@@ -15,6 +15,7 @@ import jakarta.persistence.EntityManager;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @ApplicationScoped
 public class GroupRepository {
@@ -62,7 +63,7 @@ public class GroupRepository {
             throw new SecurityException("User has no permission to access this group");
         }
 
-        GroupDetailDTO dto = em.createQuery("SELECT NEW at.htlleonding.leomail.model.dto.groups.GroupDetailDTO(g.id, g.name) FROM Group g WHERE g.id = :groupId", GroupDetailDTO.class)
+        GroupDetailDTO dto = em.createQuery("SELECT NEW at.htlleonding.leomail.model.dto.groups.GroupDetailDTO(g.id, g.name, g.description) FROM Group g WHERE g.id = :groupId", GroupDetailDTO.class)
                 .setParameter("groupId", groupId)
                 .getSingleResult();
 
@@ -74,16 +75,17 @@ public class GroupRepository {
                 .setParameter("groupId", groupId)
                 .getResultList();
 
-        return new GroupDetailDTO(dto.id(), dto.name(), createdBy, members);
+        return new GroupDetailDTO(dto.id(), dto.name(), dto.description(), createdBy, members);
     }
 
-    public void createGroup(String projectId, String accountId, String name, List<ContactSearchDTO> members) {
+    public void createGroup(String projectId, String accountId, String description, String name, List<ContactSearchDTO> members) {
         if (projectId == null || projectId.isBlank())
             throw new IllegalArgumentException("projectId must not be null");
         else if (accountId == null || accountId.isBlank())
             throw new IllegalArgumentException("accountId must not be null");
         else if (name == null || name.isBlank())
             throw new IllegalArgumentException("name must not be null");
+        if(members == null) members = List.of();
 
         if (em.createQuery("SELECT COUNT(p) FROM Project p WHERE p.id = :projectId", Long.class)
                 .setParameter("projectId", projectId)
@@ -98,8 +100,10 @@ public class GroupRepository {
                 .setParameter("memberIds", members.stream().map(ContactSearchDTO::id).toList())
                 .getResultList();
 
+        memberList.add(Contact.findById(accountId));
         addKeycloakUsers(memberList, members);
-        em.persist(new Group(name, Contact.findById(accountId), Project.findById(projectId), Collections.singletonList(memberList)));
+
+        em.persist(new Group(name, description, Contact.findById(accountId), Project.findById(projectId), memberList));
     }
 
     private void addKeycloakUsers(List<Contact> memberList, List<ContactSearchDTO> members) {
@@ -133,7 +137,7 @@ public class GroupRepository {
                 .executeUpdate();
     }
 
-    public void updateGroup(String projectId, String accountId, String groupId, String name, List<ContactSearchDTO> members) {
+    public void updateGroup(String projectId, String accountId, String description, String groupId, String name, List<ContactSearchDTO> members) {
         if (projectId == null || projectId.isBlank())
             throw new IllegalArgumentException("projectId must not be null");
         else if (accountId == null || accountId.isBlank())
@@ -152,13 +156,14 @@ public class GroupRepository {
             throw new SecurityException("User has no permission to access this group");
         }
 
-
         Group group = Group.findById(groupId);
         group.name = name;
+        group.description = description;
         group.members = em.createQuery("SELECT c FROM Contact c WHERE c.id IN :memberIds", Contact.class)
-                .setParameter("memberIds", members.stream().map(ContactSearchDTO::id).toList())
+                .setParameter("memberIds", members != null ? members.stream().map(ContactSearchDTO::id).toList() : List.of())
                 .getResultList();
+        group.members.add(Contact.findById(accountId));
 
-        addKeycloakUsers(group.members, members);
+        addKeycloakUsers(group.members, members != null ? members : List.of());
     }
 }

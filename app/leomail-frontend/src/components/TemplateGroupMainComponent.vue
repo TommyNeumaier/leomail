@@ -28,15 +28,19 @@ const filteredTemplates = computed(() => {
 
 const getData = async () => {
   let response;
-  if (route.path.includes('vorlagen')) {
-    response = await Service.getInstance().getTemplates(appStore.$state.project);
-  } else if (route.path.includes('gruppen')) {
-    // response = await Service.getInstance().getGruppen();
-    response = '';
+  try {
+    if (route.path.includes('vorlagen')) {
+      response = await Service.getInstance().getTemplates(appStore.$state.project);
+    } else if (route.path.includes('gruppen')) {
+      response = await Service.getInstance().getPersonalGroups(appStore.$state.project);
+    }
+    console.log(response);
+    fetchedData.value = response.data;
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Daten:', error);
   }
-  console.log(response);
-  fetchedData.value = response.data;
 };
+
 
 const handleCreate = () => {
   selectedTemplate.value = null; // Clear the selected template

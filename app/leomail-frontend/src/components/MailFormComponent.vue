@@ -195,7 +195,7 @@ const sendMail = async () => {
     };
     console.log(mailForm);
     console.log(parseDate());
-    const response = await Service.getInstance().sendEmails(mailForm);
+    const response = await Service.getInstance().sendEmails(mailForm, appStore.$state.project);
     console.log('Erfolgreich gesendet:', response.data);
     router.push({ name: 'mail' });
 

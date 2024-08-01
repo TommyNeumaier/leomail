@@ -60,9 +60,10 @@ public class SentTemplate extends PanacheEntityBase {
         this.greeting = greeting;
     }
 
-    public SentTemplate(Template template, LocalDateTime scheduledAt, Contact sentBy) {
+    public SentTemplate(Template template, LocalDateTime scheduledAt, Project project, Contact sentBy) {
         this(template.name, template.headline, template.content, template.createdBy, template.greeting);
         this.scheduledAt = scheduledAt;
+        this.project = project;
         this.sentBy = sentBy;
     }
 }

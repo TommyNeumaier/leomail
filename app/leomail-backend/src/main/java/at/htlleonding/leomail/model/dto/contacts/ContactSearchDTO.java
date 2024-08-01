@@ -7,5 +7,4 @@ public record ContactSearchDTO(
         String firstName,
         String lastName,
         String mailAddress) implements Serializable {
-
 }

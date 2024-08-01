@@ -66,7 +66,7 @@ public class GroupResource {
     // URL?pid={ProjektID} und im POST-Body die Gruppeninformationen (Attribute wie in GroupDetailDTO)
     public Response addGroup(@QueryParam("pid") String projectId, GroupDetailDTO dto) {
         try {
-            groupRepository.createGroup(projectId, jwt.getClaim("sub"), dto.name(), dto.members());
+            groupRepository.createGroup(projectId, jwt.getClaim("sub"), dto.description(), dto.name(), dto.members());
             return Response.ok().build();
         } catch (Exception e) {
             return Response.status(409).entity("E-Group-01").build();
@@ -81,9 +81,10 @@ public class GroupResource {
     // URL?pid={ProjektID} und im POST-Body die Gruppeninformationen (Attribute wie in GroupDetailDTO)
     public Response updateGroup(@QueryParam("pid") String projectId, GroupDetailDTO dto) {
         try {
-            groupRepository.updateGroup(projectId, jwt.getClaim("sub"), dto.id(), dto.name(), dto.members());
+            groupRepository.updateGroup(projectId, jwt.getClaim("sub"), dto.description(), dto.id(), dto.name(), dto.members());
             return Response.ok().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(409).entity("E-Group-01").build();
         }
     }
