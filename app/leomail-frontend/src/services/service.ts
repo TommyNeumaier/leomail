@@ -108,7 +108,7 @@ export class Service {
     }
 
     async getPersonalGroups(projectId: string) {
-        return axios.get(`/api/groups/get/personal`, {
+        return axios.get<Group>(`/api/groups/get/personal`, {
             params: {
                 "pid": projectId
             }
@@ -134,6 +134,15 @@ export class Service {
 
     async deleteGroup(projectId: string, groupId: string) {
         return axios.delete(`/api/groups/delete`, {
+            params: {
+                "pid": projectId,
+                "gid": groupId
+            }
+        });
+    }
+
+    async getGroupDetails(groupId: string, projectId: string) {
+        return axios.get<Group>(`/api/groups/get/details`, {
             params: {
                 "pid": projectId,
                 "gid": groupId

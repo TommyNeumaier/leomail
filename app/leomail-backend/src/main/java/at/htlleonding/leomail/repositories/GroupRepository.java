@@ -59,7 +59,7 @@ public class GroupRepository {
                 .getSingleResult() == 0)
             throw new ProjectNotExistsException();
 
-        if (!permissionService.hasPermission(projectId, accountId, groupId)) {
+        if (!permissionService.hasPermission(projectId, accountId)) {
             throw new SecurityException("User has no permission to access this group");
         }
 
@@ -68,12 +68,11 @@ public class GroupRepository {
                 .getSingleResult();
 
         CreatorDTO createdBy = em.createQuery("SELECT NEW at.htlleonding.leomail.model.dto.contacts.CreatorDTO(g.createdBy.id, g.createdBy.firstName, g.createdBy.lastName, g.createdBy.mailAddress) FROM Group g WHERE g.id = :groupId", CreatorDTO.class)
-                .setParameter("groupId", dto.createdBy().id())
+                .setParameter("groupId", groupId)
                 .getSingleResult();
 
-        List<ContactSearchDTO> members = em.createQuery("SELECT NEW at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO(c.id, c.firstName, c.lastName, c.mailAddress) FROM Contact c JOIN c.groups g WHERE g.id = :groupId", ContactSearchDTO.class)
-                .setParameter("groupId", groupId)
-                .getResultList();
+        Group group = Group.findById(groupId);
+        List<ContactSearchDTO> members = group.members != null ? group.members.stream().map(contact -> new ContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress)).toList() : Collections.emptyList();
 
         return new GroupDetailDTO(dto.id(), dto.name(), dto.description(), createdBy, members);
     }

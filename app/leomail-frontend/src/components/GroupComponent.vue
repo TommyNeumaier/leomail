@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
 import { Service } from "@/services/service";
-import { useRoute } from 'vue-router';
 import { useAppStore } from "@/stores/app.store";
-
-const route = useRoute();
-const appStore = useAppStore();
 
 interface User {
   id: number;
@@ -14,24 +10,23 @@ interface User {
   mailAddress: string;
 }
 
+interface Group {
+  id: string;
+  name: string;
+  description: string;
+  members: User[];
+}
+
+const appStore = useAppStore();
+const emitEvents = defineEmits(['group-added', 'group-removed', 'group-saved']);
+const props = defineProps<{ selectedTemplate: Group | null }>();
+
 const groupName = ref('');
 const groupDescription = ref('');
 const selectedMembers = ref<User[]>([]);
-const selectedGroup = ref<{ id: string, name: string, description: string, members: User[] } | null>(null);
-const groups = ref<{ id: string, name: string, description: string, members: User[] }[]>([]);
-const searchQuery = ref('');
 const users = ref<User[]>([]);
 const searchTerm = ref('');
 const loading = ref(false);
-
-const getGroups = async () => {
-  try {
-    const response = await Service.getInstance().getPersonalGroups(appStore.$state.project);
-    groups.value = response.data;
-  } catch (error) {
-    console.error('Fehler beim Laden der Gruppen:', error);
-  }
-};
 
 const fetchUsers = async (query: string) => {
   loading.value = true;
@@ -75,39 +70,41 @@ const addGroup = async () => {
       description: groupDescription.value,
       members: selectedMembers.value
     };
-    await Service.getInstance().addGroup(appStore.$state.project, formData);
-    await getGroups();
+    const response = await Service.getInstance().addGroup(appStore.$state.project, formData);
+    console.log('Group created:', response.data);
+    emitEvents('group-added', formData);
     clearForm();
   } catch (error) {
-    console.error('Fehler beim Senden der Daten:', error);
+    console.error('Error adding group:', error);
   }
 };
 
 const updateGroup = async () => {
   try {
-    if (!selectedGroup.value) return;
+    if (!props.selectedTemplate) return;
     const formData = {
-      id: selectedGroup.value.id,
+      id: props.selectedTemplate.id,
       name: groupName.value,
       description: groupDescription.value,
-      members: selectedMembers.value.map(user => user.id)
+      members: selectedMembers.value
     };
-    await Service.getInstance().updateGroup(appStore.$state.project, formData);
-    await getGroups();
+    const response = await Service.getInstance().updateGroup(appStore.$state.project, formData);
+    console.log('Group updated:', response.data);
+    emitEvents('group-saved', formData);
     clearForm();
   } catch (error) {
-    console.error('Fehler beim Aktualisieren der Gruppe:', error);
+    console.error('Error updating group:', error);
   }
 };
 
 const removeGroup = async () => {
   try {
-    if (!selectedGroup.value) return;
-    await Service.getInstance().deleteGroup(appStore.$state.project, selectedGroup.value.id);
-    await getGroups();
+    if (!props.selectedTemplate) return;
+    await Service.getInstance().deleteGroup(appStore.$state.project, props.selectedTemplate.id);
+    emitEvents('group-removed', props.selectedTemplate);
     clearForm();
   } catch (error) {
-    console.error('Fehler beim Löschen der Gruppe:', error);
+    console.error('Error removing group:', error);
   }
 };
 
@@ -115,31 +112,32 @@ const clearForm = () => {
   groupName.value = '';
   groupDescription.value = '';
   selectedMembers.value = [];
-  selectedGroup.value = null;
 };
+
+watch(() => props.selectedTemplate, (newTemplate) => {
+  if (newTemplate) {
+    groupName.value = newTemplate.name;
+    groupDescription.value = newTemplate.description;
+    selectedMembers.value = newTemplate.members;
+  } else {
+    clearForm();
+  }
+});
 
 onMounted(() => {
-  getGroups();
+  if (props.selectedTemplate) {
+    groupName.value = props.selectedTemplate.name;
+    groupDescription.value = props.selectedTemplate.description;
+    selectedMembers.value = props.selectedTemplate.members;
+  }
 });
-
-const filteredGroups = computed(() => {
-  if (!searchQuery.value) return groups.value;
-  return groups.value.filter(group => group.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
-});
-
-const selectGroup = (group: { id: string, name: string, description: string, members: User[] }) => {
-  selectedGroup.value = group;
-  groupName.value = group.name;
-  groupDescription.value = group.description;
-  selectedMembers.value = group.members;
-};
 
 </script>
 
 <template>
   <div id="bigBox">
     <h3>Gruppenverwaltung</h3>
-    <form @submit.prevent="selectedGroup ? updateGroup() : addGroup()">
+    <form @submit.prevent="props.selectedTemplate ? updateGroup() : addGroup()">
       <div class="boxLabel">
         <label for="groupName" class="group-label">Gruppenname:</label><br>
       </div>
@@ -179,20 +177,11 @@ const selectGroup = (group: { id: string, name: string, description: string, mem
       </div>
 
       <div id="buttonBox">
-        <button type="submit" id="submitButton">{{ selectedGroup ? 'Aktualisieren' : 'Erstellen' }}</button>
-        <button type="button" @click="removeGroup" v-if="selectedGroup">Löschen</button>
+        <button type="submit" id="submitButton">{{ props.selectedTemplate ? 'Aktualisieren' : 'Erstellen' }}</button>
+        <button type="button" @click="removeGroup" v-if="props.selectedTemplate">Löschen</button>
         <button type="button" @click="clearForm">Abbrechen</button>
       </div>
     </form>
-
-    <div>
-      <input type="text" v-model="searchQuery" placeholder="Gruppen suchen" class="formGroup"/>
-      <ul>
-        <li v-for="group in filteredGroups" :key="group.id" @click="selectGroup(group)">
-          {{ group.name }}
-        </li>
-      </ul>
-    </div>
   </div>
 </template>
 
@@ -342,4 +331,14 @@ li:hover .user-info small {
   box-shadow: none;
 }
 
+#deleteButton {
+  background-color: #f5151c;
+  color: white;
+  border: #ff393f solid 1px;
+}
+
+#deleteButton:hover {
+  background-color: rgba(253, 75, 96, 0.86);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
 </style>

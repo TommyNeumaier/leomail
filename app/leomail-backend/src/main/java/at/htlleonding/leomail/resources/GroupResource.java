@@ -40,6 +40,7 @@ public class GroupResource {
         try {
             return Response.ok(groupRepository.getGroupDetails(projectId, jwt.getClaim("sub"), groupId)).build();
         } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(409).entity("E-Group-01").build();
         }
     }
