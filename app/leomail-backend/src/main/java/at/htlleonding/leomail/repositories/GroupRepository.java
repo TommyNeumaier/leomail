@@ -23,6 +23,9 @@ public class GroupRepository {
     EntityManager em;
 
     @Inject
+    ContactRepository contactRepository;
+
+    @Inject
     PermissionService permissionService;
 
     public List<GroupOverviewDTO> getPersonalGroups(String projectId, String accountId) {
@@ -94,7 +97,18 @@ public class GroupRepository {
         List<Contact> memberList = em.createQuery("SELECT c FROM Contact c WHERE c.id IN :memberIds", Contact.class)
                 .setParameter("memberIds", members.stream().map(ContactSearchDTO::id).toList())
                 .getResultList();
+
+        addKeycloakUsers(memberList, members);
         em.persist(new Group(name, Contact.findById(accountId), Project.findById(projectId), Collections.singletonList(memberList)));
+    }
+
+    private void addKeycloakUsers(List<Contact> memberList, List<ContactSearchDTO> members) {
+        members.forEach(member -> {
+            if (Contact.findById(member.id()) == null) {
+                Contact contact = contactRepository.saveKeycloakUserLocally(member.id(), member.firstName(), member.lastName(), member.mailAddress());
+                memberList.add(contact);
+            }
+        });
     }
 
     public void deleteGroup(String projectId, String accountId, String groupId) {
@@ -138,10 +152,13 @@ public class GroupRepository {
             throw new SecurityException("User has no permission to access this group");
         }
 
+
         Group group = Group.findById(groupId);
         group.name = name;
         group.members = em.createQuery("SELECT c FROM Contact c WHERE c.id IN :memberIds", Contact.class)
                 .setParameter("memberIds", members.stream().map(ContactSearchDTO::id).toList())
                 .getResultList();
+
+        addKeycloakUsers(group.members, members);
     }
 }

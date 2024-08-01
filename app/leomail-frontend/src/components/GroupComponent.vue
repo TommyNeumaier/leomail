@@ -17,7 +17,7 @@ const addGroup = async () => {
     const response = await Service.getInstance().addTemplate(formData);
     console.log('Erfolgreich gesendet:', response.data);
     clearForm();
-    emit('template-added', formData);*/
+    emit('template-added', formData);
   } catch (error) {
     console.error('Fehler beim Senden der Daten:', error);
   }

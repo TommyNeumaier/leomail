@@ -126,8 +126,21 @@ public class ContactRepository {
     }
 
     @Transactional
-    public void saveKeycloakUserLocally(String id, String firstName, String lastName, String mailAddress) {
+    public Contact saveKeycloakUserLocally(String id, String firstName, String lastName, String mailAddress) {
         Contact contact = new Contact(id, firstName, lastName, mailAddress, true);
         contact.persist();
+        return contact;
+    }
+
+    @Transactional
+    public Contact saveKeycloakUserLocally(Object user) {
+        Map<String, Object> userMap = (Map<String, Object>) user;
+        String id = (String) userMap.get("id");
+        String firstName = (String) userMap.get("firstName");
+        String lastName = (String) userMap.get("lastName");
+        String mailAddress = (String) userMap.get("email");
+        Contact contact = new Contact(id, firstName, lastName, mailAddress, true);
+        contact.persist();
+        return contact;
     }
 }
