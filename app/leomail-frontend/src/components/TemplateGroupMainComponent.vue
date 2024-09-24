@@ -26,9 +26,9 @@ const filteredTemplates = computed(() => {
 const getData = async () => {
   let response;
   try {
-    if (route.path.includes('vorlagen')) {
+    if (route.path.includes('template')) {
       response = await Service.getInstance().getTemplates(appStore.$state.project);
-    } else if (route.path.includes('gruppen')) {
+    } else if (route.path.includes('groups')) {
       response = await Service.getInstance().getPersonalGroups(appStore.$state.project);
     }
     console.log(response);
@@ -40,16 +40,16 @@ const getData = async () => {
 
 const handleCreate = () => {
   selectedTemplate.value = null; // Clear the selected template
-  if (route.path.includes('vorlagen')) {
+  if (route.path.includes('template')) {
     formVG.value = TemplateComponent;
-  } else if (route.path.includes('gruppen')) {
+  } else if (route.path.includes('groups')) {
     formVG.value = GroupComponent;
   }
 };
 
 const handleClick = (item) => {
   selectedTemplate.value = item;
-  if(route.path.includes('gruppen')) {
+  if(route.path.includes('groups')) {
     Service.getInstance().getGroupDetails(item.id, appStore.$state.project).then((response) => {
       selectedTemplate.value = response.data;
       console.log(response)
@@ -84,11 +84,11 @@ onMounted(() => {
 watch(
     () => route.path,
     (newPath) => {
-      if (newPath.toLowerCase().includes('vorlagen')) {
+      if (newPath.toLowerCase().includes('template')) {
         headlineVG.value = 'Vorlagen';
         newVGButton.value = 'Neue Vorlage';
         formVG.value = TemplateComponent;
-      } else if (newPath.toLowerCase().includes('gruppen')) {
+      } else if (newPath.toLowerCase().includes('groups')) {
         headlineVG.value = 'Gruppen';
         newVGButton.value = 'Neue Gruppe';
         formVG.value = GroupComponent;
@@ -262,7 +262,7 @@ input[type="text"] {
 #search {
   width: 90%;
   margin-left: 3%;
-  font-size: 0.3rem;
+  font-size: 0.8rem;
 }
 
 #search-container:focus {

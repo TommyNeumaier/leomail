@@ -109,15 +109,19 @@ const scheduledAt = ref({
 });
 
 watch(date, (newDate) => {
+  console.log("newDate structure:", newDate);
   scheduledAt.value.year = newDate.getFullYear().toString();
   scheduledAt.value.month = (newDate.getMonth() + 1).toString().padStart(2, "0");
   scheduledAt.value.day = newDate.getDate().toString().padStart(2, "0");
 });
 
 watch(time, (newTime) => {
-  scheduledAt.value.hours = newTime.getHours().toString().padStart(2, "0");
-  scheduledAt.value.minutes = newTime.getMinutes().toString().padStart(2, "0")
+  console.log("newTime structure:", newTime);
+  scheduledAt.value.hours = newTime.hours.toString().padStart(2, "0");
+  scheduledAt.value.minutes = newTime.minutes.toString().padStart(2, "0");
 });
+
+
 
 const filterFunction = () => {
   const filterValue = filter.value.trim().toLowerCase();
@@ -177,11 +181,12 @@ const parseReceiverInput = () => {
 
 const parseDate = () => {
   if (checked.value) {
-    return '${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z';
+    return `${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z`;
   } else {
     return null;
   }
 }
+
 const sortSelectedUsers = (selectedUsers: User[]): number[] => {
   return selectedUsers.map(user => user.id).sort((a, b) => a - b);
 }
@@ -189,6 +194,7 @@ const sendMail = async () => {
   try {
     parseReceiverInput();
     console.log(receiver);
+    console.log(parseDate().toString());
     const mailForm = {
       receiver: {
         contacts: sortSelectedUsers(selectedUsers.value),

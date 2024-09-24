@@ -55,25 +55,20 @@ const startIndex = ref(1);
 const endIndex = ref(10);
 const totalMails = ref(50);
 const limit = ref(10);
-const showEmailForm = ref(false);
 const checkAllMails = ref(false);
 const appStore = useAppStore();
 
 const getMails = async () => {
-  const response = await Service.getInstance().getUsedTemplates(false, appStore.$state.project);
+  const response = await Service.getInstance().getUsedTemplates(true, appStore.$state.project);
   console.log(response.data);
   fetchedMails.value = response.data.map((mail: any) => {
-    const sentOnDate = parseISO(mail.keyDates.sentOn);
-    let formattedSentOn;
+    const scheduledAt = parseISO(mail.keyDates.scheduledAt);
+    let formattedScheduledAt;
 
-    if (isToday(sentOnDate)) {
-      formattedSentOn = format(sentOnDate, 'HH:mm');
-    } else if (isYesterday(sentOnDate)) {
-      formattedSentOn = 'gestern';
-    } else if (isSameDay(sentOnDate, subDays(new Date(), 2))) {
-      formattedSentOn = 'vorgestern';
+    if (isToday(scheduledAt)) {
+      formattedScheduledAt = format(scheduledAt, 'HH:mm');
     } else {
-      formattedSentOn = format(sentOnDate, 'yyyy-MM-dd');
+      formattedScheduledAt = format(scheduledAt, 'dd.MM.yyyy, HH:mm');
     }
     return {
       id: mail.id,
@@ -85,8 +80,8 @@ const getMails = async () => {
       },
       keyDates: {
         created: mail.keyDates.created,
-        sentOn: formattedSentOn,
-        scheduledAt: mail.keyDates.scheduledAt,
+        sentOn: mail.keyDates.sentOn,
+        scheduledAt: formattedScheduledAt,
       },
       accountInformation: {
         createdBy: mail.accountInformation.createdBy,
@@ -109,11 +104,6 @@ const getMails = async () => {
 onMounted(() => {
   getMails();
 })
-
-const clickedEmailForm = () => {
-  console.log(router.currentRoute)
-  router.push({name: 'newMail'});
-}
 
 const decrement = () => {
   if (startIndex.value - limit.value >= 0) {
@@ -144,7 +134,7 @@ watch(() => route.query.mailsend, (newValue) => {
   }
 });
 
-const startTimeout = () => {
+/*const startTimeout = () => {
   setTimeout(() => {
     isMailSent.value = false;
 
@@ -160,19 +150,14 @@ onMounted(() => {
     startTimeout();
   }
 });
-
+*/
 </script>
 
 <template>
   <div id="bigVGContainer">
     <div id="VGHeaderBox">
-      <h1 id="vgHeading">Mails</h1>
-
-      <button id="neueMail" @click="clickedEmailForm">
-        <p>Neue Email</p>
-      </button>
+      <h1 id="vgHeading">Geplante Emails</h1>
     </div>
-
 
     <div id="search-container">
       <input type="text" id="search" placeholder="suche">
@@ -217,7 +202,7 @@ onMounted(() => {
 
     <div id="mailsBox">
       <div id="mailContentBox">
-        <div v-for="email in fetchedMails.slice().reverse()" :key="email.id" @click="handleEmailClick(email.id)" class="emailElement">
+        <div v-for="email in fetchedMails" :key="email.id" @click="handleEmailClick(email.id)" class="emailElement">
           <div id="checkboxContainer"><input type="checkbox" id="checkbox"/></div>
           <div class="contactName">
             <p class="allContacts">
@@ -227,8 +212,8 @@ onMounted(() => {
             </p>
           </div>
           <p id="mailHeadline">{{ email.meta.mailHeadline }}</p>
-         <!--<p>{{ email.keyDates.content.slice(0, 10) }}...</p>-->
-          <p id="sentOnMail">{{ email.keyDates.sentOn }}</p>
+          <!--<p>{{ email.keyDates.content.slice(0, 10) }}...</p>-->
+          <p id="sentOnMail">{{ email.keyDates.scheduledAt }}</p>
         </div>
         <transition name="fade" @after-enter="startTimeout">
           <div v-if="isMailSent" class="notification-box">
@@ -242,12 +227,12 @@ onMounted(() => {
 
 <style scoped>
 #sentOnMail{
-  width: 10%;
+  width: 15%;
   margin: 0 auto; /* zentriert das Element */
   text-align: center;
 }
 #mailHeadline{
-  width: 60%;
+  width: 55%;
 }
 #checkboxContainer{
   width: 3%;

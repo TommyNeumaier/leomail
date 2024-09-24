@@ -136,27 +136,32 @@ onMounted(() => {
 
 <template>
   <div id="bigBox">
-    <h3>Gruppenverwaltung</h3>
     <form @submit.prevent="props.selectedTemplate ? updateGroup() : addGroup()">
-      <div class="boxLabel">
-        <label for="groupName" class="group-label">Gruppenname:</label><br>
+      <div class="dataBox">
+        <div class="boxLabel">
+          <label for="groupName" class="group-label">Gruppenname:</label><br>
+        </div>
+        <input
+            type="text"
+            id="groupName"
+            class="formGroup"
+            placeholder="Geben Sie einen Gruppennamen ein..."
+            v-model="groupName"
+        >
       </div>
-      <input
-          type="text"
-          id="groupName"
-          class="formGroup"
-          placeholder="Geben Sie einen Gruppennamen ein..."
-          v-model="groupName"
-      >
-      <div class="boxLabel">
-        <label for="groupDescription" class="group-label">Beschreibung:</label><br>
+
+      <div class="dataBox">
+        <div class="boxLabel">
+          <label for="groupDescription" class="group-label">Beschreibung:</label><br>
+        </div>
+        <textarea
+            id="groupDescription"
+            class="formGroup"
+            placeholder="Geben Sie eine kurze Beschreibung zur Gruppe ein..."
+            v-model="groupDescription"
+        ></textarea>
       </div>
-      <textarea
-          id="groupDescription"
-          class="formGroup"
-          placeholder="Geben Sie eine kurze Beschreibung zur Gruppe ein..."
-          v-model="groupDescription"
-      ></textarea>
+
       <div class="boxLabel">
         <label for="members" class="group-label">Mitglieder hinzufügen:</label><br>
       </div>
@@ -164,7 +169,7 @@ onMounted(() => {
         <div class="selected" v-for="user in selectedMembers" :key="user.id">
           {{ user.firstName }} {{ user.lastName }} <span class="remove" @click="removeUser(user)">×</span>
         </div>
-        <input type="text" v-model="searchTerm" placeholder="Benutzer suchen">
+        <input type="text" v-model="searchTerm" class="formGroup" placeholder="Benutzer suchen">
         <ul v-if="searchTerm.length > 0 && filteredUsers.length">
           <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
             <div class="user-info">
@@ -186,6 +191,12 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.dataBox{
+  margin-bottom: 1%;
+}
+form{
+  padding: 2% 3%;
+}
 #bigBox {
   width: 100%;
 }
@@ -205,10 +216,8 @@ onMounted(() => {
   border: solid 1px #BEBEBE;
   border-radius: 5px;
   padding: 0.6vw;
-  width: 50%;
+  width: 40%;
   font-size: 0.5em;
-  margin-bottom: 3%;
-  background-color: #F6F6F6;
 }
 
 .formGroup:focus {
@@ -223,14 +232,13 @@ onMounted(() => {
   width: 50%;
   font-size: 0.5em;
   margin-bottom: 3%;
-  background-color: #F6F6F6;
   position: relative;
 }
 
 .selected {
   display: inline-flex;
   align-items: center;
-  background-color: #78A6FF;
+  background-color: lightblue;
   color: white;
   border-radius: 3px;
   padding: 2px 5px;
@@ -252,7 +260,6 @@ onMounted(() => {
 
 .multiselect input[type="text"] {
   all: unset;
-  background-color: #F6F6F6;
   width: 100%;
   padding: 0.6vw;
   box-sizing: border-box;

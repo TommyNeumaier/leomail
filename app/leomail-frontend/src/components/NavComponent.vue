@@ -9,13 +9,13 @@
       <RouterLink to="/mail" activeClass="highlight"><img src="../assets/icons/mail.svg" alt="Mail Icon" /></RouterLink>
     </div>
     <div class="iconBox">
-      <RouterLink to="/geplanteMails" activeClass="highlight"><img src="../assets/icons/sceduled-mail.svg" alt="Sceduled Mail Icon" /></RouterLink>
+      <RouterLink to="/scheduledMails" activeClass="highlight"><img src="../assets/icons/sceduled-mail.svg" alt="Sceduled Mail Icon" /></RouterLink>
     </div>
     <div class="iconBox">
-      <RouterLink to="/gruppen" activeClass="highlight"><img src="../assets/icons/gruppe.svg" alt="Group Icon" /></RouterLink>
+      <RouterLink to="/groups" activeClass="highlight"><img src="../assets/icons/gruppe.svg" alt="Group Icon" /></RouterLink>
     </div>
     <div class="iconBox">
-      <RouterLink to="/vorlagen" activeClass="highlight"><img src="../assets/icons/dokument.svg" alt="Vorlagen Icon" /></RouterLink>
+      <RouterLink to="/template" activeClass="highlight"><img src="../assets/icons/dokument.svg" alt="Vorlagen Icon" /></RouterLink>
     </div>
     <div class="iconBox">
       <RouterLink to="/settings" activeClass="highlight"><img src="../assets/icons/settings.svg" alt="Settings Icon" /></RouterLink>

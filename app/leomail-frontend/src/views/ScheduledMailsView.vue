@@ -2,13 +2,14 @@
 import NavComponent from "@/components/NavComponent.vue";
 import MailsComponent from "@/components/MailsComponent.vue";
 import HeaderComponent from "@/components/HeaderComponent.vue";
+import ScheduledMailsComponent from "@/components/ScheduledMailsComponent.vue";
 </script>
 
 <template>
   <header-component></header-component>
   <div id="mail-mainBox">
     <NavComponent></NavComponent>
-    <MailsComponent></MailsComponent>
+    <ScheduledMailsComponent></ScheduledMailsComponent>
   </div>
 </template>
 

@@ -7,11 +7,11 @@ import {logout} from "@/services/auth.service";
     <RouterLink to="/"><img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45"></RouterLink>
     <div id="HeaderLinkBox">
       <RouterLink to="/" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
-      <RouterLink to="/personen" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
+      <RouterLink to="/contacts" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
       <RouterLink to="/authtest" activeClass="highlight" class="HeaderLinks">JWT</RouterLink>
     </div>
     <div id="profilBox">
-      <img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50" @click="logout()">
+      <RouterLink to="/profile"><img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50"></RouterLink>
     </div>
   </div>
 </template>
@@ -38,8 +38,8 @@ body {
 }
 
 .HeaderLinks {
-  border-left: black solid 1px;
-  border-right: black solid 1px;
+  /*border-left: black solid 1px;
+  border-right: black solid 1px;*/
   padding: 10%;
   padding-left: 50%;
   padding-right: 50%;

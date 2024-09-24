@@ -124,7 +124,7 @@ const handleSubmit = () => {
       },
       members: selectedUsers.value,
     }).then(() => {
-      router.push({name: 'projekte'});
+      router.push({name: 'projects'});
     }).catch((error) => {
       console.error('Error creating project:', error);
     });
@@ -137,7 +137,7 @@ const handleSubmit = () => {
 };
 
 const handleBack = () => {
-  router.push({ name: 'projekte' });
+  router.push({ name: 'projects' });
 };
 </script>
 

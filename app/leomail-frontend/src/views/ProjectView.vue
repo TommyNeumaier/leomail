@@ -10,7 +10,7 @@ const appStore = useAppStore();
 const projects = ref([]) as Ref<ProjectOverview[]>;
 
 const clickedNewProject = () => {
-  router.push({name: 'neueProjekte'});
+  router.push({name: 'newProjects'});
 }
 
 const clickedProject = (project: ProjectOverview) => {
@@ -49,7 +49,7 @@ onMounted(() => {
 
       <div id="search-container">
         <div id="searchIconBox">
-          <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
+          <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="15">
         </div>
         <input type="text" id="search" placeholder="suche">
       </div>
@@ -158,7 +158,6 @@ onMounted(() => {
   all: unset;
   width: 90%;
   margin-left: 3%;
-  font-size: 0.3rem;
 }
 
 #bigContainer {
