@@ -6,10 +6,11 @@ import { useAppStore } from "@/stores/app.store";
 import axios from "axios";
 import { useRouter } from 'vue-router';
 import {format} from "date-fns";
+import MailPreviewComponent from "@/components/MailPreviewComponent.vue";
 
 const router = useRouter();
 
-interface Template {
+export interface Template {
   id: number;
   name: string;
   headline: string;
@@ -18,7 +19,7 @@ interface Template {
   visible: boolean;
 }
 
-interface User {
+export interface User {
   id: number;
   firstName: string;
   lastName: string;
@@ -47,6 +48,19 @@ const users = ref<User[]>([]) as Ref<User[]>;
 const groups = ref<Group[]>([]) as Ref<Group[]>;
 const loading = ref(false);
 const personalized = ref(false);
+const showPreview = ref(false);
+
+const canPreview = computed(() => selectedUsers.value.length > 0 && selectedTemplate.value);
+
+const handlePreview = () => {
+  if (canPreview.value) {
+    showPreview.value = true;
+  }
+};
+
+const closePreview = () => {
+  showPreview.value = false;
+};
 
 const formState = ref({
   name: '',
@@ -365,7 +379,16 @@ const removeGroup = (group: Group) => {
           <div id="editor" class="quill-editor"></div>
         </div>
         <button type="button" @click="handleSubmit">Absenden</button>
-      </form>
+        <button type="button" @click="handlePreview" :disabled="!canPreview">Vorschau</button>
+
+        <MailPreviewComponent
+            v-if="showPreview"
+            :selectedTemplate="selectedTemplate"
+            :selectedUsers="selectedUsers"
+            :personalized="personalized"
+            :visible="showPreview"
+            @close="closePreview"
+        /></form>
     </div>
   </div>
 </template>

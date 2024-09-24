@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,35 +35,52 @@ public class ContactRepository {
     int maxResults;
 
     public List<ContactSearchDTO> searchContacts(String searchTerm, boolean keycloakOnly, String own) {
-        if(searchTerm == null) searchTerm = "";
+        if (searchTerm == null || searchTerm.isEmpty()) {
+            searchTerm = "";
+        }
 
-        String finalSearchTerm = searchTerm;
+        String finalSearchTerm = searchTerm.trim();
+
         CompletableFuture<List<Object>> keycloakFuture = CompletableFuture.supplyAsync(() ->
                 keycloakAdminService.searchUser(finalSearchTerm, maxResults), managedExecutor
         );
 
         try {
-            List<ContactSearchDTO> list = new java.util.ArrayList<>(keycloakFuture.get().stream()
+            String finalSearchTerm1 = searchTerm;
+            List<ContactSearchDTO> keycloakResults = keycloakFuture.get().stream()
                     .map(user -> {
                         Map<String, Object> userMap = (Map<String, Object>) user;
                         String id = (String) userMap.get("id");
                         String firstName = (String) userMap.get("firstName");
                         String lastName = (String) userMap.get("lastName");
                         String mailAddress = (String) userMap.get("email");
+
                         return new ContactSearchDTO(id, firstName, lastName, mailAddress);
                     })
+                    .filter(contact -> {
+                        String firstName = contact.firstName();
+                        String lastName = contact.lastName();
+                        String email = contact.mailAddress();
+
+                        return (firstName != null && firstName.toLowerCase().contains(finalSearchTerm1.toLowerCase()))
+                                || (lastName != null && lastName.toLowerCase().contains(finalSearchTerm1.toLowerCase()))
+                                || (email != null && email.toLowerCase().contains(finalSearchTerm1.toLowerCase()));
+                    })
                     .filter(contact -> !contact.id().equals(own))
-                    .toList());
+                    .toList();
 
-            if (keycloakOnly) return list;
+            if (keycloakOnly) return keycloakResults;
 
-            List<Contact> contacts = Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1 and kcUser is false", "%" + searchTerm + "%").list();
+            List<Contact> contacts = Contact.find("lower(firstName) like lower(?1) or lower(lastName) like lower(?1) or lower(mailAddress) like lower(?1) and kcUser is false", "%" + searchTerm + "%").list();
+
             List<ContactSearchDTO> contactList = contacts.stream()
                     .map(contact -> new ContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress))
                     .toList();
-            list.addAll(contactList);
 
-            return list;
+            List<ContactSearchDTO> mutableList = new ArrayList<>(/* deine unveränderliche Sammlung */);
+            mutableList.addAll(contactList);
+            return mutableList;
+
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
