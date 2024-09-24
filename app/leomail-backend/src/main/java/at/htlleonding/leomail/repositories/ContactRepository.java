@@ -14,10 +14,7 @@ import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -41,13 +38,14 @@ public class ContactRepository {
 
         String finalSearchTerm = searchTerm.trim();
 
-        CompletableFuture<List<Object>> keycloakFuture = CompletableFuture.supplyAsync(() ->
-                keycloakAdminService.searchUser(finalSearchTerm, maxResults), managedExecutor
-        );
+        CompletableFuture<List<Object>> keycloakFuture = CompletableFuture.supplyAsync(() -> {
+            List<Object> users = keycloakAdminService.searchUser(finalSearchTerm, maxResults);
+            System.out.println("Keycloak users: " + users);
+            return users;
+        }, managedExecutor);
 
         try {
-            String finalSearchTerm1 = searchTerm;
-            List<ContactSearchDTO> keycloakResults = keycloakFuture.get().stream()
+            List<ContactSearchDTO> list = new java.util.ArrayList<>(keycloakFuture.get().stream()
                     .map(user -> {
                         Map<String, Object> userMap = (Map<String, Object>) user;
                         String id = (String) userMap.get("id");
@@ -55,32 +53,26 @@ public class ContactRepository {
                         String lastName = (String) userMap.get("lastName");
                         String mailAddress = (String) userMap.get("email");
 
+                        if (id == null || firstName == null || lastName == null || mailAddress == null) {
+                            return null;
+                        }
+
                         return new ContactSearchDTO(id, firstName, lastName, mailAddress);
                     })
-                    .filter(contact -> {
-                        String firstName = contact.firstName();
-                        String lastName = contact.lastName();
-                        String email = contact.mailAddress();
-
-                        return (firstName != null && firstName.toLowerCase().contains(finalSearchTerm1.toLowerCase()))
-                                || (lastName != null && lastName.toLowerCase().contains(finalSearchTerm1.toLowerCase()))
-                                || (email != null && email.toLowerCase().contains(finalSearchTerm1.toLowerCase()));
-                    })
+                    .filter(Objects::nonNull)
                     .filter(contact -> !contact.id().equals(own))
-                    .toList();
+                    .toList());
 
-            if (keycloakOnly) return keycloakResults;
+            if (!keycloakOnly) {
+                List<Contact> contacts = Contact.find("firstName like ?1 or lastName like ?1 or mailAddress like ?1 and kcUser is false", "%" + searchTerm + "%").list();
+                List<ContactSearchDTO> contactList = contacts.stream()
+                        .map(contact -> new ContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress))
+                        .toList();
 
-            List<Contact> contacts = Contact.find("lower(firstName) like lower(?1) or lower(lastName) like lower(?1) or lower(mailAddress) like lower(?1) and kcUser is false", "%" + searchTerm + "%").list();
+                list.addAll(contactList);
+            }
 
-            List<ContactSearchDTO> contactList = contacts.stream()
-                    .map(contact -> new ContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress))
-                    .toList();
-
-            List<ContactSearchDTO> mutableList = new ArrayList<>(/* deine unveränderliche Sammlung */);
-            mutableList.addAll(contactList);
-            return mutableList;
-
+            return list;
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
