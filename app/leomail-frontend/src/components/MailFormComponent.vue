@@ -1,10 +1,282 @@
+<template>
+  <div id="mailFormContainer">
+    <div id="formHeader">
+      <h1>Neue E-Mail</h1>
+    </div>
+    <div id="formContent">
+      <form @submit.prevent="handlePreview">
+        <div class="form-group">
+          <label for="recipients" class="form-label">Empfänger</label>
+          <div class="input-container">
+            <input
+                type="text"
+                v-model="searchTerm"
+                class="form-input search-input"
+                placeholder="Namen oder Gruppen eingeben..."
+            />
+            <ul
+                v-if="searchTerm.length > 0 && (filteredUsers.length || filteredGroups.length)"
+                class="autocomplete"
+            >
+              <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
+                {{ user.firstName }} {{ user.lastName }} - {{ user.mailAddress }}
+              </li>
+              <li v-for="group in filteredGroups" :key="group.id" @click="selectGroup(group)">
+                Gruppe: {{ group.name }}
+              </li>
+              <li v-if="loading">Laden...</li>
+            </ul>
+          </div>
+        </div>
+
+        <div id="selectedRecipients">
+          <div class="tag" v-for="user in selectedUsers" :key="user.id">
+            {{ user.firstName }} {{ user.lastName }} <span class="tag-remove" @click="removeUser(user)">✕</span>
+          </div>
+          <div class="tag" v-for="group in selectedGroups" :key="group.id">
+            Gruppe: {{ group.name }} <span class="tag-remove" @click="removeGroup(group)">✕</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="sendLater" class="form-label">Sendezeit</label>
+          <div class="input-container flex">
+            <input
+                type="checkbox"
+                id="sendLater"
+                v-model="checked"
+                class="form-checkbox"
+            />
+            <label for="sendLater" class="form-checkbox-label">Später senden</label>
+          </div>
+          <div v-if="checked" class="datetime-picker">
+            <VueDatePicker v-if="checked" locale="de-AT" v-model="date" class="datepicker" id="datepicker"
+                           now-button-label="Current" format="dd-mm-yyyy" :enable-time-picker="false"
+                           placeholder='Date' date-picker
+                           :min-date="format(new Date(), 'yyyy-MM-dd')"></VueDatePicker>
+            <VueDatePicker
+                v-model="time"
+                class="form-input timepicker"
+                time-picker
+                placeholder="Uhrzeit auswählen"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="template" class="form-label">Vorlage</label>
+          <div class="input-container">
+            <input
+                type="text"
+                v-model="filter"
+                class="form-input search-input"
+                placeholder="Vorlage suchen..."
+            />
+            <ul v-if="dropdownVisible" class="autocomplete">
+              <li
+                  v-for="template in fetchedTemplates"
+                  :key="template.id"
+                  v-show="template.visible"
+                  @click="selectTemplate(template)"
+              >
+                {{ template.name }}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="form-group flex">
+          <input type="checkbox" v-model="personalized" class="form-checkbox"/>
+          <label class="form-checkbox-label">E-Mail personalisieren</label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" @click="handlePreview" :disabled="!canPreview" class="btn btn-outline">
+            Vorschau anzeigen
+          </button>
+        </div>
+      </form>
+      <MailPreviewComponent
+          v-if="showPreview"
+          :selectedTemplate="selectedTemplate"
+          :selectedUsers="selectedUsers"
+          :personalized="personalized"
+          :visible="showPreview"
+          @close="closePreview"
+          @send-mail="sendMail"
+      />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Container */
+#mailFormContainer {
+  width: 90%;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+#formHeader {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+#formHeader h1 {
+  font-size: 2.5rem;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-size: 1.2rem;
+  color: #555;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.input-container {
+  position: relative;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.form-input:focus {
+  border-color: #007bff;
+}
+
+.search-input {
+  background-color: #f9f9f9;
+}
+
+/* Tags für ausgewählte Benutzer/Gruppen */
+#selectedRecipients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tag {
+  background-color: #007bff;
+  color: white;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tag-remove {
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+/* Checkbox */
+.flex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-checkbox {
+  transform: scale(1.3);
+}
+
+.form-checkbox-label {
+  font-size: 1rem;
+  color: #333;
+}
+
+.datetime-picker {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.datepicker,
+.timepicker {
+  width: 50%;
+}
+
+.autocomplete {
+  list-style-type: none;
+  margin: 5px 0 0;
+  padding: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  position: absolute;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.autocomplete li {
+  padding: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.autocomplete li:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.btn {
+  padding: 12px 20px;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+  margin-right: 10px;
+}
+
+.btn-outline:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+</style>
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, type Ref, ref, watch } from "vue";
-import { Quill } from "@vueup/vue-quill";
-import { Service } from "@/services/service";
-import { useAppStore } from "@/stores/app.store";
+import {computed, nextTick, onMounted, onUnmounted, type Ref, ref, watch} from "vue";
+import {Quill} from "@vueup/vue-quill";
+import {Service} from "@/services/service";
+import {useAppStore} from "@/stores/app.store";
 import axios from "axios";
-import { useRouter } from 'vue-router';
+import {useRouter} from 'vue-router';
 import {format} from "date-fns";
 import MailPreviewComponent from "@/components/MailPreviewComponent.vue";
 
@@ -61,22 +333,6 @@ const handlePreview = () => {
 const closePreview = () => {
   showPreview.value = false;
 };
-
-const formState = ref({
-  name: '',
-  description: '',
-  mailAddress: '',
-  password: '',
-  members: selectedUsers.value
-});
-
-const errors = ref({
-  name: '',
-  description: '',
-  email: '',
-  password: '',
-  selectedUsers: ''
-});
 
 const closeDropdown = () => {
   dropdownVisible.value = false;
@@ -136,7 +392,6 @@ watch(time, (newTime) => {
 });
 
 
-
 const filterFunction = () => {
   const filterValue = filter.value.trim().toLowerCase();
   fetchedTemplates.value.forEach(item => {
@@ -189,10 +444,6 @@ const getTemplates = async () => {
   console.log(fetchedTemplates.value);
 };
 
-const parseReceiverInput = () => {
-  receiver.value = receiverInput.value.split(',').map(Number);
-};
-
 const parseDate = () => {
   if (checked.value) {
     return `${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z`;
@@ -206,30 +457,28 @@ const sortSelectedUsers = (selectedUsers: User[]): number[] => {
 }
 const sendMail = async () => {
   try {
-    parseReceiverInput();
-    console.log(receiver);
-    console.log(parseDate().toString());
     const mailForm = {
       receiver: {
         contacts: sortSelectedUsers(selectedUsers.value),
         groups: selectedGroups.value.map(group => group.id)
       },
       templateId: selectedTemplate.value?.id,
-      personalized: personalized.value,  //todo: must be optimized if bauer wants the checkbox
+      personalized: personalized.value,
       scheduledAt: parseDate()
     };
-    console.log(mailForm);
-    console.log(parseDate());
+
     const response = await Service.getInstance().sendEmails(mailForm, appStore.$state.project);
     console.log('Erfolgreich gesendet:', response.data);
-    router.push({ name: 'mail', query: { mailsend: 'true' } });
+
+    selectedUsers.value = [];
+    selectedGroups.value = [];
+
+    router.push({name: 'mail', query: {mailsend: 'true'}});
+
   } catch (error) {
     console.error('Fehler beim Senden der Daten:', error);
   }
-  selectedUsers.value = [];
-  selectedGroups.value = [];
 };
-
 const handleSubmit = () => {
   sendMail();
 }
@@ -272,14 +521,28 @@ const selectUser = (user: User) => {
   groups.value = [];
 };
 
-const selectGroup = (group: Group) => {
+const selectGroup = async (group: Group) => {
   if (!selectedGroups.value.find(g => g.id === group.id)) {
     selectedGroups.value.push(group);
+
+    try {
+      const response = await Service.getInstance().getUsersInGroup(group.id, appStore.$state.project);
+      const usersInGroup = response.data;
+
+      usersInGroup.forEach((user: User) => {
+        if (!selectedUsers.value.some(u => u.id === user.id)) {
+          selectedUsers.value.push(user);
+        }
+      });
+
+      console.log("Benutzer in Gruppe:", usersInGroup);
+
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Benutzer in der Gruppe:", error);
+    }
   }
-  searchTerm.value = '';
-  users.value = [];
-  groups.value = [];
 };
+
 
 const removeUser = (user: User) => {
   selectedUsers.value = selectedUsers.value.filter(u => u.id !== user.id);
@@ -287,379 +550,4 @@ const removeUser = (user: User) => {
 
 const removeGroup = (group: Group) => {
   selectedGroups.value = selectedGroups.value.filter(g => g.id !== group.id);
-};
-</script>
-
-<template>
-  <div id="bigContainer">
-    <div id="VGHeaderBox">
-      <h1 id="vgHeading">Neue Email</h1>
-    </div>
-    <div id="formBox">
-      <form>
-        <div id="userBox">
-          <div class="boxLabel">
-            <label for="users" class="mail-label">An:</label><br>
-          </div>
-          <div class="multiselect">
-            <input type="text" v-model="searchTerm" class="mailForm" placeholder="Benutzer oder Gruppen suchen">
-            <ul v-if="searchTerm.length > 0 && (filteredUsers.length || filteredGroups.length)">
-              <!-- Display users -->
-              <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
-                <div class="user-info">
-                  <span>{{ user.firstName }} {{ user.lastName }}</span>
-                  <small>{{ user.mailAddress }}</small>
-                </div>
-              </li>
-              <!-- Display groups -->
-              <li v-for="group in filteredGroups" :key="group.id" @click="selectGroup(group)">
-                <div class="group-info">
-                  <span>{{ group.name }}</span>
-                </div>
-              </li>
-              <li v-if="loading">Laden...</li>
-            </ul>
-          </div>
-
-          <div id="selectedUserBox">
-            <div class="selected" v-for="user in selectedUsers" :key="user.id">
-              {{ user.firstName }} {{ user.lastName }} <span class="remove" @click="removeUser(user)"></span>
-            </div>
-            <div class="selected" v-for="group in selectedGroups" :key="group.id">
-              Gruppe: {{ group.name }} <span class="remove" @click="removeGroup(group)"></span>
-            </div>
-          </div>
-        </div>
-        <span class="error">{{ errors.selectedUsers }}</span>
-
-        <div id="formFlexBox">
-          <div id="dateFlexBox">
-            <div class="boxLabel">
-              <label class="mail-label">Senden am:</label></div>
-            <br>
-            <div id="checkboxSendLater">
-              <input type="checkbox" id="date" v-model="checked">
-              <label for="date">später senden</label>
-            </div>
-            <div id="datepickerFlexBox">
-              <VueDatePicker v-if="checked" locale="de-AT" v-model="date" class="datepicker" id="datepicker"
-                             now-button-label="Current" format="dd-mm-yyyy" :enable-time-picker="false"
-                             placeholder='Date' date-picker
-                             :min-date="format(new Date(), 'yyyy-MM-dd')"></VueDatePicker>
-              <!--https://vue3datepicker.com/props/localization/-->
-              <VueDatePicker v-if="checked" v-model="time" class="datepicker" time-picker placeholder='Time'
-                             :min-time="format(new Date(), 'HH:mm')"/>
-            </div>
-          </div>
-        </div>
-
-        <div id="flexBoxContainer">
-          <div id="templateBox">
-            <div class="boxLabel">
-              <label for="template" class="mail-label">Vorlagen:</label></div>
-            <br>
-            <div id="searchSelectBox">
-              <div>
-                <input type="text" id="myInput" v-model="filter" placeholder="Search.." @input="filterFunction"
-                       @focus="showDropdown" class="mailForm">
-              </div>
-              <div v-if="dropdownVisible" class="dropdown-content">
-                <a v-for="item in fetchedTemplates" :key="item.id" v-show="item.visible"
-                   @click="selectTemplate(item)">{{ item.name }}</a>
-              </div>
-            </div>
-          </div>
-          <div id="checkBoxContainer">
-            <input type="checkbox" v-model="personalized">
-            <label>personalisieren</label>
-          </div>
-        </div>
-
-        <div class="editor-wrapper">
-          <div id="editor" class="quill-editor"></div>
-        </div>
-        <button type="button" @click="handleSubmit">Absenden</button>
-        <button type="button" @click="handlePreview" :disabled="!canPreview">Vorschau</button>
-
-        <MailPreviewComponent
-            v-if="showPreview"
-            :selectedTemplate="selectedTemplate"
-            :selectedUsers="selectedUsers"
-            :personalized="personalized"
-            :visible="showPreview"
-            @close="closePreview"
-        /></form>
-    </div>
-  </div>
-</template>
-
-<style scoped>
-#selectedUserBox {
-  width: 50vw;
-  margin-left: 2%;
-  height: 12vh;
-  border: black solid 1px;
-  overflow-y: scroll;
-}
-
-#userBox {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.user-info small {
-  color: #B3B3B3;
-}
-
-li:hover {
-  background-color: rgba(75, 129, 253, 0.86);
-  color: white;
-}
-
-li:hover .user-info small {
-  color: white;
-}
-
-.multiselect {
-  display: block;
-  border: solid 1px #BEBEBE;
-  border-radius: 5px;
-  width: 25vw;
-  font-size: 0.5em;
-}
-
-.multiselect::placeholder {
-  color: #B3B3B3;
-}
-
-.multiselect:focus {
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
-}
-
-.selected {
-  display: inline-flex;
-  align-items: center;
-  background-color: blue;
-  color: white;
-  border-radius: 3px;
-  padding: 0.2vh 0.3vw;
-  margin-right: 0.5vw;
-  margin-bottom: 0.1vh;
-  font-size: 0.5rem;
-}
-
-.remove {
-  cursor: pointer;
-  margin-left: 5px;
-}
-
-.remove:after {
-  content: '×';
-  color: white;
-  font-weight: bold;
-}
-
-.multiselect input[type="text"] {
-  all: unset;
-  width: 100%;
-  padding: 0.6vw;
-  box-sizing: border-box;
-  border-radius: 5px;
-}
-
-.multiselect input:focus {
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  background-color: #FFF;
-  border: solid 1px #BEBEBE;
-  border-top: none;
-  position: absolute;
-  width: 100%;
-  z-index: 1000;
-}
-
-li {
-  padding: 10px;
-  cursor: pointer;
-}
-
-.error {
-  color: red;
-  font-size: 0.7em;
-}
-
-#checkBoxContainer {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  margin-left: 5%;
-}
-
-#checkBoxContainer label {
-  padding-left: 1vw;
-}
-
-#formFlexBox {
-  width: 50%;
-}
-
-#flexBoxContainer {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-}
-
-#bigContainer {
-  width: 86.5%;
-  margin-top: 2%;
-  margin-left: 1.5%;
-  display: flex;
-  flex-direction: column;
-}
-
-#date {
-  margin-right: 2vw;
-  margin-left: 1vw;
-}
-
-.boxLabel {
-  width: 6vw;
-}
-
-#checkboxSendLater {
-  width: 15vw;
-}
-
-#datepickerFlexBox {
-  width: 50%;
-  display: flex;
-  flex-direction: row;
-}
-
-.datepicker {
-  width: 8vw; /* Hier können Sie die gewünschte Schriftgröße angeben */
-}
-
-#templateBox {
-  display: flex;
-  flex-direction: row;
-}
-
-#receiverFlexBox {
-  display: flex;
-  flex-direction: row;
-}
-
-#dateFlexBox {
-  display: flex;
-  flex-direction: row;
-  height: 5vh;
-  margin-top: 1vh;
-  margin-bottom: 1vh;
-  align-items: center;
-}
-
-form {
-  padding: 1% 3%;
-}
-
-.mail-label {
-  color: #5A5A5A;
-  font-size: 0.8em;
-}
-
-.mailForm::placeholder {
-  color: #B3B3B3;
-}
-
-.mailForm {
-  display: block;
-  all: unset;
-  border: solid 1px #BEBEBE;
-  border-radius: 5px;
-  font-size: 0.5em;
-  width: 100%;
-  padding: 0.6vw;
-}
-
-.mailForm:focus {
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
-}
-
-body {
-  width: 100%;
-}
-
-#formBox {
-  background-color: white;
-  height: 87%;
-  margin-top: 2vh;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
-}
-
-#VGHeaderBox {
-  display: flex;
-  flex-direction: row;
-  background-color: white;
-  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
-}
-
-#vgHeading {
-  margin-left: 4%;
-  margin-top: 2%;
-  margin-bottom: 2%;
-  font-size: 1.1em;
-}
-
-#searchSelectBox {
-  display: flex;
-  flex-direction: column;
-  width: 25vw;
-}
-
-#myInput {
-  width: 100%;
-}
-
-/* Dropdown Content (Hidden by Default) */
-.dropdown-content {
-  width: 100%;
-  border: 1px solid #ddd;
-  z-index: 1;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
-  max-height: 25vh;
-  overflow-y: scroll;
-  cursor: pointer;
-}
-
-/* Links inside the dropdown */
-.dropdown-content a {
-  color: black;
-  padding: 2% 4%;
-  font-size: 0.8rem;
-  text-decoration: none;
-  display: block;
-}
-
-/* Change color of dropdown links on hover */
-.dropdown-content a:hover {
-  background-color: #f1f1f1
-}
-
-.editor-wrapper {
-  border: black solid 1px;
-  height: 90%;
-}
-</style>
+};</script>

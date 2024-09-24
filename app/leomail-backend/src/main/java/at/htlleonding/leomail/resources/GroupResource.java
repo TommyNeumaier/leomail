@@ -1,5 +1,6 @@
 package at.htlleonding.leomail.resources;
 
+import at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO;
 import at.htlleonding.leomail.model.dto.groups.GroupDetailDTO;
 import at.htlleonding.leomail.repositories.GroupRepository;
 import io.quarkus.security.Authenticated;
@@ -108,4 +109,17 @@ public class GroupResource {
         }
     }
 
+    @GET
+    @Path("/getUsers")
+    @Authenticated
+    public Response getUsers(@QueryParam("gid") String groupId, @QueryParam("pid") String projectId) {
+        try {
+            List<ContactSearchDTO> results = groupRepository.getGroupMembers(groupId, projectId, jwt.getClaim("sub"));
+            System.out.println(results);
+            return Response.ok(results).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(409).entity("E-Group-01").build();
+        }
+    }
 }

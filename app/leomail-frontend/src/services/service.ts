@@ -149,6 +149,15 @@ export class Service {
             }
         });
     }
+
+    async getUsersInGroup(groupId: string, projectId: string) {
+        return axios.get(`/api/groups/getUsers`, {
+            params: {
+                "pid": projectId,
+                "gid": groupId
+            }
+        })
+    }
 }
 
 interface Group {

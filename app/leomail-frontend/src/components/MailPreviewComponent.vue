@@ -14,7 +14,7 @@
         </div>
         <div class="info-row">
           <label>Senden am:</label>
-          <input type="text" :value="sendTime" disabled />
+          <input type="text" :value="formattedSendTime" disabled />
         </div>
         <div class="info-row">
           <label>An:</label>
@@ -27,32 +27,48 @@
           <span class="arrow prev-arrow" @click="prevEmail" :class="{ 'disabled': currentEmailIndex === 0 }"></span>
           <span class="arrow next-arrow" @click="nextEmail" :class="{ 'disabled': currentEmailIndex === selectedUsers.length - 1 }"></span>
         </div>
+
+        <div class="checkbox">
+          <input type="checkbox" v-model="confirmed" id="confirmation" />
+          <label for="confirmation">Ich bestätige, dass die Vorschau korrekt ist</label>
+        </div>
+
+        <button type="button" @click="emitSendMail" :disabled="!confirmed" class="send-button">Absenden</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import type { Template, User } from '@/types';
+import { Service } from "@/services/service";
+import {useAppStore} from "@/stores/app.store";  // Importiere den Service zum Laden von Benutzern
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'send-mail']);
 
 const props = defineProps({
   selectedTemplate: Object as () => Template | null,
   selectedUsers: Array as () => User[],
-  personalized: Boolean,
+  selectedGroups: Array as () => number[],  // Füge die Gruppen als Prop hinzu
   visible: Boolean,
+  personalized: Boolean,
   scheduledAt: String || null,
 });
 
 const currentEmailIndex = ref<number | null>(0);
 const filledTemplate = ref<string>('');
+const confirmed = ref(false);
+const allSelectedUsers = ref<User[]>([]);  // Hier werden alle Benutzer, inklusive der Gruppenbenutzer, gespeichert
 
-const sendTime = computed(() => {
-  return props.scheduledAt ? new Date(props.scheduledAt).toLocaleString() : 'Jetzt';
+const formattedSendTime = computed(() => {
+  if (props.scheduledAt) {
+    return new Date(props.scheduledAt).toLocaleString();
+  }
+  return 'Jetzt';
 });
 
+// Funktion zur Template-Befüllung
 const fillTemplate = (template: Template, user: User) => {
   let filledContent = template.content
       .replace('{firstname}', `<span class="highlight">${user.firstName}</span>`)
@@ -61,39 +77,76 @@ const fillTemplate = (template: Template, user: User) => {
   return filledContent;
 };
 
-// Schließen des Modals
-const close = () => {
-  currentEmailIndex.value = null;
-  emit('close');
-};
-
-onMounted(() => {
-  if (props.selectedTemplate && props.selectedUsers.length > 0) {
-    filledTemplate.value = fillTemplate(props.selectedTemplate, props.selectedUsers[0]);
-  }
-});
-
-watch([() => props.selectedTemplate, () => props.selectedUsers], ([newTemplate, newUsers]) => {
-  if (newTemplate && newUsers.length > 0) {
-    currentEmailIndex.value = 0;
-    filledTemplate.value = fillTemplate(newTemplate, newUsers[0]);
-  }
-});
-
-const prevEmail = () => {
-  if (currentEmailIndex.value !== null && currentEmailIndex.value > 0) {
-    currentEmailIndex.value--;
-    filledTemplate.value = fillTemplate(props.selectedTemplate!, props.selectedUsers[currentEmailIndex.value]);
+const updateFilledTemplate = () => {
+  if (currentEmailIndex.value !== null) {
+    const user = props.selectedUsers[currentEmailIndex.value];
+    filledTemplate.value = fillTemplate(props.selectedTemplate!, user);
   }
 };
 
 const nextEmail = () => {
   if (currentEmailIndex.value !== null && currentEmailIndex.value < props.selectedUsers.length - 1) {
     currentEmailIndex.value++;
-    filledTemplate.value = fillTemplate(props.selectedTemplate!, props.selectedUsers[currentEmailIndex.value]);
+    updateFilledTemplate();
   }
 };
+
+const prevEmail = () => {
+  if (currentEmailIndex.value !== null && currentEmailIndex.value > 0) {
+    currentEmailIndex.value--;
+    updateFilledTemplate();
+  }
+};
+
+// Funktion zum Laden der ersten E-Mail und aller Benutzer, auch der Gruppenbenutzer
+const loadFirstEmail = async () => {
+  try {
+    // Füge Benutzer aus den Gruppen hinzu
+    if (props.selectedGroups.length > 0) {
+      for(const groupId of props.selectedGroups) {
+        const response = await Service.getInstance().getUsersInGroups(groupId, useAppStore().$state.projectId);
+        allSelectedUsers.value.push(...response.data);
+      }
+    } else {
+      allSelectedUsers.value = [...props.selectedUsers];  // Nur die ausgewählten Benutzer
+    }
+
+    // Lade die erste E-Mail-Vorschau
+    if (props.selectedTemplate && allSelectedUsers.value.length > 0) {
+      filledTemplate.value = fillTemplate(props.selectedTemplate, allSelectedUsers.value[0]);
+      currentEmailIndex.value = 0;
+    }
+  } catch (error) {
+    console.error("Fehler beim Laden der Benutzer aus Gruppen:", error);
+  }
+};
+
+// Watcher auf visible, um sicherzustellen, dass die erste Vorschau geladen wird
+watch(() => props.visible, (newValue) => {
+  if (newValue) {
+    loadFirstEmail();  // Lade die Vorschau beim Öffnen
+  }
+});
+
+const close = () => {
+  currentEmailIndex.value = null;
+  emit('close');
+};
+
+const emitSendMail = () => {
+  if (confirmed.value) {
+    emit('send-mail');
+  }
+};
+
+onMounted(() => {
+  if (props.selectedUsers.length > 0) {
+    currentEmailIndex.value = 0; // Setze die Vorschau auf den ersten Benutzer
+    updateFilledTemplate();
+  }
+});
 </script>
+
 
 <style scoped>
 .mail-preview-modal {
@@ -206,6 +259,34 @@ h3 {
 .arrow.disabled {
   border-color: #cccccc;
   cursor: not-allowed;
+}
+
+.checkbox {
+  margin-top: 20px;
+}
+
+.checkbox input {
+  margin-right: 10px;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.send-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  align-self: center;
+}
+
+.send-button:hover {
+  background-color: #45a049;
 }
 
 .highlight {

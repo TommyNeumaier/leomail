@@ -172,4 +172,39 @@ public class GroupRepository {
                 .getResultList();
     }
 
+    public List<ContactSearchDTO> getGroupMembers(String groupId, String projectId, String userId) {
+        if (groupId == null || groupId.isBlank()) {
+            throw new IllegalArgumentException("groupId must not be null");
+        }
+
+        if (projectId == null || projectId.isBlank()) {
+            throw new IllegalArgumentException("projectId must not be null");
+        }
+
+        if (!permissionService.hasPermission(projectId, userId)) {
+            throw new SecurityException("User has no permission to access this group");
+        }
+
+        Long projectCount = em.createQuery(
+                        "SELECT COUNT(p) FROM Project p WHERE p.id = :projectId", Long.class)
+                .setParameter("projectId", projectId)
+                .getSingleResult();
+
+        if (projectCount == 0) {
+            throw new ProjectNotExistsException();
+        }
+
+        Group group = Group.findById(groupId);
+        if (group == null) {
+            throw new IllegalArgumentException("Group with id " + groupId + " does not exist.");
+        }
+
+        return em.createQuery(
+                        "SELECT NEW at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO(c.id, c.firstName, c.lastName, c.mailAddress) " +
+                                "FROM Contact c WHERE :group in c.groups", ContactSearchDTO.class)
+                .setParameter("group", group)
+                .getResultList();
+    }
+
+
 }
