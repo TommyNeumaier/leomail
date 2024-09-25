@@ -8,6 +8,7 @@ import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
 import at.htlleonding.leomail.repositories.ContactRepository;
 import at.htlleonding.leomail.repositories.UserRepository;
 import io.quarkus.security.Authenticated;
+import io.quarkus.vertx.ConsumeEvent;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -113,5 +114,12 @@ public class AuthResource {
             return Response.ok(true).build();
         }  else
             return Response.status(Response.Status.UNAUTHORIZED).entity(false).build();
+    }
+
+    @GET
+    @Path("/profile")
+    @Authenticated
+    public Response getProfile() {
+        return Response.ok(userRepository.getProfile(jwt.getClaim("sub"))).build();
     }
 }

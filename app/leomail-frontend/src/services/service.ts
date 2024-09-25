@@ -158,6 +158,10 @@ export class Service {
             }
         })
     }
+
+    async getProfile() {
+        return axios.get(`/api/auth/profile`);
+    }
 }
 
 interface Group {
