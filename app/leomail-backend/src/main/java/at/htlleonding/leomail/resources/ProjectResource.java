@@ -40,6 +40,6 @@ public class ProjectResource {
     @Authenticated
     @Produces("application/json")
     public Response getProjectName(@QueryParam("pid") String pid) {
-        return Response.ok(projectRepository.getProjectName(pid, jwt.getClaim("sub"))).build();
+        return Response.ok(projectRepository.getProjectName(pid)).build();
     }
 }
