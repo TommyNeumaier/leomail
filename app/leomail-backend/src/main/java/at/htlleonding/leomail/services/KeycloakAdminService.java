@@ -1,28 +1,37 @@
 package at.htlleonding.leomail.services;
 
-import at.htlleonding.leomail.contracts.IKeycloak;
+import at.htlleonding.leomail.contracts.IKeycloakAdmin;
+import at.htlleonding.leomail.contracts.IKeycloakToken;
+import at.htlleonding.leomail.model.dto.auth.KeycloakUserMapperDTO;
 import at.htlleonding.leomail.model.dto.template.KeycloakTokenResponse;
+import at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class KeycloakAdminService {
 
-    @ConfigProperty(name = "quarkus.rest-client.\"keycloak-api\".url")
-    String keycloakUrl;
+    private static final Logger LOGGER = Logger.getLogger(KeycloakAdminService.class);
 
-    @ConfigProperty(name = "keycloak.realm")
-    String realm;
+    @Inject
+    @RestClient
+    IKeycloakToken keycloakTokenService;
+
+    @Inject
+    @RestClient
+    IKeycloakAdmin keycloakAdminClient;
 
     @ConfigProperty(name = "quarkus.oidc.client-id")
     String clientId;
@@ -30,58 +39,111 @@ public class KeycloakAdminService {
     @ConfigProperty(name = "quarkus.oidc.credentials.secret")
     String clientSecret;
 
-    @Inject
-    @RestClient
-    IKeycloak IKeycloak;
+    @ConfigProperty(name = "keycloak.realm")
+    String realm;
 
-    private String getAdminToken() {
-        KeycloakTokenResponse tokenResponse = IKeycloak.serviceAccountLogin(clientId, clientSecret, "client_credentials");
-        return tokenResponse.access_token();
+    private Cache<String, String> tokenCache;
+
+    @PostConstruct
+    void init() {
+        tokenCache = Caffeine.newBuilder()
+                .expireAfterWrite(1, TimeUnit.HOURS)
+                .maximumSize(10)
+                .build();
     }
 
-    public List<Object> searchUser(String searchTerm, int maxSearchResults) {
-        String token = getAdminToken();
-
-        try(Client client = ClientBuilder.newClient()) {
-            Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users")
-                    .queryParam("search", searchTerm)
-                    .queryParam("max", maxSearchResults)
-                    .request(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + token)
-                    .get();
-
-            if (response.getStatus() != 200) {
-                String responseBody = response.readEntity(String.class);
-                throw new RuntimeException("Failed to search user: " + responseBody);
+    /**
+     * Holt ein gültiges Admin-Token, entweder aus dem Cache oder durch Abrufen von Keycloak.
+     *
+     * @return Admin-Token als String
+     */
+    private String getAdminToken() {
+        return tokenCache.get("adminToken", key -> {
+            try {
+                KeycloakTokenResponse tokenResponse = keycloakTokenService.serviceAccountLogin(
+                        realm,
+                        clientId,
+                        clientSecret,
+                        "client_credentials",
+                        "openid"
+                );
+                LOGGER.info("Admin-Token erfolgreich abgerufen und im Cache gespeichert.");
+                return "Bearer " + tokenResponse.access_token();
+            } catch (Exception e) {
+                LOGGER.error("Fehler beim Abrufen des Admin-Tokens", e);
+                throw new RuntimeException("Fehler beim Abrufen des Admin-Tokens", e);
             }
+        });
+    }
 
-            List<Map<String, Object>> users = response.readEntity(List.class);
-            return users.stream()
-                    .sorted((u1, u2) -> {
-                        Long createdTimestamp1 = Long.parseLong(String.valueOf(u1.get("createdTimestamp")));
-                        Long createdTimestamp2 = Long.parseLong(String.valueOf(u2.get("createdTimestamp")));
-                        return createdTimestamp2.compareTo(createdTimestamp1);
-                    })
-                    .limit(maxSearchResults)
+    /**
+     * Sucht Benutzer in Keycloak und konvertiert sie in ContactSearchDTO.
+     *
+     * @param searchTerm Suchbegriff
+     * @param maxResults Maximale Anzahl der Ergebnisse
+     * @return Liste der gefundenen Benutzer als ContactSearchDTO
+     */
+    public List<ContactSearchDTO> searchUserAsContactSearchDTO(String searchTerm, int maxResults) {
+        try {
+            String token = getAdminToken();
+            List<KeycloakUserMapperDTO> keycloakUsers = keycloakAdminClient.searchUsers(token, realm, searchTerm, maxResults);
+            LOGGER.info("Gefundene Keycloak-Benutzer: " + keycloakUsers);
+            return keycloakUsers.stream()
+                    .map(user -> new ContactSearchDTO(
+                            user.id(),
+                            user.firstName(),
+                            user.lastName(),
+                            user.email()
+                    ))
                     .collect(Collectors.toList());
+        } catch (WebApplicationException e) {
+            int status = e.getResponse().getStatus();
+            if (status == 404) {
+                LOGGER.errorf("Realm oder Endpunkt nicht gefunden: Status %d", status);
+            } else if (status == 401 || status == 403) {
+                LOGGER.errorf("Nicht autorisiert: Status %d", status);
+            } else {
+                LOGGER.errorf("Fehler beim Suchen von Nutzern: Status %d", status);
+            }
+            throw new RuntimeException("Fehler beim Suchen von Nutzern", e);
+        } catch (Exception e) {
+            LOGGER.error("Unbekannter Fehler beim Suchen von Nutzern", e);
+            throw new RuntimeException("Unbekannter Fehler beim Suchen von Nutzern", e);
         }
     }
 
-    public Object findUser(String userId) {
-        String token = getAdminToken();
-
-        try (Client client = ClientBuilder.newClient()) {
-            Response response = client.target(keycloakUrl + "/admin/realms/" + realm + "/users/" + userId)
-                    .request(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + token)
-                    .get();
-
-            if (response.getStatus() != 200) {
-                String responseBody = response.readEntity(String.class);
-                throw new RuntimeException("Failed to find user: " + responseBody);
+    /**
+     * Findet einen Benutzer anhand der Benutzer-ID und gibt ein ContactSearchDTO zurück.
+     *
+     * @param userId Benutzer-ID
+     * @return ContactSearchDTO-Objekt oder null, wenn nicht gefunden
+     */
+    public ContactSearchDTO findUserAsContactSearchDTO(String userId) {
+        try {
+            String token = getAdminToken();
+            KeycloakUserMapperDTO user = keycloakAdminClient.findUser(token, realm, userId);
+            if (user == null) {
+                return null;
             }
-
-            return response.readEntity(Object.class);
+            return new ContactSearchDTO(
+                    user.id(),
+                    user.firstName(),
+                    user.lastName(),
+                    user.email()
+            );
+        } catch (WebApplicationException e) {
+            int status = e.getResponse().getStatus();
+            if (status == 404) {
+                LOGGER.errorf("Realm oder Endpunkt nicht gefunden: Status %d", status);
+            } else if (status == 401 || status == 403) {
+                LOGGER.errorf("Nicht autorisiert: Status %d", status);
+            } else {
+                LOGGER.errorf("Fehler beim Suchen von Nutzern: Status %d", status);
+            }
+            throw new RuntimeException("Fehler beim Suchen von Nutzern", e);
+        } catch (Exception e) {
+            LOGGER.error("Unbekannter Fehler beim Suchen von Nutzern", e);
+            throw new RuntimeException("Unbekannter Fehler beim Suchen von Nutzern", e);
         }
     }
 }

@@ -1,4 +1,4 @@
-package at.htlleonding.leomail.model.dto.authtest;
+package at.htlleonding.leomail.model.dto.auth;
 
 import java.io.Serializable;
 import java.util.List;
