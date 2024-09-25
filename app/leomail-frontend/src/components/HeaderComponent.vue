@@ -1,9 +1,34 @@
 <script setup lang="ts">
 import {logout} from "@/services/auth.service";
+import {Service} from "@/services/service";
+import {onMounted, ref} from "vue";
+import {useAppStore} from "@/stores/app.store";
+const profileData = ref();
+const name = ref();
+const projectName = ref();
+
+onMounted(()=>{
+  getProjectName()
+  getProfile();
+});
+
+const getProfile = async () => {
+  const response = await Service.getInstance().getProfile();
+  profileData.value = response.data;
+  name.value = profileData.value.firstName + " " + profileData.value.lastName;
+  console.log(name.value);
+};
+
+const getProjectName = async () => {
+  const response = await Service.getInstance().getProjectName(useAppStore().$state.project);
+  projectName.value = response.data;
+  console.log(projectName.value);
+};
 </script>
 
 <template>
   <div id="headerNav">
+    <p>{{projectName}}</p>
     <RouterLink to="/"><img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45"></RouterLink>
     <div id="HeaderLinkBox">
       <RouterLink to="/" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
@@ -11,7 +36,7 @@ import {logout} from "@/services/auth.service";
       <RouterLink to="/authtest" activeClass="highlight" class="HeaderLinks">JWT</RouterLink>
     </div>
     <div id="profilBox">
-      <RouterLink to="/profile"><img alt="profil" class="profil-photo" src="@/assets/profil.jpg" width="auto" height="50"></RouterLink>
+      <RouterLink to="/profile">{{name}}</RouterLink>
     </div>
   </div>
 </template>

@@ -162,6 +162,14 @@ export class Service {
     async getProfile() {
         return axios.get(`/api/auth/profile`);
     }
+
+    async getProjectName(projectId: string) {
+        return axios.get(`/api/project/get/name`, {
+            params: {
+                "pid": projectId
+            }
+        })
+    }
 }
 
 interface Group {

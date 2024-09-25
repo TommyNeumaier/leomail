@@ -280,15 +280,6 @@ onMounted(() => {
   left: 75vw;
 }
 
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 1s; /* Dauer der Einblendung/Ausblendung */
-}
-
-.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */
-{
-  opacity: 0;
-}
-
 .notification-box p {
   padding: 0.6vw;
 }
@@ -300,14 +291,6 @@ onMounted(() => {
   height: 4vh;
   justify-content: center;
   align-items: center;
-}
-
-#form {
-  width: 86vw;
-  margin-top: 4vh;
-  margin-left: 1.5%;
-  display: flex;
-  flex-direction: column;
 }
 
 #pagesNummern {

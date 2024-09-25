@@ -4,15 +4,15 @@
       <h1>Neue E-Mail</h1>
     </div>
     <div id="formContent">
-      <form @submit.prevent="handlePreview">
+      <form @submit.prevent="handlePreview" id="mailForm">
         <div class="form-group">
-          <label for="recipients" class="form-label">Empfänger</label>
+          <label for="recipients" class="form-label">Empfänger:</label>
           <div class="input-container">
             <input
                 type="text"
                 v-model="searchTerm"
                 class="form-input search-input"
-                placeholder="Namen oder Gruppen eingeben..."
+                placeholder="Geben Sie hier den Namen oder Gruppen ein..."
             />
             <ul
                 v-if="searchTerm.length > 0 && (filteredUsers.length || filteredGroups.length)"
@@ -29,17 +29,19 @@
           </div>
         </div>
 
-        <div id="selectedRecipients">
-          <div class="tag" v-for="user in selectedUsers" :key="user.id">
-            {{ user.firstName }} {{ user.lastName }} <span class="tag-remove" @click="removeUser(user)">✕</span>
-          </div>
-          <div class="tag" v-for="group in selectedGroups" :key="group.id">
-            Gruppe: {{ group.name }} <span class="tag-remove" @click="removeGroup(group)">✕</span>
+        <div id="selectedUsersList">
+          <div id="selectedRecipients">
+            <div class="tag" v-for="user in selectedUsers" :key="user.id">
+              {{ user.firstName }} {{ user.lastName }} <span class="tag-remove" @click="removeUser(user)">✕</span>
+            </div>
+            <div class="tag" v-for="group in selectedGroups" :key="group.id">
+              Gruppe: {{ group.name }} <span class="tag-remove" @click="removeGroup(group)">✕</span>
+            </div>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="sendLater" class="form-label">Sendezeit</label>
+          <label for="sendLater" class="form-label">Senden am:</label>
           <div class="input-container flex">
             <input
                 type="checkbox"
@@ -47,47 +49,56 @@
                 v-model="checked"
                 class="form-checkbox"
             />
-            <label for="sendLater" class="form-checkbox-label">Später senden</label>
+            <label for="sendLater" class="form-checkbox-label">später senden</label>
           </div>
           <div v-if="checked" class="datetime-picker">
-            <VueDatePicker v-if="checked" locale="de-AT" v-model="date" class="datepicker" id="datepicker"
-                           now-button-label="Current" format="dd-mm-yyyy" :enable-time-picker="false"
-                           placeholder='Date' date-picker
-                           :min-date="format(new Date(), 'yyyy-MM-dd')"></VueDatePicker>
+            <VueDatePicker v-if="checked"
+                           locale="de-AT"
+                           v-model="date"
+                           class="datepicker"
+                           id="datepicker"
+                           now-button-label="Current"
+                           format="dd-MM-yyyy"
+                           :enable-time-picker="false"
+                           placeholder='Datum auswählen'
+                           :min-date="format(new Date(), 'yyyy-MM-dd')">
+            </VueDatePicker>
             <VueDatePicker
                 v-model="time"
-                class="form-input timepicker"
+                class="timepicker"
                 time-picker
                 placeholder="Uhrzeit auswählen"
             />
           </div>
         </div>
 
+        <label for="template" class="form-label">Vorlage</label>
+        <div id="mailFlexBox">
         <div class="form-group">
-          <label for="template" class="form-label">Vorlage</label>
-          <div class="input-container">
-            <input
-                type="text"
-                v-model="filter"
-                class="form-input search-input"
-                placeholder="Vorlage suchen..."
-            />
-            <ul v-if="dropdownVisible" class="autocomplete">
-              <li
-                  v-for="template in fetchedTemplates"
-                  :key="template.id"
-                  v-show="template.visible"
-                  @click="selectTemplate(template)"
-              >
-                {{ template.name }}
-              </li>
-            </ul>
+            <div id="mailTemplateInput" class="input-container">
+              <input
+                  type="text"
+                  v-model="filter"
+                  class="form-input search-input"
+                  placeholder="Vorlage suchen..."
+              />
+              <ul v-if="dropdownVisible" class="autocomplete">
+                <li
+                    v-for="template in fetchedTemplates"
+                    :key="template.id"
+                    v-show="template.visible"
+                    @click="selectTemplate(template)"
+                >
+                  {{ template.name }}
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
 
-        <div class="form-group flex">
-          <input type="checkbox" v-model="personalized" class="form-checkbox"/>
-          <label class="form-checkbox-label">E-Mail personalisieren</label>
+          <!--<div class="form-group flex" id="personalizedBox">
+            <input type="checkbox" v-model="personalized" class="form-checkbox"/>
+            <label class="form-checkbox-label">E-Mail personalisieren</label>
+          </div>-->
         </div>
 
         <div class="form-actions">
@@ -112,24 +123,52 @@
 <style scoped>
 /* Container */
 #mailFormContainer {
-  width: 90%;
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 30px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  width: 86.5%;
+  margin-top: 2%;
+  margin-left: 1.5%;
+  display: flex;
+  flex-direction: column;
+}
+
+#mailFlexBox {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+#mailTemplateInput {
+  width: 32vw;
+}
+
+#personalizedBox{
+  padding-left: 1%;
+  width: 100%;
 }
 
 /* Header */
+#formContent {
+  height: 85%;
+  margin-top: 2%;
+  background-color: white;
+  box-shadow: 5px 5px 10px lightgray;
+}
+
+#mailForm {
+  padding: 2% 3%;
+}
+
 #formHeader {
-  text-align: center;
-  margin-bottom: 30px;
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 }
 
 #formHeader h1 {
-  font-size: 2.5rem;
-  color: #333;
+  margin-left: 4%;
+  margin-top: 2%;
+  margin-bottom: 2%;
+  font-size: 1.1em;
 }
 
 .form-group {
@@ -137,7 +176,6 @@
 }
 
 .form-label {
-  font-size: 1.2rem;
   color: #555;
   margin-bottom: 8px;
   display: block;
@@ -145,6 +183,7 @@
 
 .input-container {
   position: relative;
+  width: 40%;
 }
 
 .form-input {
@@ -152,7 +191,7 @@
   padding: 12px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 0.7rem;
   transition: border-color 0.2s ease-in-out;
 }
 
@@ -165,19 +204,25 @@
 }
 
 /* Tags für ausgewählte Benutzer/Gruppen */
+#selectedUsersList {
+  width: 80vw;
+  height: 10vh;
+  border: 1px solid #ccc;
+}
+
 #selectedRecipients {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 0.2%;
   margin-bottom: 20px;
 }
 
 .tag {
-  background-color: #007bff;
+  background-color: lightblue;
   color: white;
   border-radius: 20px;
   padding: 6px 12px;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   display: inline-flex;
   align-items: center;
 }
@@ -211,7 +256,7 @@
 
 .datepicker,
 .timepicker {
-  width: 50%;
+  width: 20%;
 }
 
 .autocomplete {
@@ -319,7 +364,7 @@ const searchTerm = ref('');
 const users = ref<User[]>([]) as Ref<User[]>;
 const groups = ref<Group[]>([]) as Ref<Group[]>;
 const loading = ref(false);
-const personalized = ref(false);
+const personalized = ref(true);
 const showPreview = ref(false);
 
 const canPreview = computed(() => selectedUsers.value.length > 0 && selectedTemplate.value);

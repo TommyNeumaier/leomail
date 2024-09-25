@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import {ref} from 'vue';
+import {onMounted, ref} from 'vue';
 import {logout} from "@/services/auth.service";
+import {Service} from "@/services/service";
 
 const profileImage = ref<File | null>(null);
 const imageUrl = ref<string | null>(null);
+const profileData = ref();
+const firstname = ref();
+const lastname = ref();
+const email = ref();
 
 const onImageSelected = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
@@ -11,6 +16,19 @@ const onImageSelected = (event: Event) => {
     profileImage.value = file;
     imageUrl.value = URL.createObjectURL(file);
   }
+};
+
+onMounted(() => {
+  getProfile();
+});
+
+const getProfile = async () => {
+  const response = await Service.getInstance().getProfile();
+  profileData.value = response.data;
+  console.log(profileData.value.firstName)
+  firstname.value = profileData.value.firstName;
+  lastname.value = profileData.value.lastName;
+  email.value = profileData.value.mailAddress;
 };
 </script>
 
@@ -28,38 +46,30 @@ const onImageSelected = (event: Event) => {
         <div id="inputContainer">
           <div class="inputBox">
             <label for="firstName">Vorname</label>
-            <input type="text">
+            <input type="text" v-model="firstname" disabled>
           </div>
 
           <div class="inputBox">
             <label for="lastName">Nachname</label>
-            <input type="text">
+            <input type="text" v-model="lastname" disabled>
           </div>
         </div>
 
         <div class="inputBox" style="margin: 4% 0;width: 50%">
           <label for="email">Email-Adresse</label>
-          <input type="email">
+          <input type="email" v-model="email" disabled>
         </div>
 
         <div id="inputContainer">
           <div class="inputBox">
             <label for="userGroup">Benutzergruppe</label>
-            <input type="text">
+            <input type="text" disabled>
           </div>
 
           <div class="inputBox">
             <label for="lastName">Abteilung</label>
-            <input type="text">
+            <input type="text" disabled>
           </div>
-        </div>
-      </div>
-
-      <div id="profileImageBox">
-        <label for="profileImage"><img id="profileImage" src="../assets/profil.jpg"> </label>
-        <input type="file" accept="image/*" @change="onImageSelected">
-        <div v-if="imageUrl" id="imagePreview">
-          <img :src="imageUrl" alt="Profilbild Vorschau">
         </div>
       </div>
 
@@ -73,7 +83,6 @@ const onImageSelected = (event: Event) => {
   display: flex;
   flex-direction: column;
   width: 50%;
-  border: black solid 1px;
 }
 #profileImage {
   width: 10vw;
@@ -128,8 +137,6 @@ const onImageSelected = (event: Event) => {
 
 #profileContentBox {
   background-color: white;
-  display: flex;
-  flex-direction: row;
   height: 85%;
   margin-top: 3%;
   padding: 5% 6%;
