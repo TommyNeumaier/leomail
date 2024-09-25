@@ -5,10 +5,7 @@ import at.htlleonding.leomail.repositories.ProjectRepository;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
@@ -36,5 +33,13 @@ public class ProjectResource {
     public Response addProject(ProjectAddDTO project) {
         projectRepository.addProject(project, jwt.getClaim("sub"));
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("get/name")
+    @Authenticated
+    @Produces("application/json")
+    public Response getProjectName(@QueryParam("pid") String pid) {
+        return Response.ok(projectRepository.getProjectName(pid, jwt.getClaim("sub"))).build();
     }
 }

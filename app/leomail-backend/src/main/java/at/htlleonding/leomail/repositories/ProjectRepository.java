@@ -62,4 +62,11 @@ public class ProjectRepository {
         Project project = new Project(projectAddDTO.name(), projectAddDTO.description(), creatorContact, projectAddDTO.mailInformation().mailAddress(), projectAddDTO.mailInformation().password(), members);
         em.persist(project);
     }
+
+    public String getProjectName(String pid, String uid) {
+        return em.createQuery("SELECT p.name FROM Project p WHERE p.id = :pid AND :uid MEMBER OF p.members", String.class)
+                .setParameter("pid", pid)
+                .setParameter("uid", uid)
+                .getSingleResult();
+    }
 }
