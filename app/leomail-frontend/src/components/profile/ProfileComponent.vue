@@ -55,7 +55,7 @@ const getProfile = async () => {
           </div>
         </div>
 
-        <div class="inputBox" style="margin: 4% 0;width: 50%">
+        <div class="inputBox" style="margin: 8% 0;width: 50%">
           <label for="email">Email-Adresse</label>
           <input type="email" v-model="email" disabled>
         </div>
@@ -79,14 +79,58 @@ const getProfile = async () => {
 </template>
 
 <style scoped>
+/* content box */
+#bigVGContainer {
+  width: 60vw;
+  margin-top: 2%;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#profileContentBox {
+  background-color: white;
+  height: 85%;
+  margin-top: 3%;
+  padding: 6% 6%;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* headline */
+#VGHeaderBox {
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
+}
+
+
+#vgHeading {
+  margin-left: 4%;
+  margin-top: 2%;
+  margin-bottom: 2%;
+  font-size: 1.4em;
+}
+
+/* input box */
+#inputContainer {
+  display: flex;
+  flex-direction: row;
+}
+
+#inputContainer div {
+  margin-right: 5%;
+}
+
 #inputBoxen{
   display: flex;
   flex-direction: column;
-  width: 50%;
 }
-#profileImage {
-  width: 10vw;
-  border-radius: 100%;
+
+.inputBox {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
 }
 
 .inputBox label {
@@ -98,49 +142,21 @@ const getProfile = async () => {
   border-bottom: #D9D9D9 solid 2px;
 }
 
-.inputBox {
-  display: flex;
-  flex-direction: column;
-  width: 50%;
+/* button */
+#logout{
+  all: unset;
+  padding: 0.5vh 2.3vw;
+  border-radius: 12px;
+  background-color: #78A6FF;
+  color: white;
+  border: #78A6FF solid 1px;
+  font-size: 0.8rem;
+  margin-top: 5%;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-#inputContainer {
-  display: flex;
-  flex-direction: row;
+#logout:hover {
+  background-color: rgba(38, 93, 198, 0.8);
+  color: white;
 }
-
-#inputContainer div {
-  margin-right: 5%;
-}
-
-#bigVGContainer {
-  width: 86.5%;
-  margin-top: 2%;
-  margin-left: 1.5%;
-  display: flex;
-  flex-direction: column;
-}
-
-#VGHeaderBox {
-  display: flex;
-  flex-direction: row;
-  background-color: white;
-  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
-}
-
-#vgHeading {
-  margin-left: 4%;
-  margin-top: 2%;
-  margin-bottom: 2%;
-  font-size: 1.1em;
-}
-
-#profileContentBox {
-  background-color: white;
-  height: 85%;
-  margin-top: 3%;
-  padding: 5% 6%;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
-}
-
 </style>

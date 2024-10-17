@@ -143,7 +143,7 @@ const handleBack = () => {
 
 <template>
   <div id="bigBox">
-    <img id="pfeil" src="../assets/icons/pfeil-links-big.png" @click="handleBack">
+    <img id="pfeil" src="../../../assets/icons/pfeil-links-big.png" @click="handleBack">
     <div id="contentBox">
       <h3 id="headline">Neues Projekt</h3>
 

@@ -3,13 +3,20 @@ import {logout} from "@/services/auth.service";
 import {Service} from "@/services/service";
 import {onMounted, ref} from "vue";
 import {useAppStore} from "@/stores/app.store";
+import {useRoute} from "vue-router";
 const profileData = ref();
 const name = ref();
 const projectName = ref();
 
-onMounted(()=>{
-  getProjectName()
+const route = useRoute();
+
+onMounted(() => {
   getProfile();
+
+  const pid = route.query.pid;
+  if (pid) {
+    getProjectName(pid);
+  }
 });
 
 const getProfile = async () => {
