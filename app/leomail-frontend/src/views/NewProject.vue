@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
-import HeaderComponent from "@/components/HeaderComponent.vue";
-import ProjectFormComponent from "@/components/ProjectFormComponent.vue";
+import HeaderComponent from "@/components/header/HeaderComponent.vue";
+import ProjectFormComponent from "@/components/project/ProjectComponent.vue";
 </script>
 
 <template>

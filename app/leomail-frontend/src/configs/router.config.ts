@@ -1,16 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import MailView from "@/views/MailView.vue";
-import GeplanteMails from "@/views/ScheduledMailsView.vue";
-import Gruppe from "@/views/GroupView.vue";
-import Vorlagen from "@/views/TemplateView.vue";
-import Settings from "@/views/SettingsView.vue";
 import Login from "@/views/Login.vue";
-import ProjekteView from "@/views/ProjectView.vue";
 import PersonenView from "@/views/ContactView.vue";
 import ProfilView from "@/views/ProfilView.vue";
 import { useAuthStore } from "@/stores/auth.store";
 import NewProject from "@/views/NewProject.vue";
-import AuthTest from "@/views/AuthTest.vue";
 import NewMail from "@/views/NewMail.vue";
 import { useAppStore } from '@/stores/app.store';
 import axios from 'axios';
@@ -21,6 +15,7 @@ import ScheduledMailsView from "@/views/ScheduledMailsView.vue";
 import GroupView from "@/views/GroupView.vue";
 import TemplateView from "@/views/TemplateView.vue";
 import SettingsView from "@/views/SettingsView.vue";
+import AuthorisationView from "@/views/AuthorisationView.vue";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -34,7 +29,7 @@ const routes = [
   { path: '/projects/new', name: 'newProjects', component: NewProject, meta: { requiresAuth: true } },
   { path: '/contacts', name: 'contacts', component: PersonenView, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: ProfilView, meta: { requiresAuth: true } },
-  { path: '/authtest', name: 'authtest', component: AuthTest, meta: { requiresAuth: true } }
+  { path: '/authorisation', name: 'authorisation', component: AuthorisationView, meta: { requiresAuth: true } }
 ];
 
 const router = createRouter({
@@ -83,7 +78,7 @@ function handleInvalidToken(authStore, next) {
 }
 
 function proceedWithAuthorization(to, next) {
-  const exceptions = ["/", "/projects/new", "/login", "/people", "/authtest", "/settings", "/profile"];
+  const exceptions = ["/", "/projects/new", "/login", "/contacts", "/settings", "/profile"];
   const appStore = useAppStore();
 
   if (appStore.project === '' && !exceptions.includes(to.path)) {

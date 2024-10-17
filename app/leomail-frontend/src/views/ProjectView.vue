@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import HeaderComponent from "@/components/HeaderComponent.vue";
+import HeaderComponent from "@/components/header/HeaderComponent.vue";
 import {useRouter} from 'vue-router';
 import {onMounted, type Ref, ref} from 'vue';
 import {Service} from "@/services/service";

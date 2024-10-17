@@ -5,14 +5,14 @@
     <form @submit.prevent="handleLogin">
       <div class="form-group">
         <label for="username" class="login-label">Benutzername:</label><br>
-        <input type="text" id="username" class="formLogin" v-model="username" required />
+        <input type="text" id="username" class="formLogin" v-model="username" required/>
       </div>
       <div class="form-group">
         <label for="password" class="login-label">Passwort:</label><br>
-        <input type="password" id="password" class="formLogin" v-model="password" required />
+        <input type="password" id="password" class="formLogin" v-model="password" required/>
       </div>
       <button type="submit" id="loginButton">Login</button>
-      <p v-if="errorMessage">{{ errorMessage }}</p>
+      <p v-if="errorMessage" id="errorMessage">{{ errorMessage }}</p>
     </form>
   </div>
 </template>
@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import {ref} from 'vue';
 import {login} from "@/services/auth.service";
-import HeaderLoginComponent from "@/components/HeaderLoginComponent.vue";
+import HeaderLoginComponent from "@/components/header/HeaderLoginComponent.vue";
 import router from "@/configs/router.config";
 
 const username = ref('');
@@ -30,8 +30,9 @@ const errorMessage = ref('');
 const handleLogin = async () => {
   try {
     const loginSuccess = await login(username.value, password.value);
+
     if (loginSuccess) {
-      router.push('/').then(() => {});
+      router.push('/authorisation').then(() => {});
     }
   } catch (error) {
     errorMessage.value = error.message;
@@ -41,10 +42,15 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
+/* error message */
+#errorMessage{
+  color: red;
+}
 #headline {
-  font-weight: bold;
+  font-weight: var(--font-weight-medium);
   text-align: center;
 }
+
 #login-container {
   width: 35vw;
   height: 55vh;
@@ -133,11 +139,11 @@ form {
     width: 30vw;
   }
 
-  #loginButton{
+  #loginButton {
     width: 100%;
   }
 
-  form{
+  form {
     justify-content: center;
   }
 }
@@ -155,11 +161,11 @@ form {
     width: 40vw;
   }
 
-  #loginButton{
+  #loginButton {
     width: 100%;
   }
 
-  form{
+  form {
     justify-content: center;
   }
 }
@@ -177,11 +183,11 @@ form {
     width: 50vw;
   }
 
-  #loginButton{
+  #loginButton {
     width: 100%;
   }
 
-  form{
+  form {
     justify-content: center;
   }
 }
@@ -199,11 +205,11 @@ form {
     width: 70vw;
   }
 
-  #loginButton{
+  #loginButton {
     width: 100%;
   }
 
-  form{
+  form {
     justify-content: center;
   }
 }

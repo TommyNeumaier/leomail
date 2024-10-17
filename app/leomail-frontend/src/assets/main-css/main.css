@@ -1,7 +1,8 @@
-@import './base.css';
+@import '../base.css';
 
 :root {
     --font-weight-medium: 500;
+    --font-weight-bold: 700;
 }
 
 html,body{

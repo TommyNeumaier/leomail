@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue';
-import { Service } from "@/services/service";
-import { useAppStore } from "@/stores/app.store";
+import {ref, onMounted, watch, computed} from 'vue';
+import {Service} from "@/services/service";
+import {useAppStore} from "@/stores/app.store";
 
 interface User {
   id: number;
@@ -27,6 +27,15 @@ const selectedMembers = ref<User[]>([]);
 const users = ref<User[]>([]);
 const searchTerm = ref('');
 const loading = ref(false);
+
+const clearForm = () => {
+  groupName.value = '';
+  groupDescription.value = '';
+  selectedMembers.value = [];
+};
+
+// Stellen Sie sicher, dass die Methode verfügbar ist
+defineExpose({ clearForm });
 
 const fetchUsers = async (query: string) => {
   loading.value = true;
@@ -108,12 +117,6 @@ const removeGroup = async () => {
   }
 };
 
-const clearForm = () => {
-  groupName.value = '';
-  groupDescription.value = '';
-  selectedMembers.value = [];
-};
-
 watch(() => props.selectedTemplate, (newTemplate) => {
   if (newTemplate) {
     groupName.value = newTemplate.name;
@@ -139,7 +142,7 @@ onMounted(() => {
     <form @submit.prevent="props.selectedTemplate ? updateGroup() : addGroup()">
       <div class="dataBox">
         <div class="boxLabel">
-          <label for="groupName" class="group-label">Gruppenname:</label><br>
+          <label for="groupName" class="group-label">Gruppenname</label><br>
         </div>
         <input
             type="text"
@@ -152,7 +155,7 @@ onMounted(() => {
 
       <div class="dataBox">
         <div class="boxLabel">
-          <label for="groupDescription" class="group-label">Beschreibung:</label><br>
+          <label for="groupDescription" class="group-label">Beschreibung</label><br>
         </div>
         <textarea
             id="groupDescription"
@@ -162,48 +165,52 @@ onMounted(() => {
         ></textarea>
       </div>
 
-      <div class="boxLabel">
-        <label for="members" class="group-label">Mitglieder hinzufügen:</label><br>
-      </div>
-      <div class="multiselect">
-        <div class="selected" v-for="user in selectedMembers" :key="user.id">
-          {{ user.firstName }} {{ user.lastName }} <span class="remove" @click="removeUser(user)">×</span>
+      <div class="dataBox">
+        <div class="boxLabel">
+          <label for="members" class="group-label">Mitglieder hinzufügen</label><br>
         </div>
-        <input type="text" v-model="searchTerm" class="formGroup" placeholder="Benutzer suchen">
-        <ul v-if="searchTerm.length > 0 && filteredUsers.length">
-          <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
-            <div class="user-info">
-              <span>{{ user.firstName }} {{ user.lastName }}</span>
-              <small>{{ user.mailAddress }}</small>
-            </div>
-          </li>
-          <li v-if="loading">Laden...</li>
-        </ul>
+        <div class="multiselect">
+          <div class="selected" v-for="user in selectedMembers" :key="user.id">
+            {{ user.firstName }} {{ user.lastName }} <span class="remove" @click="removeUser(user)">×</span>
+          </div>
+          <input type="text" v-model="searchTerm" class="formGroup" placeholder="Benutzer suchen">
+          <ul v-if="searchTerm.length > 0 && filteredUsers.length">
+            <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
+              <div class="user-info">
+                <span>{{ user.firstName }} {{ user.lastName }}</span>
+                <small>{{ user.mailAddress }}</small>
+              </div>
+            </li>
+            <li v-if="loading">Laden...</li>
+          </ul>
+        </div>
       </div>
 
       <div id="buttonBox">
-        <button type="submit" id="submitButton">{{ props.selectedTemplate ? 'Aktualisieren' : 'Erstellen' }}</button>
-        <button type="button" @click="removeGroup" v-if="props.selectedTemplate">Löschen</button>
-        <button type="button" @click="clearForm">Abbrechen</button>
+        <button type="submit" id="submitButton">{{ props.selectedTemplate ? 'Speichern' : 'Erstellen' }}</button>
+        <button type="button" @click="removeGroup" v-if="props.selectedTemplate" id="deleteButton">Löschen</button>
+        <!--<button type="button" @click="clearForm">Abbrechen</button>-->
       </div>
     </form>
   </div>
 </template>
 
 <style scoped>
-.dataBox{
+.dataBox {
   margin-bottom: 1%;
 }
-form{
+
+form {
   padding: 2% 3%;
 }
+
 #bigBox {
   width: 100%;
 }
 
 .group-label {
   color: #5A5A5A;
-  font-size: 0.8em;
+  font-size: 1em;
 }
 
 .formGroup::placeholder {
@@ -212,12 +219,11 @@ form{
 
 .formGroup {
   display: block;
-  all: unset;
   border: solid 1px #BEBEBE;
   border-radius: 5px;
   padding: 0.6vw;
-  width: 40%;
-  font-size: 0.5em;
+  width: 60%;
+  font-size: 0.8em;
 }
 
 .formGroup:focus {
@@ -229,8 +235,8 @@ form{
   border: solid 1px #BEBEBE;
   border-radius: 5px;
   padding: 0.6vw;
-  width: 50%;
-  font-size: 0.5em;
+  width: 60%;
+  font-size: 0.8em;
   margin-bottom: 3%;
   position: relative;
 }
@@ -308,17 +314,26 @@ li:hover .user-info small {
 
 #buttonBox {
   display: flex;
-  gap: 10px;
 }
 
 #submitButton {
   all: unset;
   border-radius: 12px;
-  padding: 1vh 0;
+  padding: 0.5vh 0;
   background-color: #78A6FF;
   color: white;
-  width: 15%;
+  width: 10%;
   border: #78A6FF solid 1px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+#deleteButton{
+  all: unset;
+  border-radius: 12px;
+  padding: 0.5vh 0;
+  color: red;
+  width: 10%;
   font-size: 0.8rem;
   text-align: center;
 }
@@ -338,14 +353,7 @@ li:hover .user-info small {
   box-shadow: none;
 }
 
-#deleteButton {
-  background-color: #f5151c;
-  color: white;
-  border: #ff393f solid 1px;
-}
-
 #deleteButton:hover {
-  background-color: rgba(253, 75, 96, 0.86);
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+ font-weight: bold;
 }
 </style>

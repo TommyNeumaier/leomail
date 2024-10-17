@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
-import HeaderComponent from "@/components/HeaderComponent.vue";
-import PersonenFormComponent from "@/components/ContactFormComponent.vue";
+import HeaderComponent from "@/components/header/HeaderComponent.vue";
+import PersonenFormComponent from "@/components/contact/ContactFormComponent.vue";
 import {Service} from "@/services/service";
 import {computed, onMounted, ref, watch} from "vue";
 import Paginator from 'primevue/paginator';

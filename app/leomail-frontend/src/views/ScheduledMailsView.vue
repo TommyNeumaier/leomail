@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import NavComponent from "@/components/NavComponent.vue";
-import MailsComponent from "@/components/MailsComponent.vue";
-import HeaderComponent from "@/components/HeaderComponent.vue";
-import ScheduledMailsComponent from "@/components/ScheduledMailsComponent.vue";
+import NavComponent from "@/components/navigation/NavComponent.vue";
+import MailsComponent from "@/components/mail/MailsComponent.vue";
+import HeaderComponent from "@/components/header/HeaderComponent.vue";
+import ScheduledMailsComponent from "@/components/mail/ScheduledMailsComponent.vue";
 </script>
 
 <template>

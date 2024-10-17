@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import MainComponent from "@/components/MailsComponent.vue";
-import HeaderComponent from "@/components/HeaderComponent.vue";
-import NavComponent from "@/components/NavComponent.vue";
+import MainComponent from "@/components/mail/MailsComponent.vue";
+import HeaderComponent from "@/components/header/HeaderComponent.vue";
+import NavComponent from "@/components/navigation/NavComponent.vue";
 </script>
 
 <template>

@@ -1,4 +1,4 @@
-import './assets/main.css';
+import './assets/main-css/main.css';
 
 import {QuillEditor} from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css';

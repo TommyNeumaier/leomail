@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import NavComponent from "@/components/NavComponent.vue";
+import NavComponent from "@/components/navigation/NavComponent.vue";
 import { onMounted, ref, shallowRef, watch, computed } from "vue";
 import { Service } from "@/services/service";
 import { useRoute } from "vue-router";
-import GroupComponent from "@/components/GroupComponent.vue";
-import TemplateComponent from "@/components/TemplateComponent.vue";
+import GroupComponent from "@/components/template and group/group/GroupComponent.vue";
+import TemplateComponent from "@/components/template and group/template/TemplateComponent.vue";
 import { useAppStore } from "@/stores/app.store";
 
 const route = useRoute();
@@ -39,13 +39,16 @@ const getData = async () => {
 };
 
 const handleCreate = () => {
-  selectedTemplate.value = null; // Clear the selected template
+  selectedTemplate.value = null;
+
   if (route.path.includes('template')) {
     formVG.value = TemplateComponent;
   } else if (route.path.includes('groups')) {
     formVG.value = GroupComponent;
   }
 };
+
+
 
 const handleClick = (item) => {
   selectedTemplate.value = item;
@@ -111,14 +114,14 @@ watch(
         <div id="getVGBox">
           <div id="search-container">
             <div id="searchIconBox">
-              <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
+              <img src="../../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
             </div>
             <input v-model="searchQuery" type="text" id="search" placeholder="suche">
           </div>
 
-          <ul id="vorlagenBoxContainer">
+          <ul id="templateGroupItemsContainer">
             <li v-for="(item, index) in filteredTemplates" :key="index" :id="String('template-' + index)"
-                @click="handleClick(item)" class="vorlagenItems"
+                @click="handleClick(item)" class="templateGroupItems"
                 :class="{ highlighted: selectedTemplate && selectedTemplate.id === item.id }">
               {{ item.name }}
             </li>
@@ -128,7 +131,7 @@ watch(
 
         <div id="newVGBox">
           <button id="newVGButton" @click="handleCreate()">
-            <img src="../assets/icons/newMail-grau.svg" width="auto" height="10">
+            <img src="../../assets/icons/newMail.png" width="auto" height="15">
             {{ newVGButton }}
           </button>
         </div>
@@ -152,39 +155,15 @@ watch(
 </template>
 
 <style scoped>
-#vorlagenBoxContainer {
-  display: flex;
-  flex-direction: column;
-  margin-top: 2vh;
-  list-style-type: none;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.vorlagenItems {
-  border-bottom: 1px solid #ddd;
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-.vorlagenItems:hover {
-  color: #9f9f9f;
-}
-
-.highlighted {
-  font-weight: bold;
-}
-
 #VGMainContainer {
   display: flex;
   flex-direction: row;
 }
 
 #bigVGContainer {
-  width: 90%;
+  width: 92%;
   margin-top: 2%;
   padding-left: 0.3%;
-  padding-right: 2%;
   display: flex;
   flex-direction: row;
 }
@@ -192,14 +171,19 @@ watch(
 #newVGButton {
   all: unset;
   color: #A3A3A3;
-  font-size: 0.8rem;
   padding-left: 0.5vw;
   margin-top: 1vh;
   width: 100%;
+  display: flex;
+  align-items: center;
 }
 
 #newVGButton:hover {
   font-weight: bold;
+}
+
+#newVGButton img{
+  margin-right: 0.5vw;
 }
 
 #newVGButton p {
@@ -207,7 +191,7 @@ watch(
 }
 
 #dataVGContainer {
-  width: 12vw;
+  width: 15vw;
   padding: 0 1%;
   display: flex;
   flex-direction: column;
@@ -218,10 +202,6 @@ watch(
   margin-left: 5%;
   font-size: 1.1rem;
   text-align: left;
-}
-
-#getVGBox {
-  height: 60%;
 }
 
 #newVGBox {
@@ -288,5 +268,58 @@ input[type="text"] {
   margin-top: 2%;
   background-color: white;
   box-shadow: 5px 5px 10px lightgray;
+}
+
+
+#getVGBox {
+  display: flex;
+  flex-direction: column;
+  height: 60%; /* Das bleibt gleich */
+}
+
+#templateGroupItemsContainer {
+  display: flex;
+  flex-direction: column;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  height: 100%; /* Nimmt die verbleibende Höhe des Elterncontainers */
+  overflow-y: auto; /* Fügt den Scroll-Effekt hinzu */
+  padding-right: 10px; /* Platz für den Scrollbalken */
+}
+
+/* Scrollbar-Stile für Webkit (Chrome, Edge, Safari) */
+#templateGroupItemsContainer::-webkit-scrollbar {
+  width: 8px; /* Breite des Scrollbalkens */
+}
+
+#templateGroupItemsContainer::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Hintergrund des Scrollbalkens */
+}
+
+#templateGroupItemsContainer::-webkit-scrollbar-thumb {
+  background: #888; /* Farbe des Scrollbalkens */
+  border-radius: 4px; /* Runde Kanten für den Scrollbalken */
+}
+
+#templateGroupItemsContainer::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Farbe des Scrollbalkens beim Hover */
+}
+
+.templateGroupItems {
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 8px; /* Fügt etwas Padding für besseren Abstand hinzu */
+}
+
+.templateGroupItems:hover {
+  color: #9f9f9f;
+}
+
+.highlighted {
+  font-weight: var(--font-weight-bold);
 }
 </style>

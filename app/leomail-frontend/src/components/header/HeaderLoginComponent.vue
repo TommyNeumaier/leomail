@@ -5,7 +5,7 @@ import {logout} from "@/services/auth.service";
 
 <template>
   <div id="headerNav">
-    <img alt="LeoMail-Logo" class="logo" src="@/assets/LeoMail.png" width="auto" height="45">
+    <img alt="LeoMail-Logo" class="logo" src="../../assets/LeoMail.png" width="auto" height="45">
   </div>
 </template>
 

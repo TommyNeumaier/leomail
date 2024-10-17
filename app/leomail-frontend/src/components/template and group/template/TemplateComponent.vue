@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from 'vue';
 import Quill from 'quill'; // Stellen Sie sicher, dass Quill importiert ist
 import { Service } from '@/services/service';
 import 'quill/dist/quill.snow.css';
-import AutocompleteModule from '../autocompleteModule'; // Pfad zu Ihrer Datei
+import AutocompleteModule from '../../../autocompleteModule'; // Pfad zu Ihrer Datei
 import { useAppStore } from "@/stores/app.store";
 
 interface Greeting {
@@ -101,14 +101,17 @@ const removeTemplate = async () => {
 const clearForm = () => {
   inputName.value = '';
   inputHeading.value = '';
-  selectedGreeting.value = '';
-  content.value = '';
+  //selectedGreeting.value = selectedGreeting.disabled();
+  //content.value = '';
+  // Falls ein Quill-Editor vorhanden ist, leere auch den Editor
   if (quillEditor.value) {
-    quillEditor.value.setText('');
+    quillEditor.value.setText('');  // Setzt den Text im Editor zurück
   }
 };
 
 onMounted(() => {
+  clearForm();
+  console.log('clearForm');
   getGreetings();
 
   const editor = new Quill('#editor', {
@@ -170,7 +173,7 @@ watch(
       <div id="editor" class="quill-editor"></div>
     </div>
 
-    <img src="../assets/icons/icons8-info-250.png" width="20" v-tooltip="{ value: 'Vorname: {firstname} Nachname: {lastname} Email-Adresse: {mailAddress}', showDelay: 200, hideDelay: 400 }" label="Save">
+    <img src="../../../assets/icons/icons8-info-250.png" width="20" v-tooltip="{ value: 'Vorname: {firstname} Nachname: {lastname} Email-Adresse: {mailAddress}', showDelay: 200, hideDelay: 400 }" label="Save">
 
 
     <div id="buttonBox">
@@ -275,7 +278,7 @@ form {
   border-radius: 5px;
   padding: 0.6vw;
   width: 40%;
-  font-size: 0.5em;
+  font-size: 0.8em;
 }
 
 .formTemplate:focus {

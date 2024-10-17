@@ -1,34 +1,48 @@
 <script setup lang="ts">
+import {useAppStore} from "@/stores/app.store";
+import {computed, onMounted, ref} from 'vue';
 
+const appStore = useAppStore();
+const currentProjectId = computed(() => appStore.project);
 </script>
 
 <template>
-<div id="bigNavBox">
-  <div id="iconLinks">
-    <div class="iconBox">
-      <RouterLink to="/mail" activeClass="highlight"><img src="../assets/icons/mail.svg" alt="Mail Icon" /></RouterLink>
+    <div id="bigNavBox">
+      <div id="iconLinks">
+        <div class="iconBox">
+          <RouterLink :to="{ path: '/mail', query: { pid: currentProjectId } }" activeClass="highlight">
+            <img src="../../assets/icons/mail.svg" alt="Mail Icon"/>
+          </RouterLink>
+        </div>
+        <div class="iconBox">
+          <RouterLink :to="{ path: '/scheduledMails', query: { pid: currentProjectId } }" activeClass="highlight">
+            <img src="../../assets/icons/sceduled-mail.svg" alt="Scheduled Mail Icon"/>
+          </RouterLink>
+        </div>
+        <div class="iconBox">
+          <RouterLink :to="{ path: '/groups', query: { pid: currentProjectId } }" activeClass="highlight">
+            <img src="../../assets/icons/gruppe.svg" alt="Group Icon"/>
+          </RouterLink>
+        </div>
+        <div class="iconBox">
+          <RouterLink :to="{ path: '/template', query: { pid: currentProjectId } }" activeClass="highlight">
+            <img src="../../assets/icons/dokument.svg" alt="Vorlagen Icon"/>
+          </RouterLink>
+        </div>
+        <div class="iconBox">
+          <RouterLink :to="{ path: '/settings', query: { pid: currentProjectId } }" activeClass="highlight">
+            <img src="../../assets/icons/settings.png" alt="Settings Icon"/>
+          </RouterLink>
+        </div>
+      </div>
     </div>
-    <div class="iconBox">
-      <RouterLink to="/scheduledMails" activeClass="highlight"><img src="../assets/icons/sceduled-mail.svg" alt="Sceduled Mail Icon" /></RouterLink>
-    </div>
-    <div class="iconBox">
-      <RouterLink to="/groups" activeClass="highlight"><img src="../assets/icons/gruppe.svg" alt="Group Icon" /></RouterLink>
-    </div>
-    <div class="iconBox">
-      <RouterLink to="/template" activeClass="highlight"><img src="../assets/icons/dokument.svg" alt="Vorlagen Icon" /></RouterLink>
-    </div>
-    <div class="iconBox">
-      <RouterLink to="/settings" activeClass="highlight"><img src="../assets/icons/settings.svg" alt="Settings Icon" /></RouterLink>
-    </div>
-  </div>
-</div>
-
 </template>
 
+
 <style scoped>
-#bigNavBox{
+#bigNavBox {
+  margin-top: 3vh;
   width: 8%;
-  margin-top: 4vh;
   border-right: rgba(0, 0, 0, 0.20) solid 2px;
   border-radius: 20px;
   padding-bottom: 1%;
@@ -37,13 +51,15 @@
   display: flex;
   justify-content: center;
 }
-#iconLinks{
+
+#iconLinks {
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100%;
   width: 80%;
 }
+
 .iconBox {
   position: relative;
   display: flex;

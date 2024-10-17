@@ -177,7 +177,7 @@ onMounted(() => {
     <div id="search-container">
       <input type="text" id="search" placeholder="suche">
       <div id="searchIconBox">
-        <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
+        <img src="../../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
       </div>
     </div>
 
@@ -187,10 +187,10 @@ onMounted(() => {
           <input type="checkbox" v-model="checkAllMails" id="checkbox"/>
         </div>
         <div>
-          <img src="../assets/reload.png" alt="Reload" id="reload-icon" width="auto" height="12">
+          <img src="../../assets/reload.png" alt="Reload" id="reload-icon" width="auto" height="12">
         </div>
         <div>
-          <img src="../assets/trash.png" alt="Trash" id="trash-icon" width="auto" height="12">
+          <img src="../../assets/trash.png" alt="Trash" id="trash-icon" width="auto" height="12">
         </div>
       </div>
 
@@ -206,10 +206,10 @@ onMounted(() => {
         </div>
         <div id="pagesButtonBox">
           <button @click="decrement" :disabled="startIndex == 0" class="icon-button">
-            <img src="../assets/icons/pfeil-links.png" alt="Decrement" class="icon">
+            <img src="../../assets/icons/pfeil-links.png" alt="Decrement" class="icon">
           </button>
           <button @click="increment" :disabled="endIndex == totalMails - 1" class="icon-button">
-            <img src="../assets/icons/pfeil-rechts.png" alt="Increment" class="icon">
+            <img src="../../assets/icons/pfeil-rechts.png" alt="Increment" class="icon">
           </button>
         </div>
       </div>

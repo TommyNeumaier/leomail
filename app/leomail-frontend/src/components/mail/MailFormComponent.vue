@@ -323,7 +323,7 @@ import {useAppStore} from "@/stores/app.store";
 import axios from "axios";
 import {useRouter} from 'vue-router';
 import {format} from "date-fns";
-import MailPreviewComponent from "@/components/MailPreviewComponent.vue";
+import MailPreviewComponent from "@/components/mail/MailPreviewComponent.vue";
 
 const router = useRouter();
 
