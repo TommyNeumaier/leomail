@@ -1,4 +1,12 @@
 package at.htlleonding.leomail.model.dto.template.mail;
 
-public record TemplateMailContactInformationDTO(Long id, String firstName, String lastName, String mailAddress) {
+import at.htlleonding.leomail.model.enums.ContactType;
+
+public record TemplateMailContactInformationDTO(
+        String id,
+        String firstName,
+        String lastName,
+        String mailAddress,
+        ContactType contactType
+) {
 }

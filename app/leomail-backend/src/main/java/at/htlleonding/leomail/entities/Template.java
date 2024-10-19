@@ -1,6 +1,5 @@
 package at.htlleonding.leomail.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,17 +7,16 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@SequenceGenerator(name = "seq_template", sequenceName = "seq_template", allocationSize = 1, initialValue = 5)
 public class Template extends PanacheEntityBase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_template")
-    public Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    public String id;
 
     @Column(length = 128, nullable = false, unique = true)
     public String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Project project;
 
     @CreationTimestamp
@@ -30,10 +28,10 @@ public class Template extends PanacheEntityBase {
     @Column(length = 8192, nullable = false)
     public String content;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Contact createdBy;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public TemplateGreeting greeting;
 
     public Template() {

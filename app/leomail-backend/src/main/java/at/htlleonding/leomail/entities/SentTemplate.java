@@ -1,12 +1,11 @@
 package at.htlleonding.leomail.entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @SequenceGenerator(name = "seq_sent_template", sequenceName = "seq_sent_template", allocationSize = 1, initialValue = 3)
@@ -28,23 +27,23 @@ public class SentTemplate extends PanacheEntityBase {
     @Column(length = 8192, nullable = false)
     public String content;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Contact createdBy;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Project project;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public TemplateGreeting greeting;
 
     public LocalDateTime sentOn;
 
     public LocalDateTime scheduledAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Contact sentBy;
 
-    @OneToMany(mappedBy = "usedTemplate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "usedTemplate", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     public List<SentMail> mails = new ArrayList<>();
 
     public SentTemplate() {

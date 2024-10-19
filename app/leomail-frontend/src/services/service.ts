@@ -59,42 +59,90 @@ export class Service {
         });
     }
 
-    public addContact(formData: any) {
-        return axios.post(`/api/users/add`, formData)
+    /**
+     * Adds a new natural contact.
+     */
+    public addNaturalContact(contactData: any) {
+        return axios.post(`/api/contacts/add/natural`, contactData);
     }
 
-    public async searchContacts(query: string) {
-        console.log('query: ' + query)
-        return axios.get(`/api/users/search`, {
-            params: {
-                "query": query
-            }
-        })
-    };
-
-    public getContacts() {
-        return axios.get(`/api/users/get`);
+    /**
+     * Adds a new company contact.
+     */
+    public addCompanyContact(contactData: any) {
+        return axios.post(`/api/contacts/add/company`, contactData);
     }
 
-    public getContact(id: string) {
-        return axios.get(`/api/users/single`, {
-            params: {
-                "id": id
-            }
-        })
-    };
-
-    public updateContact(id: any, formData: any) {
-        return axios.post(`/api/users/update?id=${formData}`, formData);
+    /**
+     * Updates an existing natural contact.
+     */
+    public updateNaturalContact(contactData: any) {
+        return axios.post(`/api/contacts/update/natural`, contactData);
     }
 
-    public deleteContact(id: any){
-        return axios.post(`/api/users/delete`, {}, {
+    /**
+     * Updates an existing company contact.
+     */
+    public updateCompanyContact(contactData: any) {
+        return axios.post(`/api/contacts/update/company`, contactData);
+    }
+
+    /**
+     * Deletes a contact by ID.
+     */
+    public deleteContact(id: string) {
+        return axios.delete(`/api/contacts/delete`, {
             params: {
-                "id": id
-            }
+                id: id,
+            },
         });
     }
+
+    /**
+     * Retrieves a single contact by ID.
+     */
+    public getContact(id: string) {
+        return axios.get(`/api/contacts/single`, {
+            params: {
+                id: id,
+            },
+        });
+    }
+
+    /**
+     * Searches for natural contacts.
+     */
+    public searchNaturalContacts(query: string) {
+        return axios.get(`/api/contacts/search/natural`, {
+            params: {
+                query: query,
+            },
+        });
+    }
+
+    /**
+     * Searches for company contacts.
+     */
+    public searchCompanyContacts(query: string) {
+        return axios.get(`/api/contacts/search/company`, {
+            params: {
+                query: query,
+            },
+        });
+    }
+
+    /**
+     * Searches for all contacts.
+     */
+    public searchAllContacts(query: string) {
+        return axios.get(`/api/contacts/search/all`, {
+            params: {
+                query: query,
+            },
+        });
+    }
+
+
     public getPersonalProjects(){
         return axios.get(`/api/project/get/personal`);
     }
@@ -107,47 +155,35 @@ export class Service {
         });
     }
 
-    async getPersonalGroups(projectId: string) {
-        return axios.get<Group>(`/api/groups/get/personal`, {
-            params: {
-                "pid": projectId
-            }
-        });
+    public async getPersonalGroups(projectId: string) {
+        return axios.get(`/api/groups/get/personal?pid=${projectId}`);
     }
 
-    async addGroup(projectId: string, groupData: Group) {
-        return axios.post(`/api/groups/add`, groupData, {
+    public async getGroupDetails(projectId: string, groupId: string) {
+        return axios.get('/api/groups/get/details', {
             params: {
-                "pid": projectId
+                pid: projectId,
+                gid: groupId
             }
-        });
+        })
     }
 
-    async updateGroup(projectId: string, groupData: Group) {
-        return axios.post(`/api/groups/update`, groupData, {
-            params: {
-                "pid": projectId
-            }
-
-        });
+    public async addGroup(projectId: string, groupData: any) {
+        const groupType = groupData.groupType || "NATURAL"; // Adjust as needed
+        return axios.post(`/api/groups/add?pid=${projectId}&groupType=${groupType}`, groupData);
     }
 
-    async deleteGroup(projectId: string, groupId: string) {
-        return axios.delete(`/api/groups/delete`, {
-            params: {
-                "pid": projectId,
-                "gid": groupId
-            }
-        });
+    public async updateGroup(projectId: string, groupData: any) {
+        const groupType = groupData.groupType || "NATURAL"; // Adjust as needed
+        return axios.post(`/api/groups/update?pid=${projectId}&groupType=${groupType}`, groupData);
     }
 
-    async getGroupDetails(groupId: string, projectId: string) {
-        return axios.get<Group>(`/api/groups/get/details`, {
-            params: {
-                "pid": projectId,
-                "gid": groupId
-            }
-        });
+    public async deleteGroup(projectId: string, groupId: string) {
+        return axios.delete(`/api/groups/delete?pid=${projectId}&gid=${groupId}`);
+    }
+
+    public async searchGroups(projectId: string, query: string) {
+        return axios.get(`/api/groups/search?pid=${projectId}&query=${query}`);
     }
 
     async getUsersInGroup(groupId: string, projectId: string) {
@@ -169,6 +205,21 @@ export class Service {
                 "pid": projectId
             }
         })
+    }
+
+    /**
+     * Search for contacts (both Natural and Company).
+     * @param query The search term.
+     * @param projectId The current project ID.
+     * @returns A promise resolving to the search results.
+     */
+    public async searchContacts(query: string, projectId: string) {
+        return axios.get(`/api/contacts/search/all`, {
+            params: {
+                query: query,
+                projectId: projectId
+            }
+        });
     }
 }
 

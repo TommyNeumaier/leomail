@@ -1,30 +1,41 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from "vue";
-import {Service} from "@/services/service";
+import { computed, ref, watch, defineProps, defineEmits } from "vue";
+import { Service } from "@/services/service";
 
-interface Contact {
-  id: string | null,
-  firstName: string,
-  lastName: string,
-  mailAddress: string,
-  gender?: string,
-  positionAtCompany?: string;
-  company?: string;
-  prefixTitle?: string;
-  suffixTitle?: string;
+interface BaseContact {
+  id: string | null;
+  mailAddress: string;
+  contactType: 'NATURAL' | 'COMPANY';
+  kcUser?: boolean;
 }
 
-const picked = ref<string | null>(); // Holds the value of the selected gender
-const pickedEntity = ref<string>(''); // Holds the value of the selected entity
-const checkedUnternehmen = ref(false);
-const checkedPrivatperson = ref(true);
+interface NaturalContact extends BaseContact {
+  firstName: string;
+  lastName: string;
+  gender?: string | null;
+  positionAtCompany?: string | null;
+  company?: string | null;
+  prefixTitle?: string | null;
+  suffixTitle?: string | null;
+}
+
+interface CompanyContact extends BaseContact {
+  companyName: string;
+}
+
+type Contact = NaturalContact | CompanyContact;
+
+const picked = ref<string | null>(null); // Gender
+const pickedEntity = ref<'NATURAL' | 'COMPANY'>('NATURAL'); // Contact Type
 const firstname = ref('');
 const lastname = ref('');
 const email = ref('');
-const positionAtCompany = ref<string | null>();
-const company = ref<string | null>();
-const prefixTitle = ref<string | null>();
-const suffixTitle = ref<string | null>();
+const positionAtCompany = ref('');
+const company = ref('');
+const prefixTitle = ref('');
+const suffixTitle = ref('');
+const companyName = ref('');
+const isKcUser = ref(false);
 const propsSelected = defineProps<{ selectedContact: Contact | null }>();
 const emit = defineEmits(['contact-deleted', 'contact-updated', 'contact-added']);
 
@@ -32,116 +43,117 @@ watch(
     () => propsSelected.selectedContact,
     (newContact) => {
       clearForm();
-      console.log(newContact)
       if (newContact) {
-        console.log(newContact);
-        firstname.value = newContact.firstName;
-        lastname.value = newContact.lastName;
+        pickedEntity.value = newContact.firstName === undefined ? 'COMPANY' : 'NATURAL';
         email.value = newContact.mailAddress;
-        if (newContact.gender) picked.value = newContact.gender;
-        if (newContact.positionAtCompany) positionAtCompany.value = newContact.positionAtCompany;
-        if (newContact.company) company.value = newContact.company;
-        if (newContact.prefixTitle) prefixTitle.value = newContact.prefixTitle;
-        if (newContact.suffixTitle) suffixTitle.value = newContact.suffixTitle;
+        isKcUser.value = newContact.kcUser || false;
+
+        if (pickedEntity.value === 'COMPANY') {
+          // CompanyContact
+          const companyContact = newContact as CompanyContact;
+          companyName.value = companyContact.companyName || '';
+        } else {
+          const naturalContact = newContact as NaturalContact;
+          firstname.value = naturalContact.firstName || '';
+          lastname.value = naturalContact.lastName || '';
+          picked.value = naturalContact.gender || null;
+          positionAtCompany.value = naturalContact.positionAtCompany || '';
+          company.value = naturalContact.company || '';
+          prefixTitle.value = naturalContact.prefixTitle || '';
+          suffixTitle.value = naturalContact.suffixTitle || '';
+        }
       }
     }
 );
-
 
 const clearForm = () => {
   firstname.value = '';
   lastname.value = '';
   email.value = '';
   picked.value = null;
-  positionAtCompany.value = null;
-  company.value = null;
-  prefixTitle.value = null;
-  suffixTitle.value = null;
-}
-const handleEntities = (entity: string) => {
-  pickedEntity.value = entity;
-  if (entity === 'unternehmen') {
-    checkedUnternehmen.value = true;
-    checkedPrivatperson.value = false;
-  } else if (entity === 'privatperson') {
-    checkedUnternehmen.value = false;
-    checkedPrivatperson.value = true;
-  }
+  positionAtCompany.value = '';
+  company.value = '';
+  prefixTitle.value = '';
+  suffixTitle.value = '';
+  companyName.value = '';
+  isKcUser.value = false;
 };
 
-/*const saveContact = async () => {
-  if (checkedPrivatperson && picked.value != null) {
-    try {
-      const contactForm = {
-        company: company.value,
-        positionAtCompany: positionAtCompany.value,
-        prefixTitle: prefixTitle.value,
-        suffixTitle: suffixTitle.value,
-        gender: picked.value,
+const saveOrUpdateContact = async () => {
+  if (isKcUser.value) {
+    return;
+  }
+  try {
+    let contactForm: any = {
+      id: propsSelected.selectedContact?.id || null,
+      mailAddress: email.value,
+    };
+
+    if (pickedEntity.value === 'NATURAL') {
+      contactForm = {
+        ...contactForm,
         firstName: firstname.value,
         lastName: lastname.value,
-        mailAddress: email.value
-    };
-      console.log(contactForm);
-      const response = await Service.getInstance().addContact(contactForm);
-      console.log('Erfolgreich gesendet:', response.data);
-      clearForm();
-    } catch (error) {
-      console.error('Fehler beim Senden der Daten:', error);
-    }
-  }
-}*/
+        prefixTitle: prefixTitle.value || null,
+        suffixTitle: suffixTitle.value || null,
+        company: company.value || null,
+        positionAtCompany: positionAtCompany.value || null,
+        gender: picked.value,
+      };
 
-const saveOrUpdateContact = async () => {
-  try {
-    const contactForm = {
-      id: propsSelected.selectedContact?.id,
-      company: company.value,
-      positionAtCompany: positionAtCompany.value,
-      prefixTitle: prefixTitle.value,
-      suffixTitle: suffixTitle.value,
-      gender: picked.value,
-      firstName: firstname.value,
-      lastName: lastname.value,
-      mailAddress: email.value
-    };
-    if (propsSelected.selectedContact) {
-      console.log(contactForm);
-      await Service.getInstance().updateContact(propsSelected.selectedContact.id, contactForm);
-      console.log('Kontakt erfolgreich aktualisiert');
-      emit('contact-updated');
-    } else {
-      await Service.getInstance().addContact(contactForm);
-      console.log('Kontakt erfolgreich erstellt');
-      emit('contact-added');
+      if (propsSelected.selectedContact) {
+        await Service.getInstance().updateNaturalContact(contactForm);
+        emit('contact-updated');
+      } else {
+        await Service.getInstance().addNaturalContact(contactForm);
+        emit('contact-added');
+      }
+    } else if (pickedEntity.value === 'COMPANY') {
+      // CompanyContact
+      contactForm = {
+        ...contactForm,
+        companyName: companyName.value,
+      };
+
+      if (propsSelected.selectedContact) {
+        await Service.getInstance().updateCompanyContact(contactForm);
+        emit('contact-updated');
+      } else {
+        await Service.getInstance().addCompanyContact(contactForm);
+        emit('contact-added');
+      }
     }
+
     clearForm();
   } catch (error) {
-    console.error('Fehler beim Speichern der Daten:', error);
+    console.error('Error saving data:', error);
   }
-}
-
+};
 
 const deleteContact = async () => {
   if (propsSelected.selectedContact) {
     const confirmed = confirm('Möchten Sie diesen Kontakt wirklich löschen?');
     if (confirmed) {
       try {
-        console.log(propsSelected.selectedContact)
-        await Service.getInstance().deleteContact(propsSelected.selectedContact.id);
-        console.log('Kontakt erfolgreich gelöscht');
+        await Service.getInstance().deleteContact(propsSelected.selectedContact.id!);
         clearForm();
-        emit('contact-deleted'); // Notify parent component
+        emit('contact-deleted');
       } catch (error) {
         console.error('Fehler beim Löschen des Kontakts:', error);
       }
     }
   }
-}
+};
 
-  const contactName = computed(() => {
-    return propsSelected.selectedContact ? `${propsSelected.selectedContact.firstName} ${propsSelected.selectedContact.lastName}` : 'Neue Person';
-  });
+const contactName = computed(() => {
+  if (pickedEntity.value === 'COMPANY' && companyName.value) {
+    return companyName.value;
+  } else if (pickedEntity.value === 'NATURAL' && (firstname.value || lastname.value)) {
+    return `${firstname.value} ${lastname.value}`;
+  } else {
+    return 'Neuer Kontakt';
+  }
+});
 </script>
 
 <template>
@@ -152,30 +164,32 @@ const deleteContact = async () => {
 
         <div class="personContainer">
           <div class="personBox">
-            <label for="checkboxPrivatperson">natürliche Person</label>
+            <label for="radioNatural">natürliche Person</label>
             <input
-                type="checkbox"
-                class="checkbox"
-                id="checkboxPrivatperson"
-                value="privatperson"
-                v-model="checkedPrivatperson"
-                @change="handleEntities('privatperson')"
-            /></div>
+                type="radio"
+                class="radio"
+                id="radioNatural"
+                value="NATURAL"
+                v-model="pickedEntity"
+                :disabled="isKcUser"
+            />
+          </div>
 
           <div class="personBox">
-            <label for="checkboxUnternehmen">juristische Person</label>
+            <label for="radioCompany">juristische Person</label>
             <input
-                type="checkbox"
-                class="checkbox"
-                id="checkboxUnternehmen"
-                value="unternehmen"
-                v-model="checkedUnternehmen"
-                @change="handleEntities('unternehmen')"
+                type="radio"
+                class="radio"
+                id="radioCompany"
+                value="COMPANY"
+                v-model="pickedEntity"
+                :disabled="isKcUser"
             />
           </div>
         </div>
 
-        <div v-if="checkedPrivatperson">
+        <div v-if="pickedEntity === 'NATURAL'">
+          <!-- NaturalContact form fields -->
           <div id="checkBoxGenderContainer">
             <label class="personen-label">Geschlecht</label><br>
             <div id="checkBox">
@@ -187,6 +201,7 @@ const deleteContact = async () => {
                     id="checkboxMale"
                     value="M"
                     v-model="picked"
+                    :disabled="isKcUser"
                     required
                 />
               </div>
@@ -198,6 +213,7 @@ const deleteContact = async () => {
                     id="checkboxFemale"
                     value="W"
                     v-model="picked"
+                    :disabled="isKcUser"
                     required
                 />
               </div>
@@ -207,58 +223,119 @@ const deleteContact = async () => {
           <div id="titleBox" class="inputBox">
             <div>
               <label for="titelPrefix" class="personen-label">Titel prefix</label><br>
-              <input type="text" id="titelPrefix" class="formPerson" placeholder="z.Bsp. Dr." v-model="prefixTitle">
+              <input
+                  type="text"
+                  id="titelPrefix"
+                  class="formPerson"
+                  placeholder="z.Bsp. Dr."
+                  v-model="prefixTitle"
+                  :disabled="isKcUser"
+              >
             </div>
             <div>
               <label for="titelSuffix" class="personen-label">Titel suffix</label><br>
-              <input type="text" id="titelSuffix" class="formPerson" placeholder="z.Bsp. PhD" v-model="suffixTitle">
+              <input
+                  type="text"
+                  id="titelSuffix"
+                  class="formPerson"
+                  placeholder="z.Bsp. PhD"
+                  v-model="suffixTitle"
+                  :disabled="isKcUser"
+              >
             </div>
           </div>
 
           <div id="nameBox" class="inputBox">
             <div>
               <label for="firstName" class="personen-label">Vorname</label><br>
-              <input type="text" id="firstName" class="formPerson" v-model="firstname" required>
+              <input
+                  type="text"
+                  id="firstName"
+                  class="formPerson"
+                  v-model="firstname"
+                  :disabled="isKcUser"
+                  required
+              >
             </div>
             <div>
               <label for="lastName" class="personen-label">Nachname</label><br>
-              <input type="text" id="lastName" class="formPerson" v-model="lastname" required>
+              <input
+                  type="text"
+                  id="lastName"
+                  class="formPerson"
+                  v-model="lastname"
+                  :disabled="isKcUser"
+                  required
+              >
             </div>
           </div>
 
           <div class="inputBox">
             <label for="email" class="personen-label">Email</label><br>
-            <input type="email" id="email" class="formPerson" placeholder="z.Bsp. max.muster@gmail.com" v-model="email"
-                   required>
+            <input
+                type="email"
+                id="email"
+                class="formPerson"
+                placeholder="z.Bsp. max.muster@gmail.com"
+                v-model="email"
+                :disabled="isKcUser"
+                required
+            >
           </div>
           <div>
             <div class="inputBox">
               <label for="company" class="personen-label">Firma (optional)</label><br>
-              <input type="text" id="company" class="formPerson" v-model="company">
+              <input
+                  type="text"
+                  id="company"
+                  class="formPerson"
+                  v-model="company"
+                  :disabled="isKcUser"
+              >
             </div>
             <div class="inputBox">
               <label for="position" class="personen-label">Position (optional)</label><br>
-              <input type="text" id="position" class="formPerson" v-model="positionAtCompany">
+              <input
+                  type="text"
+                  id="position"
+                  class="formPerson"
+                  v-model="positionAtCompany"
+                  :disabled="isKcUser"
+              >
             </div>
           </div>
         </div>
 
-        <div v-if="checkedUnternehmen">
+        <div v-if="pickedEntity === 'COMPANY'">
+          <!-- CompanyContact form fields -->
           <div>
             <label for="companyName" class="personen-label">Unternehmensbezeichnung</label><br>
-            <input type="text" id="companyName" class="formPerson" required>
+            <input
+                type="text"
+                id="companyName"
+                class="formPerson"
+                v-model="companyName"
+                :disabled="isKcUser"
+                required
+            >
           </div>
           <div>
             <label for="emailCompany" class="personen-label">E-Mail</label><br>
-            <input type="email" id="emailCompany" class="formPerson" required>
+            <input
+                type="email"
+                id="emailCompany"
+                class="formPerson"
+                v-model="email"
+                :disabled="isKcUser"
+                required
+            >
           </div>
         </div>
+
         <div id="buttonBox">
-          <button type="button" id="deleteButton" @click="deleteContact" v-if="propsSelected.selectedContact">Person
-            löschen
-          </button>
-          <button type="submit" id="submitButton">
-            {{ propsSelected.selectedContact ? 'Speichern' : 'Person erstellen' }}
+          <button type="button" id="deleteButton" @click="deleteContact" v-if="propsSelected.selectedContact && !isKcUser">Kontakt löschen</button>
+          <button type="submit" id="submitButton" v-if="!isKcUser">
+            {{ propsSelected.selectedContact ? 'Speichern' : 'Kontakt erstellen' }}
           </button>
         </div>
       </div>

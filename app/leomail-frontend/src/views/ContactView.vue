@@ -1,78 +1,130 @@
 <script setup lang="ts">
-
 import HeaderComponent from "@/components/header/HeaderComponent.vue";
 import PersonenFormComponent from "@/components/contact/ContactFormComponent.vue";
-import {Service} from "@/services/service";
-import {computed, onMounted, ref, watch} from "vue";
-import Paginator from 'primevue/paginator';
+import { Service } from "@/services/service";
+import { computed, onMounted, ref, watch } from "vue";
 
-interface Contact {
-  id: string,
-  firstName: string,
-  lastName: string,
-  mailAddress: string,
-  gender? : string,
-  positionAtCompany?: string,
-  company?: string,
-  prefixTitle?: string,
-  suffixTitle?: string
+
+interface BaseContact {
+  id: string | null;
+  mailAddress: string;
+  contactType: 'NATURAL' | 'COMPANY';
 }
 
-const kkc = ref(null);
-const selectedContact = ref<Contact | null>(null);
-let contactData = ref<Contact[]>([]);
-const searchQuery = ref();
-const filteredContacts = ref<Contact[]>([]);
-const selectedContactIndex = ref();
+interface NaturalContact extends BaseContact {
+  firstName: string;
+  lastName: string;
+  gender?: string | null;
+  positionAtCompany?: string | null;
+  company?: string | null;
+  prefixTitle?: string | null;
+  suffixTitle?: string | null;
+}
 
+interface CompanyContact extends BaseContact {
+  companyName: string;
+}
+
+type Contact = NaturalContact | CompanyContact;
+
+// Reactive variables
+
+const selectedContact = ref<Contact | null>(null);
+const contactData = ref<Contact[]>([]);
+const searchQuery = ref('');
+const filteredContacts = ref<Contact[]>([]);
+const selectedContactIndex = ref<number | null>(null);
+
+// Fetch all contacts
 
 const getContacts = async () => {
-  const response = await Service.getInstance().getContacts();
-  contactData.value = response.data;
-  filteredContacts.value = response.data;
-  console.log(filteredContacts.value);
+  try {
+    const response = await Service.getInstance().searchAllContacts("");
+    const data = response.data.map((item: any) => {
+      if ('firstName' in item && 'lastName' in item) {
+        item.contactType = 'NATURAL';
+      } else if ('companyName' in item) {
+        item.contactType = 'COMPANY';
+      } else {
+        item.contactType = 'UNKNOWN';
+      }
+      return item;
+    });
+    contactData.value = data;
+    filteredContacts.value = data;
+    console.log('Filtered contacts:', filteredContacts.value);
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+  }
 };
 
-const handleClickedContact = async (item:Contact, index : number) => {
+
+// Handle clicking on a contact
+
+const handleClickedContact = async (item: Contact, index: number) => {
   selectedContactIndex.value = index;
 
-  const response = await Service.getInstance().getContact(item.id);
-  selectedContact.value = response.data;
-  console.log(selectedContact.value);
-}
+  try {
+    const response = await Service.getInstance().getContact(item.id!);
+    selectedContact.value = response.data;
+    console.log(selectedContact.value);
+  } catch (error) {
+    console.error('Error fetching contact details:', error);
+  }
+};
+
+// Search contacts based on query
 
 const searchContacts = async (query: string) => {
   if (query === '') {
     filteredContacts.value = contactData.value;
   } else {
-    const response = await Service.getInstance().searchContacts(query);
-    console.log(response.data)
-    filteredContacts.value = response.data;
+    try {
+      const response = await Service.getInstance().searchAllContacts(query);
+      filteredContacts.value = response.data;
+    } catch (error) {
+      console.error('Error searching contacts:', error);
+    }
   }
 };
 
+// Handle contact deletion
+
 const handleDeleteContact = async () => {
   if (selectedContact.value) {
-    await Service.getInstance().deleteContact(selectedContact.value.id);
-    getContacts();
-    selectedContact.value = null;
+    try {
+      await Service.getInstance().deleteContact(selectedContact.value.id!);
+      await getContacts();
+      selectedContact.value = null;
+      selectedContactIndex.value = null;
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+    }
   }
-}
+};
+
+// Watch the search query and update results
 
 watch(searchQuery, () => {
   searchContacts(searchQuery.value);
 });
 
+// Handle creating a new contact
+
 const handleNewContact = () => {
   selectedContact.value = null;
   selectedContactIndex.value = null;
-}
+};
+
+// Handle contact deleted event
 
 const handleContactDeleted = () => {
   getContacts();
   selectedContact.value = null;
   selectedContactIndex.value = null;
-}
+};
+
+// Handle contact updated event
 
 const handleContactUpdated = async () => {
   await getContacts();
@@ -80,15 +132,19 @@ const handleContactUpdated = async () => {
   selectedContactIndex.value = null;
 };
 
+// Handle contact added event
+
 const handleAddedContact = () => {
   getContacts();
   selectedContact.value = null;
   selectedContactIndex.value = null;
 };
 
-onMounted( () => {
+// Fetch contacts on component mount
+
+onMounted(() => {
   getContacts();
-})
+});
 </script>
 
 <template>
@@ -98,42 +154,66 @@ onMounted( () => {
 
       <div id="flexHeadline">
         <div>
-          <h3 id="headline">Personen</h3></div>
-        <div><div @click="handleNewContact" id="newContact"><img src="../assets/icons/newMail-white.png"></div></div>
+          <h3 id="headline">Kontakte</h3>
+        </div>
+        <div>
+          <div @click="handleNewContact" id="newContact">
+            <img src="../assets/icons/newMail-white.png">
+          </div>
+        </div>
       </div>
 
       <div id="search-container">
         <div id="searchIconBox">
           <img src="../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
         </div>
-        <input type="text" id="search" placeholder="suche" v-model="searchQuery">
+        <input type="text" id="search" placeholder="Suche" v-model="searchQuery">
       </div>
 
       <div id="contactsBoxContainer">
-        <a v-for="(item, index) in filteredContacts" :key="index" @click="handleClickedContact(item,index)" class="contactItems" :id="String('contact-' + index)"
-           :class="{ highlighted: selectedContactIndex === index, 'font-bold': selectedContactIndex === index }">
-          {{ item.firstName }} {{ item.lastName }}<br>
+        <a
+            v-for="(item, index) in filteredContacts"
+            :key="index"
+            @click="handleClickedContact(item, index)"
+            class="contactItems"
+            :id="`contact-${index}`"
+            :class="{ highlighted: selectedContactIndex === index, 'font-bold': selectedContactIndex === index }"
+        >
+          <template v-if="item.firstName && item.lastName">
+            {{ item.firstName }} {{ item.lastName }}<br>
+          </template>
+          <template v-else-if="item.companyName">
+            {{ item.companyName }}<br>
+          </template>
+          <template v-else>
+            Unknown Contact<br>
+          </template>
         </a>
       </div>
 
     </div>
 
     <div id="contentContainer">
-      <personen-form-component :selectedContact="selectedContact" @contact-deleted="handleContactDeleted" @contact-updated="handleContactUpdated" @contact-added="handleAddedContact"
+      <personen-form-component
+          :selectedContact="selectedContact"
+          @contact-deleted="handleContactDeleted"
+          @contact-updated="handleContactUpdated"
+          @contact-added="handleAddedContact"
       ></personen-form-component>
     </div>
   </div>
 </template>
 
 <style scoped>
-#flexHeadline{
+#flexHeadline {
   display: flex;
   flex-direction: row;
 }
 
-#flexHeadline *{
+#flexHeadline * {
   width: 50%;
 }
+
 #newContact {
   background-color: #0086D4;
   border-radius: 25%;
@@ -146,11 +226,11 @@ onMounted( () => {
   margin-top: 2vh;
 }
 
-#newContact:focus{
+#newContact:focus {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-#newContact:hover{
+#newContact:hover {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
@@ -160,17 +240,20 @@ onMounted( () => {
   padding: 10%;
 }
 
-.contactItems.highlighted{
+.contactItems.highlighted {
   font-weight: bold;
 }
-#contactsBoxContainer a:hover{
+
+#contactsBoxContainer a:hover {
   cursor: pointer;
 }
-#contactsBoxContainer{
+
+#contactsBoxContainer {
   margin-left: 10%;
   margin-top: 5%;
 }
-#headline{
+
+#headline {
   font-weight: var(--font-weight-medium);
   padding: 2vh 0 1vh 1.5vw;
 }
@@ -198,20 +281,23 @@ onMounted( () => {
   font-size: 0.3rem;
 }
 
-#bigContainer{
+#bigContainer {
   width: 80%;
   height: 80vh;
   display: flex;
   flex-direction: row;
   margin: auto;
   margin-top: 4vh;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+  0 6px 20px 0 rgba(0, 0, 0, 0.12);
 }
-#listContainer{
+
+#listContainer {
   width: 25%;
   border-right: rgba(0, 0, 0, 0.20) solid 2px;
 }
-#contentContainer{
+
+#contentContainer {
   width: 75%;
 }
 </style>

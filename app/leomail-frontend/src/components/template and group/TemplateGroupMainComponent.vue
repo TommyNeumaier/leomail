@@ -53,7 +53,7 @@ const handleCreate = () => {
 const handleClick = (item) => {
   selectedTemplate.value = item;
   if(route.path.includes('groups')) {
-    Service.getInstance().getGroupDetails(item.id, appStore.$state.project).then((response) => {
+    Service.getInstance().getGroupDetails(appStore.$state.project, item.id).then((response) => {
       selectedTemplate.value = response.data;
       console.log(response)
     });

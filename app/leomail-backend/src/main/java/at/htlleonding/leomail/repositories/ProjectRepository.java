@@ -1,8 +1,9 @@
 package at.htlleonding.leomail.repositories;
 
 import at.htlleonding.leomail.entities.Contact;
+import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.entities.Project;
-import at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO;
+import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import at.htlleonding.leomail.model.dto.project.ProjectAddDTO;
 import at.htlleonding.leomail.model.dto.project.ProjectOverviewDTO;
 import at.htlleonding.leomail.model.exceptions.ObjectContainsNullAttributesException;
@@ -12,7 +13,9 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -21,48 +24,112 @@ public class ProjectRepository {
     @Inject
     EntityManager em;
 
+    /**
+     * Retrieves personal projects for a given contact ID.
+     *
+     * @param contactId The ID of the contact.
+     * @return A list of ProjectOverviewDTO.
+     */
     public List<ProjectOverviewDTO> getPersonalProjects(String contactId) {
-        return em.createQuery("SELECT NEW at.htlleonding.leomail.model.dto.project.ProjectOverviewDTO(p.id, p.name) FROM Project p JOIN p.members m WHERE m.id = :contactId", ProjectOverviewDTO.class)
+        return em.createQuery(
+                        "SELECT NEW at.htlleonding.leomail.model.dto.project.ProjectOverviewDTO(p.id, p.name) " +
+                                "FROM Project p JOIN p.members m WHERE m.id = :contactId", ProjectOverviewDTO.class)
                 .setParameter("contactId", contactId)
                 .getResultList();
     }
 
+    /**
+     * Adds a new project to the database.
+     *
+     * @param projectAddDTO The DTO containing project details.
+     * @param creatorId     The ID of the creator contact.
+     */
     @Transactional
-    public void addProject(ProjectAddDTO projectAddDTO, String creator) {
+    public void addProject(ProjectAddDTO projectAddDTO, String creatorId) {
         if (projectAddDTO == null) {
             throw new ObjectContainsNullAttributesException(List.of("**ALL NULL**"));
         }
 
-        List<String> nullFields = Utilities.listNullFields(projectAddDTO, List.of("id", "description", "mailInformation", "members"));
+        // Validate mandatory fields
+        List<String> nullFields = Utilities.listNullFields(projectAddDTO, List.of("id", "description"));
         if (!nullFields.isEmpty()) {
             throw new ObjectContainsNullAttributesException(nullFields);
         }
 
-        List<Contact> members = em.createQuery("SELECT c FROM Contact c WHERE c.id IN :ids", Contact.class)
-                .setParameter("ids", projectAddDTO.members().stream().map(ContactSearchDTO::id).collect(Collectors.toList()))
+        if (projectAddDTO.mailInformation() == null) {
+            throw new IllegalArgumentException("Mail information must not be null.");
+        }
+
+        if (projectAddDTO.members() == null || projectAddDTO.members().isEmpty()) {
+            throw new IllegalArgumentException("Project must have at least one member.");
+        }
+
+        // Collect member IDs
+        List<String> memberIds = projectAddDTO.members().stream()
+                .map(NaturalContactSearchDTO::id)
+                .collect(Collectors.toList());
+
+        // Fetch existing contacts
+        List<Contact> existingContacts = em.createQuery("SELECT c FROM Contact c WHERE c.id IN :ids", Contact.class)
+                .setParameter("ids", memberIds)
                 .getResultList();
 
-        for (ContactSearchDTO member : projectAddDTO.members()) {
-            if(Contact.find("id", member.id()).firstResult() == null) {
-                Contact newContact = new Contact(member.id(), member.firstName(), member.lastName(), member.mailAddress(), true);
-                em.persist(newContact);
-                members.add(newContact);
+        Map<String, Contact> existingContactsMap = existingContacts.stream()
+                .collect(Collectors.toMap(Contact::getId, c -> c));
+
+        List<NaturalContact> members = new ArrayList<>();
+
+        for (NaturalContactSearchDTO memberDTO : projectAddDTO.members()) {
+            Contact contact = existingContactsMap.get(memberDTO.id());
+            if (contact == null) {
+                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " does not exist.");
             }
-            else {
-                members.add(Contact.find("id", member.id()).firstResult());
+            if (!(contact instanceof NaturalContact)) {
+                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " is not a natural contact.");
             }
+            NaturalContact naturalContact = (NaturalContact) contact;
+            if (!naturalContact.kcUser) {
+                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " is not a Keycloak user.");
+            }
+            members.add(naturalContact);
         }
 
-        Contact creatorContact = em.find(Contact.class, creator);
-        if(creatorContact == null) {
-            throw new ObjectContainsNullAttributesException(List.of("creator"));
+        // Fetch the creator contact
+        Contact creatorContact = em.find(Contact.class, creatorId);
+        if (creatorContact == null) {
+            throw new IllegalArgumentException("Creator contact does not exist.");
         }
-        members.add(creatorContact);
+        if (!(creatorContact instanceof NaturalContact)) {
+            throw new IllegalArgumentException("Creator contact is not a natural contact.");
+        }
+        NaturalContact naturalCreator = (NaturalContact) creatorContact;
+        if (!naturalCreator.kcUser) {
+            throw new IllegalArgumentException("Creator contact is not a Keycloak user.");
+        }
 
-        Project project = new Project(projectAddDTO.name(), projectAddDTO.description(), creatorContact, projectAddDTO.mailInformation().mailAddress(), projectAddDTO.mailInformation().password(), members);
+        // Ensure the creator is in the members list
+        if (!members.contains(naturalCreator)) {
+            members.add(naturalCreator);
+        }
+
+        // Create and persist the new project
+        Project project = new Project(
+                projectAddDTO.name(),
+                projectAddDTO.description(),
+                naturalCreator,
+                projectAddDTO.mailInformation().mailAddress(),
+                projectAddDTO.mailInformation().password(),
+                new ArrayList<>(members)
+        );
         em.persist(project);
     }
 
+    /**
+     * Retrieves the name of a project by its ID.
+     *
+     * @param pid The project ID.
+     * @return The name of the project.
+     */
     public String getProjectName(String pid) {
         return em.createQuery("SELECT p.name FROM Project p WHERE p.id = :pid", String.class)
                 .setParameter("pid", pid)

@@ -19,6 +19,7 @@
     "@vuepic/vue-datepicker": "^9.0.0",
     "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.7.2",
+    "date-fns": "^4.1.0",
     "esbuild": "^0.23.0",
     "keycloak-js": "^25.0.1",
     "pinia": "^2.1.7",

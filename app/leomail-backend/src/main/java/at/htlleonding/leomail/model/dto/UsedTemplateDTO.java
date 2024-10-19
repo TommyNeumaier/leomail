@@ -7,7 +7,7 @@ import at.htlleonding.leomail.model.dto.template.TemplateMetaInformationDTO;
 
 import java.io.Serializable;
 
-public record UsedTemplateDTO(Long id,
+public record UsedTemplateDTO(String id,
                               TemplateMetaInformationDTO meta,
                               TemplateDateInformationDTO keyDates,
                               TemplateAccountInformationDTO accountInformation,

@@ -1,8 +1,8 @@
 package at.htlleonding.leomail.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 @Entity
 public class SentMail extends PanacheEntityBase {
@@ -11,10 +11,10 @@ public class SentMail extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Contact contact;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     public SentTemplate usedTemplate;
 

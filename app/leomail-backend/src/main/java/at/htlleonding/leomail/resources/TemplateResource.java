@@ -3,7 +3,8 @@ package at.htlleonding.leomail.resources;
 import at.htlleonding.leomail.entities.Template;
 import at.htlleonding.leomail.entities.TemplateGreeting;
 import at.htlleonding.leomail.model.dto.TemplateDTO;
-import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
+import at.htlleonding.leomail.model.dto.UsedTemplateDTO;
+import at.htlleonding.leomail.model.exceptions.contacts.ContactExistsInKeycloakException;
 import at.htlleonding.leomail.model.exceptions.greeting.NonExistingGreetingException;
 import at.htlleonding.leomail.model.exceptions.template.TemplateNameAlreadyExistsException;
 import at.htlleonding.leomail.repositories.TemplateRepository;
@@ -15,7 +16,11 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
-@Path("template")
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+@Path("template") // Ensure this matches the frontend request URL
 public class TemplateResource {
 
     @Inject
@@ -27,106 +32,191 @@ public class TemplateResource {
     @Inject
     PermissionService permissionService;
 
+    /**
+     * Retrieves all templates for a given project.
+     */
     @GET
     @Path("/get")
     @Authenticated
+    @Produces("application/json")
     public Response getProjectTemplates(@QueryParam("pid") String projectId) {
-        return Response.ok(templateRepository.getProjectTemplates(projectId)).build();
+        try {
+            List<TemplateDTO> templates = templateRepository.getProjectTemplates(projectId);
+            return Response.ok(templates).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
     }
 
+    /**
+     * Retrieves all template greetings.
+     */
     @GET
-    @Path("greetings")
+    @Path("/greetings")
     @Authenticated
+    @Produces("application/json")
     public Response getAllGreetings() {
-        return Response.ok(templateRepository.getAllGreetings()).build();
+        Set<TemplateGreeting> greetings = templateRepository.getAllGreetings();
+        return Response.ok(greetings).build();
     }
 
+    /**
+     * Retrieves a specific greeting by ID.
+     */
     @GET
-    @Path("greeting")
+    @Path("/greeting")
     @Authenticated
-    public Response getGreetingById(@QueryParam("gid") Long id) {
-        return Response.ok(TemplateGreeting.findById(id)).build();
+    @Produces("application/json")
+    public Response getGreetingById(@QueryParam("gid") String id) {
+        UUID greetingId;
+        try {
+            greetingId = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid greeting ID format").build();
+        }
+
+        TemplateGreeting greeting = TemplateGreeting.findById(greetingId);
+        if (greeting == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(greeting).build();
     }
 
+    /**
+     * Adds a new template.
+     */
     @POST
-    @Transactional
-    @Path("add")
+    @Path("/add")
     @Authenticated
+    @Consumes("application/json")
+    @Produces("application/json")
     public Response addTemplate(TemplateDTO templateDTO) {
         try {
-            return Response.ok(templateRepository.addTemplate(templateDTO, jwt.getClaim("sub"))).build();
+            TemplateDTO createdTemplate = templateRepository.addTemplate(templateDTO, jwt.getClaim("sub"));
+            return Response.status(Response.Status.CREATED).entity(createdTemplate).build();
         } catch (TemplateNameAlreadyExistsException excp) {
-            return Response.status(409).entity("E-Template-01").build();
+            return Response.status(Response.Status.CONFLICT).entity("E-Template-01").build();
         } catch (ContactExistsInKeycloakException excp) {
-            return Response.status(409).entity("E-Template-02").build();
+            return Response.status(Response.Status.CONFLICT).entity("E-Template-02").build();
         } catch (NonExistingGreetingException excp) {
-            return Response.status(409).entity("E-Template-03").build();
+            return Response.status(Response.Status.BAD_REQUEST).entity("E-Template-03").build();
         } catch (IllegalArgumentException e) {
-            return Response.status(418).entity(e.getMessage()).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 
+    /**
+     * Retrieves a template by ID.
+     */
     @GET
-    @Path("getById")
+    @Path("/getById")
     @Authenticated
-    public Response getById(Long id) {
-        try {
-            if(permissionService.hasPermission(id, jwt.getClaim("sub"))) {
-                return Response.ok(Template.findById(id)).build();
-            }
-            return Response.status(403).build();
-        } catch (IllegalArgumentException e) {
-            return Response.status(418).build();
+    @Produces("application/json")
+    public Response getById(@QueryParam("id") String id) {
+        Template template = Template.findById(id);
+        if (template == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
+
+        String userId = jwt.getClaim("sub");
+        if (permissionService.hasPermission(template.project.id, userId)) {
+            TemplateDTO templateDTO = new TemplateDTO(
+                    template.id,
+                    template.name,
+                    template.headline,
+                    template.content,
+                    template.greeting.id,
+                    template.createdBy.id,
+                    template.project.id);
+            return Response.ok(templateDTO).build();
+        }
+        return Response.status(Response.Status.FORBIDDEN).build();
     }
 
+    /**
+     * Deletes a template by ID.
+     */
     @DELETE
-    @Transactional
-    @Path("delete")
+    @Path("/delete")
     @Authenticated
-    public Response deleteById(@QueryParam("tid") Long tid, @QueryParam("pid") String pid) {
+    public Response deleteById(@QueryParam("tid") String tid, @QueryParam("pid") String pid) {
         try {
-            if (permissionService.hasPermission(pid, jwt.getClaim("sub"), tid)) {
+            String userId = jwt.getClaim("sub");
+            if (permissionService.hasPermission(pid, userId, tid)) {
                 templateRepository.deleteById(tid);
+                return Response.noContent().build();
             } else {
-                return Response.status(403).build();
+                return Response.status(Response.Status.FORBIDDEN).build();
             }
         } catch (IllegalArgumentException e) {
-            return Response.status(418).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
-        return Response.ok().build();
     }
 
+    /**
+     * Updates an existing template.
+     */
     @POST
-    @Transactional
-    @Path("update")
+    @Path("/update")
     @Authenticated
+    @Consumes("application/json")
+    @Produces("application/json")
     public Response updateTemplate(TemplateDTO templateDTO) {
         try {
-            if (permissionService.hasPermission(templateDTO.projectId(), jwt.getClaim("sub"), templateDTO.id())) {
-                return Response.ok(templateRepository.updateTemplate(templateDTO)).build();
+            String userId = jwt.getClaim("sub");
+            if (permissionService.hasPermission(templateDTO.projectId(), userId, templateDTO.id())) {
+                TemplateDTO updatedTemplate = templateRepository.updateTemplate(templateDTO);
+                return Response.ok(updatedTemplate).build();
             } else {
-                return Response.status(403).build();
+                return Response.status(Response.Status.FORBIDDEN).build();
             }
+        } catch (TemplateNameAlreadyExistsException excp) {
+            return Response.status(Response.Status.CONFLICT).entity("E-Template-01").build();
+        } catch (ContactExistsInKeycloakException excp) {
+            return Response.status(Response.Status.CONFLICT).entity("E-Template-02").build();
+        } catch (NonExistingGreetingException excp) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("E-Template-03").build();
         } catch (IllegalArgumentException e) {
-            return Response.status(418).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
 
+    /**
+     * Retrieves used templates, filtered by scheduled or sent.
+     */
     @GET
-    @Path("getUsedTemplates")
+    @Path("/getUsedTemplates")
     @Authenticated
-    public Response getScheduledUsedTemplates(@QueryParam("scheduled") boolean scheduled, @QueryParam("pid") String pid) {
-        if(!permissionService.hasPermission(pid, jwt.getClaim("sub"))){
-            return Response.status(403).build();
+    @Produces("application/json")
+    public Response getUsedTemplates(@QueryParam("scheduled") boolean scheduled, @QueryParam("pid") String pid) {
+        try {
+            String userId = jwt.getClaim("sub");
+            if (!permissionService.hasPermission(pid, userId)) {
+                return Response.status(Response.Status.FORBIDDEN).build();
+            }
+            List<UsedTemplateDTO> usedTemplates = templateRepository.getUsedTemplates(scheduled, pid);
+            return Response.ok(usedTemplates).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
-        return Response.ok(templateRepository.getUsedTemplates(scheduled, pid)).build();
     }
 
+    /**
+     * Retrieves a specific used template by ID.
+     */
     @GET
-    @Path("getUsedTemplate")
+    @Path("/getUsedTemplate")
     @Authenticated
-    public Response getUsedTemplate(@QueryParam("tid") Long tid, @QueryParam("pid") String pid) {
-        return Response.ok(templateRepository.getUsedTemplate(tid, pid, jwt.getClaim("sub"))).build();
+    @Produces("application/json")
+    public Response getUsedTemplate(@QueryParam("tid") String tid, @QueryParam("pid") String pid) {
+        try {
+            String userId = jwt.getClaim("sub");
+            UsedTemplateDTO usedTemplate = templateRepository.getUsedTemplate(tid, pid, userId);
+            return Response.ok(usedTemplate).build();
+        } catch (SecurityException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
     }
 }

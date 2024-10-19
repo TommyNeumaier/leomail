@@ -1,11 +1,10 @@
 package at.htlleonding.leomail.entities;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 public class Project extends PanacheEntityBase {
@@ -21,25 +20,25 @@ public class Project extends PanacheEntityBase {
     public String mailAddress;
     public String password;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Contact createdBy;
 
-    @OneToMany(mappedBy = "project")
-    public List<Group> groups;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    public List<Group> groups = new ArrayList<>();
 
-    @OneToMany(mappedBy = "project")
-    public List<Template> templates;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    public List<Template> templates = new ArrayList<>();
 
-    @OneToMany(mappedBy = "project")
-    public List<SentTemplate> sentTemplates;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    public List<SentTemplate> sentTemplates = new ArrayList<>();
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JoinTable(
             name = "project_contact",
             joinColumns = @JoinColumn(name = "project_id"),
             inverseJoinColumns = @JoinColumn(name = "contact_id")
     )
-    public List<Contact> members;
+    public List<Contact> members = new ArrayList<>();
 
     public Project() {
         this.createdOn = LocalDateTime.now();

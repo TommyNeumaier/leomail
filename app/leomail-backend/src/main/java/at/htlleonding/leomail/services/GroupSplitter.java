@@ -2,10 +2,12 @@ package at.htlleonding.leomail.services;
 
 import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.entities.Group;
-import at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO;
+import at.htlleonding.leomail.entities.NaturalContact;
+import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import at.htlleonding.leomail.repositories.ContactRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
 import java.util.*;
@@ -23,42 +25,51 @@ public class GroupSplitter {
     ContactRepository contactRepository;
 
     /**
-     * Holt alle Kontakte basierend auf den angegebenen Gruppen und Kontakt-IDs.
+     * Retrieves all contacts based on the specified groups and contact IDs.
      *
-     * @param groups   Liste der Gruppen-IDs
-     * @param contacts Liste der Kontakt-IDs
-     * @return Liste aller relevanten Kontakte
+     * @param groups   List of group IDs
+     * @param contacts List of contact IDs
+     * @return List of all relevant contacts
      */
     public List<Contact> getAllContacts(List<String> groups, List<String> contacts) {
+        Set<Contact> allContacts = new HashSet<>();
+
+        // Process individual contacts
         List<Contact> contactList = contacts.stream()
-                .map(contactId -> {
-                    Contact contact = Contact.findById(contactId);
-                    if (contact == null) {
-                        ContactSearchDTO user = keycloakAdminService.findUserAsContactSearchDTO(contactId);
-                        if (user != null) {
-                            contact = contactRepository.saveKeycloakUserLocally(user);
-                        } else {
-                            LOGGER.warnf("Benutzer mit ID %s nicht in Keycloak gefunden.", contactId);
-                        }
-                    }
-                    return contact;
-                })
+                .map(this::findOrCreateContact)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        allContacts.addAll(contactList);
 
-        Set<Contact> allContacts = new HashSet<>(contactList);
-
+        // Process groups
         for (String groupId : groups) {
             Group groupEntity = Group.findById(groupId);
             if (groupEntity != null && groupEntity.members != null) {
-                for (Contact member : groupEntity.members) {
-                    allContacts.add(member);
-                }
+                allContacts.addAll(groupEntity.members);
             } else {
-                LOGGER.warnf("Gruppe mit ID %s nicht gefunden oder hat keine Mitglieder.", groupId);
+                LOGGER.warnf("Group with ID %s not found or has no members.", groupId);
             }
         }
 
         return new ArrayList<>(allContacts);
+    }
+
+    /**
+     * Finds an existing contact by ID or creates a new one from Keycloak if not found.
+     *
+     * @param contactId ID of the contact
+     * @return Contact instance or null if not found
+     */
+    private Contact findOrCreateContact(String contactId) {
+        Contact contact = Contact.findById(contactId);
+        if (contact == null) {
+            NaturalContactSearchDTO userDTO = keycloakAdminService.findUserAsNaturalContactSearchDTO(contactId);
+            if (userDTO != null) {
+                contact = contactRepository.saveKeycloakUserLocally(userDTO.id(), userDTO.firstName(), userDTO.lastName(), userDTO.mailAddress());
+            } else {
+                LOGGER.warnf("User with ID %s not found in Keycloak.", contactId);
+            }
+        }
+        return contact;
     }
 }

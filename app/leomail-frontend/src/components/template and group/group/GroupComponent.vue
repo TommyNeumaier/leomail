@@ -1,20 +1,30 @@
 <script setup lang="ts">
-import {ref, onMounted, watch, computed} from 'vue';
-import {Service} from "@/services/service";
-import {useAppStore} from "@/stores/app.store";
+import { ref, onMounted, watch, computed } from 'vue';
+import { Service } from "@/services/service";
+import { useAppStore } from "@/stores/app.store";
 
-interface User {
-  id: number;
+interface NaturalUser {
+  type: 'natural';
+  id: string;
   firstName: string;
   lastName: string;
   mailAddress: string;
 }
 
+interface CompanyUser {
+  type: 'company';
+  id: string;
+  companyName: string;
+  mailAddress: string;
+}
+
+type ContactMember = NaturalUser | CompanyUser;
+
 interface Group {
   id: string;
   name: string;
   description: string;
-  members: User[];
+  members: ContactMember[];
 }
 
 const appStore = useAppStore();
@@ -23,8 +33,8 @@ const props = defineProps<{ selectedTemplate: Group | null }>();
 
 const groupName = ref('');
 const groupDescription = ref('');
-const selectedMembers = ref<User[]>([]);
-const users = ref<User[]>([]);
+const selectedMembers = ref<ContactMember[]>([]);
+const users = ref<ContactMember[]>([]);
 const searchTerm = ref('');
 const loading = ref(false);
 
@@ -34,14 +44,42 @@ const clearForm = () => {
   selectedMembers.value = [];
 };
 
-// Stellen Sie sicher, dass die Methode verfügbar ist
+// Expose clearForm if needed elsewhere
 defineExpose({ clearForm });
 
 const fetchUsers = async (query: string) => {
   loading.value = true;
   try {
     const response = await Service.getInstance().searchContacts(query);
-    users.value = response.data;
+    // Process the response to include 'type' based on presence of 'companyName' or 'firstName'
+    const processedUsers: ContactMember[] = response.data.map((user: any) => {
+      if (user.companyName) {
+        return {
+          type: 'company',
+          id: user.id,
+          companyName: user.companyName,
+          mailAddress: user.mailAddress
+        };
+      } else if (user.firstName && user.lastName) {
+        return {
+          type: 'natural',
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          mailAddress: user.mailAddress
+        };
+      } else {
+        console.warn('Unknown user type for user:', user);
+        return {
+          type: 'natural', // Defaulting to 'natural', adjust as needed
+          id: user.id,
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          mailAddress: user.mailAddress || ''
+        };
+      }
+    });
+    users.value = processedUsers;
   } catch (error) {
     console.error('Error fetching users:', error);
     users.value = [];
@@ -60,7 +98,7 @@ watch(searchTerm, (newTerm) => {
 
 const filteredUsers = computed(() => users.value);
 
-const selectUser = (user: User) => {
+const selectUser = (user: ContactMember) => {
   if (!selectedMembers.value.find(u => u.id === user.id)) {
     selectedMembers.value.push(user);
   }
@@ -68,41 +106,61 @@ const selectUser = (user: User) => {
   users.value = [];
 };
 
-const removeUser = (user: User) => {
+const removeUser = (user: ContactMember) => {
   selectedMembers.value = selectedMembers.value.filter(u => u.id !== user.id);
 };
 
 const addGroup = async () => {
   try {
+    // Validate that all members have the 'type' property
+    for (const member of selectedMembers.value) {
+      if (!member.type) {
+        throw new Error(`Member with ID ${member.id} is missing the 'type' property.`);
+      }
+    }
+
     const formData = {
       name: groupName.value,
       description: groupDescription.value,
       members: selectedMembers.value
     };
+    console.log('Group Payload:', formData); // Inspect the payload
     const response = await Service.getInstance().addGroup(appStore.$state.project, formData);
     console.log('Group created:', response.data);
-    emitEvents('group-added', formData);
+    emitEvents('group-added', response.data);
     clearForm();
-  } catch (error) {
+    alert('Group successfully created!');
+  } catch (error: any) {
     console.error('Error adding group:', error);
+    alert(`Error adding group: ${error.response?.data?.error || error.message}`);
   }
 };
 
 const updateGroup = async () => {
   try {
     if (!props.selectedTemplate) return;
+    // Validate that all members have the 'type' property
+    for (const member of selectedMembers.value) {
+      if (!member.type) {
+        throw new Error(`Member with ID ${member.id} is missing the 'type' property.`);
+      }
+    }
+
     const formData = {
       id: props.selectedTemplate.id,
       name: groupName.value,
       description: groupDescription.value,
       members: selectedMembers.value
     };
+    console.log('Group Update Payload:', formData); // Inspect the payload
     const response = await Service.getInstance().updateGroup(appStore.$state.project, formData);
     console.log('Group updated:', response.data);
-    emitEvents('group-saved', formData);
+    emitEvents('group-saved', response.data);
     clearForm();
-  } catch (error) {
+    alert('Group successfully updated!');
+  } catch (error: any) {
     console.error('Error updating group:', error);
+    alert(`Error updating group: ${error.response?.data?.error || error.message}`);
   }
 };
 
@@ -112,8 +170,10 @@ const removeGroup = async () => {
     await Service.getInstance().deleteGroup(appStore.$state.project, props.selectedTemplate.id);
     emitEvents('group-removed', props.selectedTemplate);
     clearForm();
-  } catch (error) {
+    alert('Group successfully removed!');
+  } catch (error: any) {
     console.error('Error removing group:', error);
+    alert(`Error removing group: ${error.response?.data?.error || error.message}`);
   }
 };
 
@@ -134,7 +194,6 @@ onMounted(() => {
     selectedMembers.value = props.selectedTemplate.members;
   }
 });
-
 </script>
 
 <template>
@@ -150,6 +209,7 @@ onMounted(() => {
             class="formGroup"
             placeholder="Geben Sie einen Gruppennamen ein..."
             v-model="groupName"
+            required
         >
       </div>
 
@@ -162,6 +222,7 @@ onMounted(() => {
             class="formGroup"
             placeholder="Geben Sie eine kurze Beschreibung zur Gruppe ein..."
             v-model="groupDescription"
+            required
         ></textarea>
       </div>
 
@@ -171,13 +232,16 @@ onMounted(() => {
         </div>
         <div class="multiselect">
           <div class="selected" v-for="user in selectedMembers" :key="user.id">
-            {{ user.firstName }} {{ user.lastName }} <span class="remove" @click="removeUser(user)">×</span>
+            <span v-if="user.type === 'natural'">{{ user.firstName }} {{ user.lastName }}</span>
+            <span v-else-if="user.type === 'company'">{{ user.companyName }}</span>
+            <span class="remove" @click="removeUser(user)">×</span>
           </div>
           <input type="text" v-model="searchTerm" class="formGroup" placeholder="Benutzer suchen">
           <ul v-if="searchTerm.length > 0 && filteredUsers.length">
             <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
               <div class="user-info">
-                <span>{{ user.firstName }} {{ user.lastName }}</span>
+                <span v-if="user.type === 'natural'">{{ user.firstName }} {{ user.lastName }}</span>
+                <span v-else-if="user.type === 'company'">{{ user.companyName }}</span>
                 <small>{{ user.mailAddress }}</small>
               </div>
             </li>
@@ -194,8 +258,19 @@ onMounted(() => {
     </form>
   </div>
 </template>
-
 <style scoped>
+.selected {
+  display: inline-flex;
+  align-items: center;
+  background-color: lightblue;
+  color: white;
+  border-radius: 3px;
+  padding: 2px 5px;
+  margin-right: 5px;
+  margin-bottom: 3px;
+  font-size: 0.5em;
+}
+
 .dataBox {
   margin-bottom: 1%;
 }

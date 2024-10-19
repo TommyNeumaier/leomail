@@ -1,6 +1,7 @@
 package at.htlleonding.leomail.repositories;
 
 import at.htlleonding.leomail.entities.Contact;
+import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.ProfileDTO;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -14,7 +15,7 @@ public class UserRepository {
     }
 
     public ProfileDTO getProfile(String id) {
-        Contact contact = Contact.findById(id);
+        NaturalContact contact = Contact.findById(id);
         if(contact == null) throw new RuntimeException("User not found");
         return new ProfileDTO(contact.firstName, contact.lastName, contact.mailAddress, "contact.schoolClass", "contact.departement");
     }

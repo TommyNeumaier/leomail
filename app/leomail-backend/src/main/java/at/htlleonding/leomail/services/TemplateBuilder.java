@@ -1,6 +1,8 @@
 package at.htlleonding.leomail.services;
 
+import at.htlleonding.leomail.entities.CompanyContact;
 import at.htlleonding.leomail.entities.Contact;
+import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.entities.Template;
 import io.quarkus.qute.Engine;
 import io.quarkus.qute.TemplateInstance;
@@ -20,14 +22,14 @@ public class TemplateBuilder {
     Engine engine;
 
     /**
-     * Rendert Templates basierend auf der Vorlage, den Kontakten und dem Personalisierungsflag.
+     * Renders templates based on the template, contacts, and personalization flag.
      *
-     * @param templateId    ID der Vorlage
-     * @param contacts      Liste der Kontakte
-     * @param personalized  Wenn true, werden die Templates personalisiert
-     * @return Liste der gerenderten Templates als Strings
+     * @param templateId   ID of the template
+     * @param contacts     List of contacts
+     * @param personalized If true, the templates are personalized
+     * @return List of rendered templates as strings
      */
-    public List<String> renderTemplates(Long templateId, List<Contact> contacts, boolean personalized) {
+    public List<String> renderTemplates(String templateId, List<Contact> contacts, boolean personalized) {
         List<TemplateInstance> instances = buildTemplateInstances(templateId, contacts, personalized);
         List<String> renderedTemplates = new ArrayList<>(instances.size());
 
@@ -35,9 +37,9 @@ public class TemplateBuilder {
             try {
                 String rendered = instance.render();
                 renderedTemplates.add(rendered);
-                LOGGER.debugf("Gerendertes Template: %s", rendered);
+                LOGGER.debugf("Rendered Template: %s", rendered);
             } catch (Exception e) {
-                LOGGER.error("Fehler beim Rendern des Templates", e);
+                LOGGER.error("Error rendering template", e);
             }
         }
 
@@ -45,23 +47,25 @@ public class TemplateBuilder {
     }
 
     /**
-     * Baut eine Liste von TemplateInstance basierend auf der Vorlage und den Kontakten.
+     * Builds a list of TemplateInstance based on the template and contacts.
      *
-     * @param templateId    ID der Vorlage
-     * @param contacts      Liste der Kontakte
-     * @param personalized  Wenn true, werden die Templates personalisiert
-     * @return Liste von TemplateInstance
+     * @param templateId   ID of the template
+     * @param contacts     List of contacts
+     * @param personalized If true, the templates are personalized
+     * @return List of TemplateInstance
      */
-    private List<TemplateInstance> buildTemplateInstances(Long templateId, List<Contact> contacts, boolean personalized) {
+    private List<TemplateInstance> buildTemplateInstances(String templateId, List<Contact> contacts, boolean personalized) {
         Template template = Template.findById(templateId);
         if (template == null) {
-            LOGGER.errorf("Vorlage mit ID %d nicht gefunden.", templateId);
-            throw new IllegalArgumentException("Vorlage nicht gefunden.");
+            LOGGER.errorf("Template with ID %d not found.", templateId);
+            throw new IllegalArgumentException("Template not found.");
         }
 
         String combinedTemplate = template.greeting.templateString + "<br>" + template.content;
         io.quarkus.qute.Template quteTemplate = engine.parse(combinedTemplate);
         List<String> templateVariables = extractTemplateVariables(combinedTemplate);
+
+        LOGGER.debugf("Template Variables Extracted: %s", templateVariables);
 
         List<TemplateInstance> instances = new ArrayList<>(contacts.size());
 
@@ -74,9 +78,8 @@ public class TemplateBuilder {
                 }
             }
             instance.data("personalized", personalized);
-            if (personalized) {
-                instance.data("sex", contact.attributes.get("sex"));
-            }
+            instance.data("sex", contact instanceof NaturalContact naturalContact ? naturalContact.gender.toString(): "");
+            LOGGER.debugf("Data Map for Contact ID %s: [personalized=%s]", contact.id, personalized);
             instances.add(instance);
         }
 
@@ -84,10 +87,10 @@ public class TemplateBuilder {
     }
 
     /**
-     * Extrahiert die Variablen aus dem Template-Inhalt.
+     * Extracts variables from the template content.
      *
-     * @param templateContent Inhalt des Templates
-     * @return Liste der Variablen
+     * @param templateContent Content of the template
+     * @return List of variables
      */
     private List<String> extractTemplateVariables(String templateContent) {
         List<String> variables = new ArrayList<>();
@@ -104,33 +107,111 @@ public class TemplateBuilder {
                 break;
             }
         }
+        LOGGER.debugf("Extracted Variables: %s", variables);
         return variables;
     }
 
     /**
-     * Prüft, ob eine Variable ein Kontrollstatement ist.
+     * Checks if a variable is a control statement.
      *
-     * @param variable Name der Variable
-     * @return true, wenn es ein Kontrollstatement ist, sonst false
+     * @param variable Name of the variable
+     * @return true if it is a control statement, else false
      */
     private boolean isControlStatement(String variable) {
         List<String> controlStatements = List.of("if", "else", "for", "end", "set", "define", "include", "extends");
-        return controlStatements.stream().anyMatch(variable::startsWith);
+        // Remove any leading '#' or '/'
+        String strippedVariable = (variable.startsWith("#") || variable.startsWith("/")) ? variable.substring(1) : variable;
+        boolean isControl = controlStatements.stream().anyMatch(strippedVariable::startsWith);
+        if (isControl) {
+            LOGGER.debugf("Identified Control Statement: %s", variable);
+        }
+        return isControl;
     }
 
     /**
-     * Holt den Wert eines Kontaktes basierend auf der Variable.
+     * Gets the value of a contact based on the variable.
      *
-     * @param contact  Kontakt
-     * @param variable Variable im Template
-     * @return Wert des Kontaktes für die Variable
+     * @param contact  Contact
+     * @param variable Variable in the template
+     * @return Value of the contact for the variable
      */
     private String getContactValue(Contact contact, String variable) {
-        return switch (variable.toLowerCase()) {
-            case "firstname" -> contact.firstName;
-            case "lastname" -> contact.lastName;
-            case "mailaddress" -> contact.mailAddress;
-            default -> contact.attributes.get(variable);
-        };
+        String value;
+        if (contact instanceof NaturalContact naturalContact) {
+            value = getNaturalContactValue(naturalContact, variable);
+        } else if (contact instanceof CompanyContact companyContact) {
+            value = getCompanyContactValue(companyContact, variable);
+        } else {
+            value = null;
+        }
+        LOGGER.debugf("Variable '%s' mapped to '%s' for Contact ID %s", variable, value, contact.id);
+        return value;
+    }
+
+    /**
+     * Gets the value for a NaturalContact based on the variable.
+     *
+     * @param contact  NaturalContact
+     * @param variable Variable in the template
+     * @return Value of the contact for the variable
+     */
+    private String getNaturalContactValue(NaturalContact contact, String variable) {
+        String value;
+        switch (variable.toLowerCase()) {
+            case "firstname":
+                value = contact.firstName;
+                break;
+            case "lastname":
+                value = contact.lastName;
+                break;
+            case "mailaddress":
+                value = contact.mailAddress;
+                break;
+            case "prefixtitle":
+                value = contact.prefixTitle != null ? contact.prefixTitle : "";
+                break;
+            case "suffixtitle":
+                value = contact.suffixTitle != null ? contact.suffixTitle : "";
+                break;
+            case "company":
+                value = contact.company;
+                break;
+            case "positionatcompany":
+                value = contact.positionAtCompany;
+                break;
+            case "gender":
+            case "sex":
+                value = contact.gender != null ? contact.gender.toString() : "";
+                break;
+            default:
+                LOGGER.warnf("Unknown template variable: %s for NaturalContact", variable);
+                value = null;
+        }
+        LOGGER.debugf("Mapping variable '%s' to value '%s' for Contact ID %s", variable, value, contact.id);
+        return value;
+    }
+
+    /**
+     * Gets the value for a CompanyContact based on the variable.
+     *
+     * @param contact  CompanyContact
+     * @param variable Variable in the template
+     * @return Value of the contact for the variable
+     */
+    private String getCompanyContactValue(CompanyContact contact, String variable) {
+        String value;
+        switch (variable.toLowerCase()) {
+            case "companyname":
+                value = contact.companyName;
+                break;
+            case "mailaddress":
+                value = contact.mailAddress;
+                break;
+            default:
+                LOGGER.warnf("Unknown template variable: %s for CompanyContact", variable);
+                value = null;
+        }
+        LOGGER.debugf("Mapping variable '%s' to value '%s' for CompanyContact ID %s", variable, value, contact.id);
+        return value;
     }
 }

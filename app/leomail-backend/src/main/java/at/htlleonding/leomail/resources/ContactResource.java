@@ -1,26 +1,30 @@
 package at.htlleonding.leomail.resources;
 
-import at.htlleonding.leomail.model.dto.contacts.ContactAddDTO;
-import at.htlleonding.leomail.model.dto.contacts.ContactDetailDTO;
-import at.htlleonding.leomail.model.dto.contacts.ContactSearchDTO;
+import at.htlleonding.leomail.contracts.ContactSearchResult;
+import at.htlleonding.leomail.model.dto.contacts.*;
 import at.htlleonding.leomail.model.exceptions.ObjectContainsNullAttributesException;
-import at.htlleonding.leomail.model.exceptions.account.ContactExistsInKeycloakException;
+import at.htlleonding.leomail.model.exceptions.contacts.ContactExistsInKeycloakException;
+import at.htlleonding.leomail.model.exceptions.contacts.ContactInUseException;
+import at.htlleonding.leomail.model.exceptions.contacts.ContactKcUserException;
 import at.htlleonding.leomail.repositories.ContactRepository;
-import io.quarkus.cache.CacheResult;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.logging.Logger;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.List;
 
-@Path("/users")
+@Path("/contacts")
+@Authenticated
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class ContactResource {
+
+    private static final Logger LOGGER = Logger.getLogger(ContactResource.class);
 
     @Inject
     ContactRepository contactRepository;
@@ -28,67 +32,140 @@ public class ContactResource {
     @Inject
     JsonWebToken jwt;
 
-    @GET
-    @Path("/get")
+    @POST
+    @Path("/add/natural")
     @Transactional
-    public Response getContacts() {
-        List<ContactSearchDTO> results = contactRepository.searchContacts(null, false, jwt.getClaim("sub"));
-        return Response.ok(results).build();
+    public Response addNaturalContact(NaturalContactAddDTO contactDTO) {
+        try {
+            contactRepository.addContact(contactDTO);
+            return Response.status(Response.Status.CREATED).entity("Natural contact created successfully.").build();
+        } catch (ContactExistsInKeycloakException e) {
+            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+        } catch (ObjectContainsNullAttributesException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getFields() + ": These fields are missing or null.").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while adding natural contact", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
+        }
+    }
+
+    @POST
+    @Path("/add/company")
+    @Transactional
+    public Response addCompanyContact(CompanyContactAddDTO contactDTO) {
+        try {
+            contactRepository.addContact(contactDTO);
+            return Response.status(Response.Status.CREATED).entity("Company contact created successfully.").build();
+        } catch (ContactExistsInKeycloakException e) {
+            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+        } catch (ObjectContainsNullAttributesException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getFields() + ": These fields are missing or null.").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while adding company contact", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
+        }
     }
 
     @GET
     @Path("/single")
     public Response getContact(@QueryParam("id") String id) {
-        return Response.ok(contactRepository.getContact(id)).build();
+        try {
+            Object contactDetail = contactRepository.getContact(id);
+            return Response.ok(contactDetail).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while fetching contact", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
+        }
     }
 
     @GET
-    @Path("/search")
-    @Transactional
-    @CacheResult(cacheName = "contact-search")
-    public Response searchContacts(@QueryParam("query") String searchTerm, @QueryParam("kc") boolean keycloakOnly) {
-        List<ContactSearchDTO> results = contactRepository.searchContacts(searchTerm, keycloakOnly, jwt.getClaim("sub"));
-        return Response.ok(results).build();
+    @Path("/search/natural")
+    public Response searchNaturalContacts(@QueryParam("query") String searchTerm) {
+        try {
+            List<NaturalContactSearchDTO> results = contactRepository.searchNaturalContacts(searchTerm, jwt.getClaim("sub"));
+            return Response.ok(results).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while searching natural contacts", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
+        }
     }
 
-    @POST
-    @Path("/add")
-    @Transactional
-    @Authenticated
-    public Response addContact(ContactAddDTO contactDTO) {
+    @GET
+    @Path("/search/company")
+    public Response searchCompanyContacts(@QueryParam("query") String searchTerm) {
         try {
-            contactRepository.addContact(contactDTO);
-            return Response.ok().build();
-        } catch (ContactExistsInKeycloakException e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
-        } catch (ObjectContainsNullAttributesException e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getFields() + ": These fields are missing / null. Please also check upper-/lowercase spelling").build();
+            List<CompanyContactSearchDTO> results = contactRepository.searchCompanyContacts(searchTerm, jwt.getClaim("sub"));
+            return Response.ok(results).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while searching company contacts", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
+        }
+    }
+
+    @GET
+    @Path("/search/all")
+    public Response searchAllContacts(@QueryParam("query") String searchTerm) {
+        try {
+            List<ContactSearchResult> results = contactRepository.searchAllContacts(searchTerm, jwt.getClaim("sub"));
+            return Response.ok(results).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while searching all contacts", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
         }
     }
 
     @POST
+    @Path("/update/natural")
+    @Transactional
+    public Response updateNaturalContact(NaturalContactDetailDTO contactDTO) {
+        try {
+            contactRepository.updateContact(contactDTO);
+            return Response.ok().entity("Natural contact updated successfully.").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while updating natural contact", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
+        }
+    }
+
+    @POST
+    @Path("/update/company")
+    @Transactional
+    public Response updateCompanyContact(CompanyContactDetailDTO contactDTO) {
+        try {
+            contactRepository.updateContact(contactDTO);
+            return Response.ok().entity("Company contact updated successfully.").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while updating company contact", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
+        }
+    }
+
+    @DELETE
     @Path("/delete")
     @Transactional
-    @Authenticated
     public Response deleteContact(@QueryParam("id") String id) {
         try {
             contactRepository.deleteContact(id);
-            return Response.ok().build();
+            return Response.ok().entity("Contact deleted successfully.").build();
+        } catch (ContactKcUserException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (ContactInUseException e) {
+            return Response.status(Response.Status.CONFLICT).entity(e.getMessage()).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
-        }
-    }
-
-    @POST
-    @Path("/update")
-    @Transactional
-    @Authenticated
-    public Response updateContact(ContactDetailDTO contactDTO) {
-        try {
-            contactRepository.updateContact(contactDTO);
-            return Response.ok().build();
-        } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+            LOGGER.error("Unexpected error while deleting contact", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An unexpected error occurred.").build();
         }
     }
 }

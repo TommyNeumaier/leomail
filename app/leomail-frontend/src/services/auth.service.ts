@@ -17,8 +17,8 @@ export const login = async (username: string, password: string) => {
             isLoginRequest: true
         }).then((response) => {
             appStore.project = '';
-            const {access_token, refresh_token} = response.data;
-            authStore.setTokens(access_token, refresh_token);
+            const {access_token: accessToken, refresh_token: refreshToken} = response.data;
+            authStore.setTokens(accessToken, refreshToken);
         });
         return true;
     } catch (error) {
@@ -44,9 +44,9 @@ export const refreshToken = async () => {
             });
 
             console.log("Refresh token response:", response.data);
-            const { access_token, refresh_token: new_refresh_token } = response.data;
+            const { accessToken, refreshToken: new_refresh_token } = response.data;
             authStore.setTokens(access_token, new_refresh_token);
-            return { access_token, refresh_token: new_refresh_token };
+            return { accessToken, refreshToken: new_refresh_token };
         } catch (error) {
             console.error("Error refreshing token:", error);
             authStore.logout();
