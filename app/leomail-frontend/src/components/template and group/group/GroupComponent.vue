@@ -206,58 +206,6 @@ const validateForm = () => {
   return true;
 };
 
-const addGroup = async () => {
-  if (!validateForm()) return; // Validierung vor dem Erstellen
-
-  try {
-    const formData = {
-      name: groupName.value,
-      description: groupDescription.value,
-      members: selectedMembers.value
-    };
-    const response = await Service.getInstance().addGroup(appStore.$state.project, formData);
-    console.log('Group created:', response.data);
-    emitEvents('group-added', formData);
-    clearForm();
-  } catch (error) {
-    console.error('Error adding group:', error);
-  }
-};
-
-const updateGroup = async () => {
-  if (!validateForm()) return; // Validierung vor dem Speichern
-
-  try {
-    if (!props.selectedTemplate) return;
-    const formData = {
-      id: props.selectedTemplate.id,
-      name: groupName.value,
-      description: groupDescription.value,
-      members: selectedMembers.value
-    };
-    const response = await Service.getInstance().updateGroup(appStore.$state.project, formData);
-    console.log('Group updated:', response.data);
-    emitEvents('group-saved', formData);
-    clearForm();
-  } catch (error) {
-    console.error('Error updating group:', error);
-  }
-};
-
-const removeUser = (user: User) => {
-  selectedMembers.value = selectedMembers.value.filter(u => u.id !== user.id);
-};
-
-const removeGroup = async () => {
-  try {
-    if (!props.selectedTemplate) return;
-    await Service.getInstance().deleteGroup(appStore.$state.project, props.selectedTemplate.id);
-    emitEvents('group-removed', props.selectedTemplate);
-    clearForm();
-  } catch (error) {
-    console.error('Error removing group:', error);
-  }
-}
 </script>
 
 <template>

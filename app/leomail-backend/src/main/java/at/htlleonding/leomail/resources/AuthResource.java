@@ -159,8 +159,8 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateToken() {
         try {
-            long exp = jwt.getExpirationTime();
-            long iat = jwt.getIssuedAtTime();
+            long exp = jwt.getExpirationTime() * 1000;
+            long iat = jwt.getIssuedAtTime()* 1000;
 
             long currentTime = System.currentTimeMillis();
 
