@@ -153,6 +153,7 @@ interface Mail {
 const router = useRouter();
 const route = useRoute();
 const appStore = useAppStore();
+const projectId = appStore.$state.project;
 
 const isMailSent = ref(false);
 const fetchedMails = ref<Mail[]>([]);
@@ -163,7 +164,6 @@ const endIndex = ref(limit.value);
 const checkAllMails = ref(false);
 const selectedMailIds = ref<number[]>([]);
 
-// Notification timeout ID
 let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 const getMails = async () => {
@@ -260,6 +260,15 @@ const handleEmailClick = (mailId: number) => {
   // Implement navigation or other actions as needed
   router.push({ name: 'usedTemplate', params: { tid: mailId, pid: appStore.$state.project } });
 };
+
+
+
+watch(() => route.query.mailsend, (newValue) => {
+  if (newValue === 'true') {
+    isMailSent.value = true;
+    startTimeout();
+  }
+});
 
 const startTimeout = () => {
   if (timeoutId) {

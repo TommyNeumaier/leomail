@@ -29,7 +29,8 @@ const routes = [
   { path: '/projects/new', name: 'newProjects', component: NewProject, meta: { requiresAuth: true } },
   { path: '/contacts', name: 'contacts', component: PersonenView, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: ProfilView, meta: { requiresAuth: true } },
-  { path: '/authorisation', name: 'authorisation', component: AuthorisationView, meta: { requiresAuth: true } }
+  { path: '/authorisation', name: 'authorisation', component: AuthorisationView, meta: { requiresAuth: true } },
+ // { path: '/mail/:id/:projectId', name: 'MailDetail', component: () => import('@/views/MailDetailView.vue'), props: true, meta: { requiresAuth: true } }
 ];
 
 const router = createRouter({

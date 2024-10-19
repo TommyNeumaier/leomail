@@ -89,7 +89,7 @@ const fetchUsers = async (query: string) => {
 };
 
 watch(searchTerm, (newTerm) => {
-  if (newTerm.length > 0) {
+  if (newTerm.length > 2) {
     fetchUsers(newTerm);
   } else {
     users.value = [];
@@ -194,6 +194,70 @@ onMounted(() => {
     selectedMembers.value = props.selectedTemplate.members;
   }
 });
+
+const errorMessage = ref<string | null>(null);
+
+const validateForm = () => {
+  if (!groupName.value || !groupDescription.value || selectedMembers.value.length === 0) {
+    errorMessage.value = 'Alle Felder müssen ausgefüllt sein (Gruppenname, Beschreibung, Mitglieder)';
+    return false;
+  }
+  errorMessage.value = null; // Clear error if validation passes
+  return true;
+};
+
+const addGroup = async () => {
+  if (!validateForm()) return; // Validierung vor dem Erstellen
+
+  try {
+    const formData = {
+      name: groupName.value,
+      description: groupDescription.value,
+      members: selectedMembers.value
+    };
+    const response = await Service.getInstance().addGroup(appStore.$state.project, formData);
+    console.log('Group created:', response.data);
+    emitEvents('group-added', formData);
+    clearForm();
+  } catch (error) {
+    console.error('Error adding group:', error);
+  }
+};
+
+const updateGroup = async () => {
+  if (!validateForm()) return; // Validierung vor dem Speichern
+
+  try {
+    if (!props.selectedTemplate) return;
+    const formData = {
+      id: props.selectedTemplate.id,
+      name: groupName.value,
+      description: groupDescription.value,
+      members: selectedMembers.value
+    };
+    const response = await Service.getInstance().updateGroup(appStore.$state.project, formData);
+    console.log('Group updated:', response.data);
+    emitEvents('group-saved', formData);
+    clearForm();
+  } catch (error) {
+    console.error('Error updating group:', error);
+  }
+};
+
+const removeUser = (user: User) => {
+  selectedMembers.value = selectedMembers.value.filter(u => u.id !== user.id);
+};
+
+const removeGroup = async () => {
+  try {
+    if (!props.selectedTemplate) return;
+    await Service.getInstance().deleteGroup(appStore.$state.project, props.selectedTemplate.id);
+    emitEvents('group-removed', props.selectedTemplate);
+    clearForm();
+  } catch (error) {
+    console.error('Error removing group:', error);
+  }
+}
 </script>
 
 <template>
@@ -237,8 +301,19 @@ onMounted(() => {
             <span class="remove" @click="removeUser(user)">×</span>
           </div>
           <input type="text" v-model="searchTerm" class="formGroup" placeholder="Benutzer suchen">
+
+          <input
+              type="text"
+              v-model="searchTerm"
+              class="formGroup"
+              placeholder="Benutzer suchen"
+          />
           <ul v-if="searchTerm.length > 0 && filteredUsers.length">
-            <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
+            <li
+                v-for="user in filteredUsers"
+                :key="user.id"
+                @click="selectUser(user)"
+            >
               <div class="user-info">
                 <span v-if="user.type === 'natural'">{{ user.firstName }} {{ user.lastName }}</span>
                 <span v-else-if="user.type === 'company'">{{ user.companyName }}</span>
@@ -250,185 +325,250 @@ onMounted(() => {
         </div>
       </div>
 
+      <div id="selectedUsersList">
+        <div id="selectedRecipients">
+          <div class="tag" v-for="user in selectedMembers" :key="user.id">
+            {{ user.firstName }} {{ user.lastName }} <span class="remove" @click="removeUser(user)">✕</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fehleranzeige -->
+      <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
+
       <div id="buttonBox">
-        <button type="submit" id="submitButton">{{ props.selectedTemplate ? 'Speichern' : 'Erstellen' }}</button>
         <button type="button" @click="removeGroup" v-if="props.selectedTemplate" id="deleteButton">Löschen</button>
-        <!--<button type="button" @click="clearForm">Abbrechen</button>-->
+        <button type="submit" id="submitButton" :disabled="!groupName || !groupDescription || selectedMembers.length === 0">
+          {{ props.selectedTemplate ? 'Speichern' : 'Erstellen' }}
+        </button>
       </div>
     </form>
   </div>
 </template>
+
 <style scoped>
-.selected {
-  display: inline-flex;
-  align-items: center;
+/* Fehleranzeige */
+.error {
+  color: red;
+  font-size: 0.7em; /* Kleinere Schriftgröße für Fehlernachricht */
+  margin-top: 10px;
+  padding: 0.1em;
+}
+
+/* Tags für ausgewählte Benutzer/Gruppen */
+#selectedUsersList {
+  width: 100%;
+  height: 15vh;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  padding: 0.2rem;
+}
+
+#selectedRecipients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2%;
+  margin-bottom: 20px;
+}
+
+.tag {
   background-color: lightblue;
   color: white;
-  border-radius: 3px;
-  padding: 2px 5px;
-  margin-right: 5px;
-  margin-bottom: 3px;
-  font-size: 0.5em;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.remove {
+  margin-left: 8px;
+  cursor: pointer;
 }
 
 .dataBox {
-  margin-bottom: 1%;
+  margin-bottom: 1.5rem; /* Abstand zwischen den Eingabefeldern */
 }
 
 form {
-  padding: 2% 3%;
+  padding: 2% 3%; /* Innenabstand des Formulars */
 }
 
 #bigBox {
-  width: 100%;
+  width: 100%; /* Vollständige Breite des Formulars */
 }
 
+/* Label für Gruppenname, Beschreibung etc. */
 .group-label {
   color: #5A5A5A;
-  font-size: 1em;
+  font-size: 0.8em; /* Beibehaltung der originalen Schriftgröße */
 }
 
+/* Platzhalter-Text in den Eingabefeldern */
 .formGroup::placeholder {
   color: #B3B3B3;
 }
 
+/* Stil der Eingabefelder */
 .formGroup {
   display: block;
-  border: solid 1px #BEBEBE;
-  border-radius: 5px;
-  padding: 0.6vw;
-  width: 60%;
-  font-size: 0.8em;
+  border: solid 1px #D1D1D1;
+  border-radius: 8px;
+  padding: 0.8rem;
+  width: 100%;
+  font-size: 0.8em; /* Beibehaltung der originalen Schriftgröße */
+  margin-top: 0.1rem;
+  transition: border-color 0.2s ease;
 }
 
 .formGroup:focus {
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+  border-color: #4B81FD; /* Blaues Highlight beim Fokus */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Leichter Schatten bei Fokus */
 }
 
+/* Multiselect-Bereich */
 .multiselect {
   display: block;
-  border: solid 1px #BEBEBE;
-  border-radius: 5px;
-  padding: 0.6vw;
-  width: 60%;
-  font-size: 0.8em;
-  margin-bottom: 3%;
+  border: solid 1px #D1D1D1;
+  border-radius: 8px;
+  padding: 0.1rem 0;
+  width: 50%;
+  font-size: 0.8em; /* Originale Schriftgröße */
+  margin-bottom: 1.5rem;
   position: relative;
+  margin-top: 0.5rem;
+  transition: border-color 0.2s ease;
 }
 
+/* Ausgewählte Mitglieder-Tag */
 .selected {
   display: inline-flex;
   align-items: center;
-  background-color: lightblue;
+  background-color: #4B81FD; /* Blaue Hintergrundfarbe */
   color: white;
-  border-radius: 3px;
-  padding: 2px 5px;
-  margin-right: 5px;
-  margin-bottom: 3px;
-  font-size: 0.5em;
+  border-radius: 15px; /* Abgerundete Ecken */
+  padding: 0.4rem 0.8rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.5em; /* Originale Schriftgröße */
+  transition: background-color 0.2s ease;
+}
+
+.selected:hover {
+  background-color: #3a6ad4; /* Etwas dunkleres Blau beim Hover */
 }
 
 .remove {
   cursor: pointer;
-  margin-left: 5px;
+  margin-left: 8px;
+  font-size: 0.8rem; /* Größe des "×"-Symbols */
 }
 
-.remove:after {
-  content: '×';
-  color: white;
-  font-weight: bold;
-}
-
+/* Textfeld für Benutzersuche im Multiselect */
 .multiselect input[type="text"] {
   all: unset;
   width: 100%;
-  padding: 0.6vw;
   box-sizing: border-box;
-  border-radius: 5px;
+  border-radius: 8px;
+  margin: 0.8rem 0 0.8em 1em;
 }
 
+/* Dropdown-Liste der Suchergebnisse */
 ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
-  background-color: #FFF;
-  border: solid 1px #BEBEBE;
+  background-color: white;
+  border: solid 1px #D1D1D1;
   border-top: none;
   position: absolute;
   width: 100%;
   z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto; /* Scrollbar bei zu vielen Ergebnissen */
+  border-radius: 0 0 8px 8px;
 }
 
 li {
-  padding: 10px;
+  padding: 12px;
   cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
+li:hover {
+  background-color: #4B81FD; /* Hintergrund beim Hover */
+  color: white;
+  transition: background-color 0.2s ease;
+}
+
+li:hover .user-info small {
+  color: white; /* Kleiner Text in weiß beim Hover */
+}
+
+/* Benutzer-Info in der Liste (Name + E-Mail) */
 .user-info {
   display: flex;
   flex-direction: column;
 }
 
 .user-info small {
-  color: #B3B3B3;
+  color: #B3B3B3; /* Leicht graue Schrift für E-Mail */
 }
 
-li:hover {
-  background-color: rgba(75, 129, 253, 0.86);
-  color: white;
-}
-
-li:hover .user-info small {
-  color: white;
-}
-
+/* Fehleranzeige */
 .error {
   color: red;
-  font-size: 0.7em;
+  font-size: 0.7em; /* Kleine Schriftgröße für Fehlernachricht */
 }
 
+/* Button-Container */
 #buttonBox {
   display: flex;
+  flex-wrap: wrap;
+  margin-top: 2%;
+  justify-content: flex-end; /* Align items to the right */
 }
 
+/* Erstellen/Speichern Button */
 #submitButton {
   all: unset;
+  padding: 1vh 3vh;
   border-radius: 12px;
-  padding: 0.5vh 0;
   background-color: #78A6FF;
   color: white;
-  width: 10%;
   border: #78A6FF solid 1px;
   font-size: 0.8rem;
-  text-align: center;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-#deleteButton{
+/* Löschen Button */
+#deleteButton {
   all: unset;
   border-radius: 12px;
-  padding: 0.5vh 0;
+  margin-right: 0.5rem;
+  padding: 1vh 3vh;
   color: red;
-  width: 10%;
-  font-size: 0.8rem;
-  text-align: center;
+  font-size: 0.8rem; /* Originale Schriftgröße */
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 #submitButton:hover {
-  background-color: rgba(75, 129, 253, 0.86);
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+  background-color: #3a6ad4; /* Dunkleres Blau beim Hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Leichter Schatten beim Hover */
+}
+
+#deleteButton:hover {
+  font-weight: bold;
 }
 
 #submitButton:disabled {
-  background-color: lightgray;
+  background-color: lightgray; /* Deaktivierter Zustand */
   border-color: lightgray;
 }
 
 #submitButton:disabled:hover {
-  border-color: lightgray;
   box-shadow: none;
-}
-
-#deleteButton:hover {
- font-weight: bold;
 }
 </style>

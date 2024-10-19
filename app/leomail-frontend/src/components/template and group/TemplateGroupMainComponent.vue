@@ -49,7 +49,6 @@ const handleCreate = () => {
 };
 
 
-
 const handleClick = (item) => {
   selectedTemplate.value = item;
   if(route.path.includes('groups')) {
@@ -71,14 +70,25 @@ const handleRemovedObject = (removedObject) => {
   getData();
 };
 
-const handleSavedObject = (savedObject) => {
+const handleSavedObject = (savedObject = {}) => {
+  console.log("Saved object received:", savedObject); // Überprüfe das empfangene Objekt
+  if (!savedObject || Object.keys(savedObject).length === 0) {
+    console.error('Saved object is invalid or undefined!');
+    return;
+  }
+
   const index = fetchedData.value.findIndex(obj => obj.id === savedObject.id);
   if (index !== -1) {
     fetchedData.value[index] = savedObject;
+  } else {
+    fetchedData.value.push(savedObject);
   }
-  selectedTemplate.value = null;
+
   getData();
+  getData();
+  selectedTemplate.value = null;
 };
+
 
 onMounted(() => {
   getData();
@@ -155,6 +165,7 @@ watch(
 </template>
 
 <style scoped>
+
 #VGMainContainer {
   display: flex;
   flex-direction: row;
@@ -167,27 +178,31 @@ watch(
   display: flex;
   flex-direction: row;
 }
-
 #newVGButton {
-  all: unset;
+  background-color: unset;
+  border: none;
   color: #A3A3A3;
-  padding-left: 0.5vw;
   margin-top: 1vh;
   width: 100%;
   display: flex;
   align-items: center;
+  border-radius: 7px;
+  padding: 0.5vh 0.5vw;
+  transition: all 0.3s ease-in-out;
+  font-size: 1em;
 }
 
 #newVGButton:hover {
-  font-weight: bold;
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+#newVGButton:active {
+  padding: 1vh 1vw;
+  box-shadow: 0 6px 6px 0 rgba(0, 0, 0, 0.3);
 }
 
 #newVGButton img{
   margin-right: 0.5vw;
-}
-
-#newVGButton p {
-  font-size: 0.8rem;
 }
 
 #dataVGContainer {

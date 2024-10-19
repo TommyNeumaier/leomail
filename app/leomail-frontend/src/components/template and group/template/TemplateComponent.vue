@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import {onMounted, ref, watch} from 'vue';
 import Quill from 'quill'; // Stellen Sie sicher, dass Quill importiert ist
-import { Service } from '@/services/service';
+import {Service} from '@/services/service';
 import 'quill/dist/quill.snow.css';
 import AutocompleteModule from '../../../autocompleteModule'; // Pfad zu Ihrer Datei
-import { useAppStore } from "@/stores/app.store";
+import {useAppStore} from "@/stores/app.store";
 
 interface Greeting {
   id: number;
@@ -22,22 +22,25 @@ interface Template {
 const appStore = useAppStore();
 const inputName = ref('');
 const inputHeading = ref('');
-const selectedGreeting = ref<string | null>('');
+const selectedGreeting = ref<number | null>(null);
 const content = ref('');
 const greetingData = ref<Greeting[]>([]);
+const checkedCompany = ref(false);
+const checkedIndividual = ref(true);
+const pickedEntity = ref<string>('');
 const toolbarOptions = ref([
-  [{ 'font': [] }],
-  [{ 'size': ['small', false, 'large', 'huge'] }],
+  [{'font': []}],
+  [{'size': ['small', false, 'large', 'huge']}],
   ['bold', 'italic', 'underline', 'strike'],
-  [{ 'color': [] }, { 'background': [] }],
-  [{ 'align': [] }],
-  [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+  [{'color': []}, {'background': []}],
+  [{'align': []}],
+  [{'list': 'ordered'}, {'list': 'bullet'}, {'list': 'check'}],
   ['blockquote'],
   ['link', 'image', 'clean']
 ]);
 
 const quillEditor = ref<Quill | null>(null);
-const emitEvents = defineEmits(['template-added', 'template-removed', 'template-saved']);
+const emitEvents = defineEmits(['group-added', 'group-removed', 'group-saved']);
 const props = defineProps<{ selectedTemplate: Template | null }>();
 
 const getGreetings = async () => {
@@ -57,7 +60,7 @@ const addTemplate = async () => {
     console.log(formData);
     const response = await Service.getInstance().addTemplate(formData);
     console.log('Erfolgreich gesendet:', response.data);
-    emitEvents('template-added', formData);
+    emitEvents('group-added', formData);
     clearForm();
   } catch (error) {
     console.error('Fehler beim Senden der Daten:', error);
@@ -74,10 +77,11 @@ const updateTemplate = async () => {
       greeting: selectedGreeting.value,
       projectId: appStore.$state.project
     };
-    console.log(updatedData);
+    console.log("Updated data to emit:", updatedData);  // Debugging
     const response = await Service.getInstance().updateTemplate(updatedData);
     console.log('Erfolgreich gesendet:', response.data);
-    emitEvents('template-saved', updatedData);
+    emitEvents('group-saved', updatedData);
+    props.selectedTemplate = null;
     clearForm();
   } catch (error) {
     console.error('Fehler beim Speichern der Daten:', error);
@@ -90,7 +94,7 @@ const removeTemplate = async () => {
     try {
       const response = await Service.getInstance().removeTemplate(props.selectedTemplate?.id, appStore.$state.project);
       console.log('Erfolgreich gesendet:', response.data);
-      emitEvents('template-removed', props.selectedTemplate);
+      emitEvents('group-removed', props.selectedTemplate);
       clearForm();
     } catch (error) {
       console.error('Fehler beim Löschen der Daten:', error);
@@ -101,7 +105,7 @@ const removeTemplate = async () => {
 const clearForm = () => {
   inputName.value = '';
   inputHeading.value = '';
-  //selectedGreeting.value = selectedGreeting.disabled();
+  selectedGreeting.value = '';
   //content.value = '';
   // Falls ein Quill-Editor vorhanden ist, leere auch den Editor
   if (quillEditor.value) {
@@ -135,7 +139,7 @@ watch(
       if (newTemplate) {
         inputName.value = newTemplate.name;
         inputHeading.value = newTemplate.headline;
-        selectedGreeting.value = newTemplate.greeting?.id ?? '';
+        selectedGreeting.value = newTemplate.greeting;
         content.value = newTemplate.content;
 
         if (quillEditor.value) {
@@ -146,6 +150,17 @@ watch(
       }
     }
 );
+
+const handleEntities = (entity: string) => {
+  pickedEntity.value = entity;
+  if (entity === 'company') {
+    checkedCompany.value = true;
+    checkedIndividual.value = false;
+  } else if (entity === 'individual') {
+    checkedCompany.value = false;
+    checkedIndividual.value = true;
+  }
+};
 </script>
 
 <template>
@@ -169,21 +184,49 @@ watch(
         </select>
       </div>
     </div>
+
+    <div class="personContainer">
+      <div class="personBox">
+        <input
+            type="checkbox"
+            class="checkbox"
+            id="individual"
+            value="individual"
+            v-model="checkedIndividual"
+            @change="handleEntities('individual')"
+        />
+        <label for="individual">Privatperson</label>
+      </div>
+
+      <div class="personBox">
+        <input
+            type="checkbox"
+            class="checkbox"
+            id="company"
+            value="company"
+            v-model="checkedCompany"
+            @change="handleEntities('company')"
+        />
+        <label for="company">Unternehmen</label>
+      </div>
+    </div>
+    <img src="../../../assets/icons/icons8-info-250.png" id="tooltip" width="20"
+         v-tooltip="{ value: 'Vorname: {firstname} Nachname: {lastname} Email-Adresse: {mailAddress}', showDelay: 200, hideDelay: 400 }"
+         label="Save">
+
     <div class="editor-wrapper">
       <div id="editor" class="quill-editor"></div>
     </div>
-
-    <img src="../../../assets/icons/icons8-info-250.png" width="20" v-tooltip="{ value: 'Vorname: {firstname} Nachname: {lastname} Email-Adresse: {mailAddress}', showDelay: 200, hideDelay: 400 }" label="Save">
 
 
     <div id="buttonBox">
       <button v-if="!selectedTemplate" type="submit" class="saveTemplate" :disabled="selectedTemplate != null">
         Erstellen
       </button>
-      <button v-if="selectedTemplate" type="button" @click=removeTemplate class="saveTemplate" id="deleteButton"
-              :disabled="selectedTemplate == null">Löschen
+      <button v-if="selectedTemplate" type="button" @click="removeTemplate()" class="saveTemplate" id="deleteButton"
+              :disabled="selectedTemplate = null">Löschen
       </button>
-      <button v-if="selectedTemplate" type="button" @click=updateTemplate class="saveTemplate"
+      <button v-if="selectedTemplate" type="button" @click="updateTemplate()" class="saveTemplate"
               :disabled="selectedTemplate == null">Speichern
       </button>
     </div>
@@ -191,6 +234,29 @@ watch(
 </template>
 
 <style scoped>
+/* checkbox */
+.personBox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 15%;
+}
+
+.personBox label {
+  margin-left: 5%;
+}
+
+.personContainer {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+#tooltip {
+  display: flex;
+  margin-left: 97%;
+  margin-bottom: 0.2%;
+}
 
 #formFlexBox {
   display: flex;
@@ -210,9 +276,7 @@ watch(
 #buttonBox {
   display: flex;
   flex-wrap: wrap;
-  width: 25%;
   margin-top: 2%;
-  margin-left: 51vw;
   justify-content: flex-end; /* Align items to the right */
 }
 
@@ -225,6 +289,7 @@ watch(
   border: #78A6FF solid 1px;
   font-size: 0.8rem;
   margin-left: 2%;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .saveTemplate:hover {
@@ -243,7 +308,7 @@ watch(
 }
 
 #anredeBox {
-  margin-bottom: 3vh;
+  margin-bottom: 2vh;
   margin-left: 5%
 }
 
@@ -291,14 +356,14 @@ form {
 }
 
 #deleteButton {
-  background-color: #f5151c;
-  color: white;
-  border: #ff393f solid 1px;
+  background-color: white;
+  border: none;
+  color: #f5151c;
 }
 
 #deleteButton:hover {
-  background-color: rgba(253, 75, 96, 0.86);
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+  font-weight: var(--font-weight-bold);
+  box-shadow: none;
 }
 </style>
 

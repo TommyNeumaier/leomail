@@ -278,7 +278,6 @@ onMounted(() => {
   all: unset;
   width: 90%;
   margin-left: 3%;
-  font-size: 0.3rem;
 }
 
 #bigContainer {

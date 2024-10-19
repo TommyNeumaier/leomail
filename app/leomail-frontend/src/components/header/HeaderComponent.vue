@@ -46,10 +46,10 @@ const getProjectName = async () => {
     </RouterLink>
     <div id="HeaderLinkBox">
       <div class="routeBox">
-        <RouterLink to="/" activeClass="highlight" class="HeaderLinks">Projekte</RouterLink>
+        <RouterLink to="/" activeClass="highlight" class="headerLink">Projekte</RouterLink>
       </div>
       <div class="routeBox">
-        <RouterLink to="/contacts" activeClass="highlight" class="HeaderLinks">Personen</RouterLink>
+        <RouterLink to="/contacts" activeClass="highlight" class="headerLink">Personen</RouterLink>
       </div>
     </div>
     <div id="projectName" v-if="projectName">
@@ -155,7 +155,7 @@ body {
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 }
 
-.HeaderLinks {
+.headerLink {
   /*border-left: black solid 1px;
   border-right: black solid 1px;*/
   padding: 10%;
@@ -186,5 +186,9 @@ body {
 .highlight {
   font-weight: var(--font-weight-bold);
   border-bottom: lightgray solid 1px;
+}
+
+.headerLink:hover {
+  font-weight: var(--font-weight-bold);
 }
 </style>

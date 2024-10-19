@@ -66,6 +66,15 @@ export class Service {
         return axios.post(`/api/contacts/add/natural`, contactData);
     }
 
+    public getUsedTemplate(tid: boolean, pid: string) {
+        return axios.get(`/api/template/getUsedTemplate`, {
+            params: {
+                "tid": tid,
+                "pid": pid
+            }
+        });
+    }
+
     /**
      * Adds a new company contact.
      */
@@ -221,11 +230,4 @@ export class Service {
             }
         });
     }
-}
-
-interface Group {
-    id: undefined | string;
-    name: string;
-    description: string;
-    members: string[];
 }

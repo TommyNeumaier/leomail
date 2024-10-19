@@ -19,6 +19,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.FormParam;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 public class AuthResource {
 
     private static final Logger LOGGER = Logger.getLogger(AuthResource.class);
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(AuthResource.class);
 
     @Inject
     ContactRepository contactRepository;
@@ -157,8 +159,8 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateToken() {
         try {
-            long exp = jwt.getExpirationTime() * 1000;
-            long iat = jwt.getIssuedAtTime() * 1000;
+            long exp = jwt.getExpirationTime();
+            long iat = jwt.getIssuedAtTime();
 
             long currentTime = System.currentTimeMillis();
 

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import {Service} from "@/services/service";
+import { Service } from "@/services/service";
 
 const router = useRouter();
 
@@ -18,6 +18,7 @@ const searchTerm = ref('');
 const users = ref<User[]>([]);
 const loading = ref(false);
 
+// Funktion, um Benutzer basierend auf der Suchanfrage abzurufen
 const fetchUsers = async (query: string) => {
   loading.value = true;
   try {
@@ -31,8 +32,9 @@ const fetchUsers = async (query: string) => {
   }
 };
 
+// Watcher für die searchTerm, um nur bei mindestens 3 Zeichen die Suche auszuführen
 watch(searchTerm, (newTerm) => {
-  if (newTerm.length > 0) {
+  if (newTerm.length >= 3) {
     fetchUsers(newTerm);
   } else {
     users.value = [];
@@ -41,6 +43,7 @@ watch(searchTerm, (newTerm) => {
 
 const filteredUsers = computed(() => users.value);
 
+// Benutzer auswählen
 const selectUser = (user: User) => {
   if (!selectedUsers.value.find(u => u.id === user.id)) {
     selectedUsers.value.push(user);
@@ -49,10 +52,12 @@ const selectUser = (user: User) => {
   users.value = [];
 };
 
+// Benutzer entfernen
 const removeUser = (user: User) => {
   selectedUsers.value = selectedUsers.value.filter(u => u.id !== user.id);
 };
 
+// Formulardaten
 const formState = ref({
   name: '',
   description: '',
@@ -61,6 +66,7 @@ const formState = ref({
   members: selectedUsers.value
 });
 
+// Fehlerobjekt zur Validierung
 const errors = ref({
   name: '',
   description: '',
@@ -69,6 +75,7 @@ const errors = ref({
   selectedUsers: ''
 });
 
+// Formvalidierung
 const validateForm = () => {
   let valid = true;
 
@@ -120,6 +127,7 @@ const validateForm = () => {
   return valid;
 };
 
+// Formular abschicken
 const handleSubmit = () => {
   if (validateForm()) {
     console.log('Form submitted:', formState.value, selectedUsers.value);
@@ -132,7 +140,7 @@ const handleSubmit = () => {
       },
       members: selectedUsers.value,
     }).then(() => {
-      router.push({name: 'projects'});
+      router.push({ name: 'projects' });
     }).catch((error) => {
       console.error('Error creating project:', error);
     });
@@ -145,8 +153,9 @@ const handleSubmit = () => {
   }
 };
 
+// Zurück navigieren
 const handleBack = () => {
-  router.push({name: 'projects'});
+  router.push({ name: 'projects' });
 };
 </script>
 
@@ -160,6 +169,7 @@ const handleBack = () => {
 
       <form @submit.prevent="handleSubmit">
 
+        <!-- Projektname -->
         <div class="form-flex-group">
           <div class="form-flex-item">
             <div class="boxLabel">
@@ -189,6 +199,7 @@ const handleBack = () => {
           </div>
         </div>
 
+        <!-- Kurzbeschreibung -->
         <div class="boxLabel">
           <label for="description" class="project-label">Kurzbeschreibung (max. 240 Zeichen)</label><br>
         </div>
@@ -200,6 +211,7 @@ const handleBack = () => {
         ></textarea>
         <span class="error">{{ errors.description }}</span>
 
+        <!-- Mail & Passwort -->
         <div class="form-flex-group">
           <div class="form-flex-item">
             <div class="boxLabel">
@@ -229,42 +241,49 @@ const handleBack = () => {
           </div>
         </div>
 
+        <!-- Benutzer hinzufügen -->
         <div class="boxLabel">
           <label for="recipients" class="project-label">Benutzer hinzufügen</label>
-          <div class="input-container">
+          <div class="multiselect">
             <input
                 type="text"
                 v-model="searchTerm"
                 class="projectForm"
                 placeholder="Geben Sie hier den Namen eines Benutzers ein..."
-                style="width: 35%"
             />
-            <ul v-if="searchTerm.length > 0 && filteredUsers.length" class="autocomplete">
+            <!-- Autocomplete Dropdown -->
+            <ul v-if="searchTerm.length >= 3 && filteredUsers.length" class="autocomplete">
               <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
-                {{ user.firstName }} {{ user.lastName }} - {{ user.mailAddress }}
+                <div class="user-info">
+                  <span>{{ user.firstName }} {{ user.lastName }}</span>
+                  <small>{{ user.mailAddress }}</small>
+                </div>
               </li>
-              <li v-if="loading">Laden...</li>
+              <li v-if="loading" class="loading">Laden...</li>
             </ul>
           </div>
+          <span class="error">{{ errors.selectedUsers }}</span>
         </div>
 
+
+        <!-- Ausgewählte Benutzer anzeigen -->
         <div id="selectedUsersList">
           <div id="selectedRecipients">
             <div class="tag" v-for="user in selectedUsers" :key="user.id">
               {{ user.firstName }} {{ user.lastName }} <span class="tag-remove" @click="removeUser(user)">✕</span>
             </div>
           </div>
-          <span class="error">{{ errors.selectedUsers }}</span>
         </div>
 
+        <!-- Buttons -->
         <div id="buttonBox">
-          <button type="submit" id="saveButton" class="btn btn-primary">Speichern</button>
-          <button @click="handleBack" id="cancelButton" class="btn btn-secondary">Abbrechen</button>
+          <button type="submit" id="submitButton">Speichern</button>
         </div>
       </form>
     </div>
   </div>
 </template>
+
 
 <style scoped>
 /* Tags für ausgewählte Benutzer/Gruppen */
@@ -319,7 +338,7 @@ const handleBack = () => {
 
 /* content */
 #contentBox {
-  margin-top: 4vh;
+  margin-top: 2vh;
 }
 
 #bigBox {
@@ -389,17 +408,17 @@ form {
   margin-top: 0;
 }
 
-/* user select */
+/* Multiselect-Bereich */
 .multiselect {
   display: block;
-  border: solid 1px #BEBEBE;
-  border-radius: 5px;
-  padding: 0.6vw;
+  border: solid 1px #D1D1D1;
+  border-radius: 8px;
+  padding: 0.1rem 0;
   width: 50%;
-  font-size: 0.5em;
-  margin-bottom: 3%;
-  background-color: #F6F6F6;
+  font-size: 0.8em; /* Originale Schriftgröße */
   position: relative;
+  margin-top: 0.5rem;
+  transition: border-color 0.2s ease;
 }
 
 .selected {
@@ -438,67 +457,81 @@ ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
-  background-color: #FFF;
-  border: solid 1px #BEBEBE;
+  background-color: white;
+  border: solid 1px #D1D1D1;
   border-top: none;
   position: absolute;
   width: 100%;
   z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto; /* Scrollbar bei zu vielen Ergebnissen */
+  border-radius: 0 0 8px 8px;
 }
 
 li {
-  padding: 10px;
+  padding: 12px;
   cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
+li:hover {
+  background-color: lightblue; /* Hintergrund beim Hover */
+  color: white;
+  transition: background-color 0.2s ease;
+}
+
+li:hover .user-info small {
+  color: white; /* Kleiner Text in weiß beim Hover */
+}
+
+/* Benutzer-Info in der Liste (Name + E-Mail) */
 .user-info {
   display: flex;
   flex-direction: column;
 }
 
 .user-info small {
-  color: #B3B3B3;
+  color: #B3B3B3; /* Leicht graue Schrift für E-Mail */
 }
 
-li:hover {
-  background-color: rgba(75, 129, 253, 0.86);
-  color: white;
-}
-
-li:hover .user-info small {
-  color: white;
-}
 
 .error {
   color: red;
   font-size: 0.7em;
 }
 
-/* button */
+/* Button-Container */
+#buttonBox {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end; /* Align items to the right */
+}
+
+/* Erstellen Button */
 #submitButton {
   all: unset;
+  padding: 1vh 3vh;
   border-radius: 12px;
-  padding: 1vh 0;
   background-color: #78A6FF;
   color: white;
-  width: 100%;
   border: #78A6FF solid 1px;
   font-size: 0.8rem;
-  text-align: center;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 #submitButton:hover {
-  background-color: rgba(75, 129, 253, 0.86);
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+  background-color: #3a6ad4; /* Dunkleres Blau beim Hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Leichter Schatten beim Hover */
 }
 
 #submitButton:disabled {
-  background-color: lightgray;
+  background-color: lightgray; /* Deaktivierter Zustand */
   border-color: lightgray;
 }
 
 #submitButton:disabled:hover {
-  border-color: lightgray;
   box-shadow: none;
 }
 
