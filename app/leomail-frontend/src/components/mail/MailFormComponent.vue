@@ -1,10 +1,23 @@
 <template>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
   <div id="mailFormContainer">
     <div id="formHeader">
       <h1>Neue E-Mail</h1>
     </div>
     <div id="formContent">
       <form @submit.prevent="handlePreview" id="mailForm">
+        <!-- Absender Auswahl -->
+        <div class="form-group">
+          <label for="senderMail" class="form-label">Absender E-Mail:</label>
+          <div class="input-with-icon">
+            <select v-model="selectedSender" class="form-input">
+              <option :value="personalMail">Persönliche Mail: <{{ personalMail }}></option>
+              <option :value="projectMail">Projekt Mail: <{{ projectMail }}></option>
+            </select>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </div>
+
         <!-- Empfänger Auswahl -->
         <div class="form-group">
           <label for="recipients" class="form-label">Empfänger:</label>
@@ -21,7 +34,6 @@
                 v-if="searchTerm.length > 0 && (filteredUsers.length || filteredGroups.length)"
                 class="autocomplete"
             >
-
               <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
                 {{ user.firstName }} {{ user.lastName }} - {{ user.mailAddress }}
               </li>
@@ -84,7 +96,6 @@
         </div>
 
         <!-- Vorlage auswählen -->
-
         <div class="form-group">
           <label for="template" class="form-label">Vorlage:</label>
           <div id="mailFlexBox">
@@ -134,13 +145,12 @@
 </template>
 
 <script setup lang="ts">
-
-import {computed, onMounted, ref, watch} from 'vue';
-import {Service} from '@/services/service';
-import {useAppStore} from '@/stores/app.store';
-import {useRouter} from 'vue-router';
+import { computed, onMounted, ref, watch } from 'vue';
+import { Service } from '@/services/service';
+import { useAppStore } from '@/stores/app.store';
+import { useRouter } from 'vue-router';
 import MailPreviewComponent from '@/components/mail/MailPreviewComponent.vue';
-import {format} from 'date-fns';
+import { format } from 'date-fns';
 
 interface Template {
   id: number;
@@ -185,6 +195,19 @@ const showPreview = ref(false);
 // Neuer Ref für die Vorschau-Empfänger
 const previewRecipients = ref<User[]>([]);
 
+// Neue Referenzen für Absender-Mails
+const profileData = ref<User[]>([]);
+const personalMail = ref();
+const projectMail = 'projekt.mail@domain.com';
+const selectedSender = ref(personalMail); // Standardmäßig die persönliche Mail
+
+const getProfile = async () => {
+  const response = await Service.getInstance().getProfile();
+  profileData.value = response.data;
+  console.log(profileData.value.firstName)
+  personalMail.value = profileData.value.mailAddress;
+};
+
 const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value);
 
 const handlePreview = async () => {
@@ -205,7 +228,6 @@ const handlePreview = async () => {
 
     // Wenn Gruppen ausgewählt sind, lade ihre Mitglieder
     if (selectedGroups.value.length > 0) {
-      // Verwende Promise.all, um alle Gruppenmitglied-Abfragen parallel durchzuführen
       const groupUsersPromises = selectedGroups.value.map(group =>
           Service.getInstance().getUsersInGroup(group.id, appStore.$state.project)
       );
@@ -244,10 +266,6 @@ const closePreview = () => {
   showPreview.value = false;
 };
 
-const closeDropdown = () => {
-  dropdownVisible.value = false;
-};
-
 /* date picker */
 const date = ref({
   day: new Date().getDate().toString().padStart(2, "0"),
@@ -256,39 +274,18 @@ const date = ref({
 });
 
 const time = ref({
-  hours: new Date().getHours().toString().padStart(2, "0"),
-  minutes: new Date().getMinutes().toString().padStart(2, "0"),
-});
-
-const scheduledAt = ref({
-  ...date.value,
-  ...time.value
-});
-
-watch(date, (newDate) => {
-  console.log("newDate structure:", newDate);
-  scheduledAt.value.year = newDate.getFullYear().toString();
-  scheduledAt.value.month = (newDate.getMonth() + 1).toString().padStart(2, "0");
-  scheduledAt.value.day = newDate.getDate().toString().padStart(2, "0");
-});
-
-watch(time, (newTime) => {
-  console.log("newTime structure:", newTime);
-  scheduledAt.value.hours = newTime.hours.toString().padStart(2, "0");
-  scheduledAt.value.minutes = newTime.minutes.toString().padStart(2, "0");
+  hours: '00',
+  minutes: '00'
 });
 
 const parseDate = () => {
-  if (checked.value) {
-    return `${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z`;
-  } else {
-    return null;
-  }
-}
+  return `${date.value.day}-${date.value.month}-${date.value.year} ${time.value.hours}:${time.value.minutes}`;
+};
 
 /**/
 
 onMounted(() => {
+  getProfile();
   getTemplates();
 
   document.addEventListener('click', handleClickOutside);
@@ -448,6 +445,17 @@ const removeGroup = (group: Group) => {
 </script>
 
 <style scoped>
+.input-with-icon {
+  position: relative;
+}
+
+.fas.fa-chevron-down {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #BEBEBE;
+}
 
 #flexSendLaterContainer {
   display: flex;
@@ -511,7 +519,6 @@ const removeGroup = (group: Group) => {
 
 .form-label {
   color: #555;
-  margin-bottom: 1%;
   display: block;
 }
 
@@ -536,7 +543,7 @@ const removeGroup = (group: Group) => {
 /* Tags für ausgewählte Benutzer/Gruppen */
 #selectedUsersList {
   width: 100%;
-  height: 20vh;
+  height: 15vh;
   border: 1px solid #ccc;
   padding: 10px;
   border-radius: 10px;
@@ -630,6 +637,7 @@ const removeGroup = (group: Group) => {
 .form-actions {
   display: flex;
   margin-top: 2%;
+  justify-content: flex-end;
 }
 
 .btn {
