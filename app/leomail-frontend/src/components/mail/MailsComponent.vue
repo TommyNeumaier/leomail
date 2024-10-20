@@ -1,4 +1,3 @@
-<!-- MailListComponent.vue -->
 <template>
   <div id="bigVGContainer">
     <div id="VGHeaderBox">
@@ -24,15 +23,24 @@
               v-model="checkAllMails"
               id="checkbox"
               aria-label="Alle E-Mails auswählen"
+              @change="selectAllMails"
           />
         </div>
         <div>
-          <img src="../../assets/reload.png" alt="Reload" id="reload-icon" width="auto" height="12" @click="getMails" />
-        </div>
-        <div>
-          <img src="../../assets/trash.png" alt="Trash" id="trash-icon" width="auto" height="12" @click="deleteSelectedMails" />
+          <img
+              src="../../assets/trash.png"
+              alt="Trash"
+              id="trash-icon"
+              width="auto"
+              height="12"
+              style="margin-left: 25%"
+              @click="deleteSelectedMails"
+              class="trash-icon"
+          />
         </div>
       </div>
+
+
 
       <div id="pages">
         <div id="pagesNummern">
@@ -93,62 +101,17 @@
           <p id="mailHeadline">{{ email.meta.mailHeadline }}</p>
           <p id="sentOnMail">{{ email.sentOnDate }}</p>
         </div>
-        <transition name="fade" @after-enter="startTimeout">
-          <div v-if="isMailSent" class="notification-box">
-            <p>E-Mail wurde erfolgreich gesendet!</p>
-          </div>
-        </transition>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref, computed, watch} from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import { Service } from '@/services/service';
 import { useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '@/stores/app.store';
-import { parseISO, format, isToday, isYesterday, subDays, isSameDay } from 'date-fns';
-
-interface MailMeta {
-  templateName: string;
-  mailHeadline: string;
-  mailContent: string;
-  greetingId: number;
-}
-
-interface MailKeyDates {
-  created: string;
-  sentOn: string;
-  scheduledAt: string | null;
-}
-
-interface MailAccountInformation {
-  createdBy: string;
-  sentBy: string;
-}
-
-interface Contact {
-  id: number;
-  firstName: string;
-  lastName: string;
-  mailAddress: string;
-}
-
-interface MailDetails {
-  contact?: Contact; // Made optional
-  content: string;
-}
-
-interface Mail {
-  id: number;
-  meta: MailMeta;
-  keyDates: MailKeyDates;
-  accountInformation: MailAccountInformation;
-  mails: MailDetails[];
-  visible: boolean;
-  sentOnDate?: Date;
-}
+import { parseISO, format } from 'date-fns';
 
 const router = useRouter();
 const route = useRoute();
@@ -164,8 +127,6 @@ const endIndex = ref(limit.value);
 const checkAllMails = ref(false);
 const selectedMailIds = ref<number[]>([]);
 
-let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
 const getMails = async () => {
   try {
     const response = await Service.getInstance().getUsedTemplates(false, appStore.$state.project);
@@ -173,20 +134,10 @@ const getMails = async () => {
 
     fetchedMails.value = response.data.map((mail: any) => {
       const sentOnDate = parseISO(mail.keyDates.sentOn);
-      let formatted;
-      formatted = format(sentOnDate, 'dd.MM.yyyy, HH:mm');
-      console.log("formated" + formatted);
+      let formatted = format(sentOnDate, 'dd.MM.yyyy, HH:mm');
 
       const mappedMails: MailDetails[] = mail.mails
-          .filter((mailDetail: any) => {
-            const isContactValid = mailDetail.contact != null;
-            if (!isContactValid) {
-              console.warn(
-                  `MailDetail with content "${mailDetail.content}" has null contact and will be excluded.`
-              );
-            }
-            return isContactValid;
-          })
+          .filter((mailDetail: any) => mailDetail.contact != null)
           .map((mailDetail: any) => ({
             contact: {
               id: mailDetail.contact.id,
@@ -222,57 +173,31 @@ const paginatedMails = computed(() => {
   return fetchedMails.value.slice(start, end);
 });
 
+const selectAllMails = () => {
+  if (checkAllMails.value) {
+    selectedMailIds.value = fetchedMails.value.map(mail => mail.id);
+  } else {
+    selectedMailIds.value = [];
+  }
+};
+
 const clickedEmailForm = () => {
   console.log('Current Route:', router.currentRoute.value);
   router.push({ name: 'newMail' });
 };
 
-const decrement = () => {
-  if (startIndex.value - limit.value >= 1) {
-    startIndex.value -= limit.value;
-    endIndex.value = startIndex.value + limit.value - 1;
-  } else {
-    startIndex.value = 1;
-    endIndex.value = limit.value;
-  }
-};
-
-const increment = () => {
-  if (endIndex.value + limit.value <= totalMails.value) {
-    startIndex.value += limit.value;
-    endIndex.value = startIndex.value + limit.value - 1;
-  } else {
-    startIndex.value = Math.max(totalMails.value - limit.value + 1, 1);
-    endIndex.value = totalMails.value;
-  }
-};
-
 const handleEmailClick = (mailId: number) => {
   console.log('Clicked email id:', mailId);
-  // Implement navigation or other actions as needed
-  router.push({ name: 'MailDetail', params: { id: mailId, projectId: appStore.$state.project } });
-};
+  console.log('Clicked project id:', appStore.$state.project);
 
-
-
-watch(() => route.query.mailsend, (newValue) => {
-  if (newValue === 'true') {
-    isMailSent.value = true;
-    startTimeout();
-  }
-});
-
-const startTimeout = () => {
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-  }
-  timeoutId = setTimeout(() => {
-    isMailSent.value = false;
-
-    const query = { ...route.query }; // Copy current query parameters
-    delete query.mailsend; // Remove 'mailsend' parameter
-    router.replace({ path: route.path, query }); // Update the URL without reloading the page
-  }, 5000); // 5 Sekunden Timeout
+  // Navigation zur MailDetail-Seite mit den Parametern id und projectId
+  router.push({
+    name: 'MailDetail',
+    params: {
+      id: mailId,
+      projectId: appStore.$state.project
+    }
+  });
 };
 
 const deleteSelectedMails = async () => {
@@ -300,23 +225,10 @@ const deleteSelectedMails = async () => {
 
 onMounted(() => {
   getMails();
-
-  if (route.query.mailsend === 'true') {
-    isMailSent.value = true;
-    startTimeout();
-  }
 });
 
-watch(
-    () => route.query.mailsend,
-    (newValue) => {
-      if (newValue === 'true') {
-        isMailSent.value = true;
-        startTimeout();
-      }
-    }
-);
 </script>
+
 
 <style scoped>
 #sentOnMail {
@@ -426,7 +338,11 @@ watch(
 }
 
 #mailFeaturesContainer div {
-  width: 4%;
+  width: 2%;
+  height: 2%;
+  display: flex;
+  align-items: center;
+  margin-top: 2%;
 }
 
 #searchIconBox {
@@ -481,8 +397,9 @@ watch(
 
 #neueMail {
   all: unset;
-  background-color: #e8e8e8;
+  background-color: #78A6FF;
   height: 50%;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -490,13 +407,12 @@ watch(
   margin-left: 80%;
   margin-top: 1.8%;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
-  border: #8a8a8a solid 2px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 #neueMail:hover {
-  background-color: #a2a2a2;
-  color: white;
-  border-color: #8a8a8a;
+  background-color: rgb(75, 120, 216); /* Dunkleres Blau beim Hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Leichter Schatten beim Hover */
 }
 
 #neueMail p {
@@ -550,5 +466,69 @@ watch(
 .icon {
   height: 70%;
   width: auto;
+}
+
+<style scoped>
+   /* Trash icon styles */
+ .trash-icon {
+   cursor: pointer;
+   transition: transform 0.2s ease, filter 0.2s ease;
+ }
+
+.trash-icon:hover {
+  transform: scale(1.1);
+  filter: brightness(0.9);
+}
+
+.trash-icon:active {
+  transform: scale(0.95);
+}
+
+#checkboxContainer {
+  width: 3%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Additional styles */
+#sentOnMail {
+  width: 15%;
+  margin: 0 auto; /* zentriert das Element */
+  text-align: center;
+}
+
+#mailHeadline {
+  width: 60%;
+}
+
+.contactName {
+  display: flex;
+  flex-wrap: nowrap; /* Verhindert den Umbruch der Kontakte */
+  width: 27%; /* Maximale Breite des Containers */
+  overflow: hidden; /* Verhindert Überlauf */
+}
+
+.allContacts {
+  white-space: nowrap; /* Der gesamte Text bleibt in einer Zeile */
+  overflow: hidden; /* Verhindert Überlauf */
+  text-overflow: ellipsis; /* Zeigt '...' am Ende des Containers, wenn der Text zu lang ist */
+}
+
+.notification-box {
+  background-color: green;
+  color: white; /* Ensure text is readable on green background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20vw;
+  border-radius: 10px;
+  position: absolute;
+  top: 85vh;
+  left: 75vw;
+}
+
+.notification-box p {
+  padding: 0.6vw;
 }
 </style>

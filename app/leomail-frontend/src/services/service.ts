@@ -66,7 +66,7 @@ export class Service {
         return axios.post(`/api/contacts/add/natural`, contactData);
     }
 
-    public getUsedTemplate(tid: boolean, pid: string) {
+    public getUsedTemplate(tid: number, pid: string) {
         return axios.get(`/api/template/getUsedTemplate`, {
             params: {
                 "tid": tid,

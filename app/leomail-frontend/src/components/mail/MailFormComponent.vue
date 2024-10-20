@@ -8,7 +8,7 @@
         <!-- Empfänger Auswahl -->
         <div class="form-group">
           <label for="recipients" class="form-label">Empfänger:</label>
-          <div class="input-container">
+          <div class="input-container-recipients">
             <input
                 type="text"
                 v-model="searchTerm"
@@ -51,33 +51,35 @@
         <!-- Sendezeit auswählen -->
         <div class="form-group">
           <label for="sendLater" class="form-label">Senden am:</label>
-          <div class="input-container flex">
-            <input
-                type="checkbox"
-                id="sendLater"
-                v-model="checked"
-                class="form-checkbox"
-            />
-            <label for="sendLater" class="form-checkbox-label">später senden</label>
-          </div>
-          <div v-if="checked" class="datetime-picker">
-            <VueDatePicker v-if="checked"
-                           locale="de-AT"
-                           v-model="date"
-                           class="datepicker"
-                           id="datepicker"
-                           now-button-label="Current"
-                           format="dd-MM-yyyy"
-                           :enable-time-picker="false"
-                           placeholder='Datum auswählen'
-                           :min-date="format(new Date(), 'yyyy-MM-dd')">
-            </VueDatePicker>
-            <VueDatePicker
-                v-model="time"
-                class="timepicker"
-                time-picker
-                placeholder="Uhrzeit auswählen"
-            />
+          <div id="flexSendLaterContainer">
+            <div class="input-container flex">
+              <input
+                  type="checkbox"
+                  id="sendLater"
+                  v-model="checked"
+                  class="form-checkbox"
+              />
+              <label for="sendLater" class="form-checkbox-label">später senden</label>
+            </div>
+            <div v-if="checked" class="datetime-picker">
+              <VueDatePicker v-if="checked"
+                             locale="de-AT"
+                             v-model="date"
+                             class="datepicker"
+                             id="datepicker"
+                             now-button-label="Current"
+                             format="dd-MM-yyyy"
+                             :enable-time-picker="false"
+                             placeholder='Datum auswählen'
+                             :min-date="format(new Date(), 'yyyy-MM-dd')">
+              </VueDatePicker>
+              <VueDatePicker
+                  v-model="time"
+                  class="timepicker"
+                  time-picker
+                  placeholder="Uhrzeit auswählen"
+              />
+            </div>
           </div>
         </div>
 
@@ -86,33 +88,31 @@
         <div class="form-group">
           <label for="template" class="form-label">Vorlage:</label>
           <div id="mailFlexBox">
-            <div class="form-group">
-              <div id="mailTemplateInput" class="input-container">
-                <input
-                    type="text"
-                    v-model="filter"
-                    class="form-input search-input"
-                    placeholder="Vorlage suchen..."
-                    @input="onTemplateSearch"
-                />
-                <ul v-if="dropdownVisible" class="autocomplete">
-                  <li
-                      v-for="template in fetchedTemplates"
-                      :key="template.id"
-                      v-show="template.visible"
-                      @click="selectTemplate(template)"
-                  >
-                    {{ template.name }}
-                  </li>
-                </ul>
-              </div>
+            <div id="mailTemplateInput" class="input-container">
+              <input
+                  type="text"
+                  v-model="filter"
+                  class="form-input search-input"
+                  placeholder="Vorlage suchen..."
+                  @input="onTemplateSearch"
+              />
+              <ul v-if="dropdownVisible" class="autocomplete">
+                <li
+                    v-for="template in fetchedTemplates"
+                    :key="template.id"
+                    v-show="template.visible"
+                    @click="selectTemplate(template)"
+                >
+                  {{ template.name }}
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
         <!-- Vorschau anzeigen Button -->
         <div class="form-actions">
-          <button type="button" @click="handlePreview" :disabled="!canPreview" class="btn btn-outline">
+          <button type="button" @click="handlePreview" :disabled="!canPreview" class="btn">
             Vorschau anzeigen
           </button>
         </div>
@@ -448,11 +448,17 @@ const removeGroup = (group: Group) => {
 </script>
 
 <style scoped>
+
+#flexSendLaterContainer {
+  display: flex;
+  flex-direction: row;
+}
+
 /* Container */
 #mailFormContainer {
   width: 86.5%;
   margin-top: 2%;
-  margin-lexft: 1.5%;
+  margin-left: 1.5%;
   display: flex;
   flex-direction: column;
 }
@@ -478,11 +484,10 @@ const removeGroup = (group: Group) => {
   margin-top: 2%;
   background-color: white;
   box-shadow: 5px 5px 10px lightgray;
-  padding: 20px;
 }
 
 #mailForm {
-  padding: 2% 3%;
+  padding: 0 3%;
 }
 
 #formHeader {
@@ -500,44 +505,42 @@ const removeGroup = (group: Group) => {
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1%;
+  margin-top: 2%;
 }
 
 .form-label {
   color: #555;
-  margin-bottom: 8px;
+  margin-bottom: 1%;
   display: block;
 }
 
 .input-container {
   position: relative;
-  width: 100%;
+  width: 15%;
 }
 
 .form-input {
+  all: unset;
+  border: solid 1px #BEBEBE;
+  border-radius: 5px;
+  padding: 0.6vw;
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  transition: border-color 0.2s ease-in-out;
+  font-size: 0.8em;
 }
 
 .form-input:focus {
   border-color: #007bff;
 }
 
-.search-input {
-  background-color: #f9f9f9;
-}
-
 /* Tags für ausgewählte Benutzer/Gruppen */
 #selectedUsersList {
   width: 100%;
-  height: auto;
+  height: 20vh;
   border: 1px solid #ccc;
   padding: 10px;
-  overflow-y: auto;
+  border-radius: 10px;
+  overflow-y: scroll;
 }
 
 #selectedRecipients {
@@ -548,9 +551,9 @@ const removeGroup = (group: Group) => {
 }
 
 .tag {
-  background-color: lightblue;
+  background-color: rgba(0, 123, 255, 0.45);
   color: white;
-  border-radius: 20px;
+  border-radius: 10px;
   padding: 6px 12px;
   font-size: 0.8rem;
   display: inline-flex;
@@ -586,21 +589,30 @@ const removeGroup = (group: Group) => {
 
 .datepicker,
 .timepicker {
-  width: 45%;
+  width: 38%;
+}
+
+/* Anpassung des Autocomplete-Containers */
+.input-container-recipients {
+  width: 30vw; /* Hier definierst du die Breite des Input-Felds */
+  position: relative; /* Um sicherzustellen, dass das Autocomplete innerhalb des Containers positioniert wird */
 }
 
 .autocomplete {
   list-style-type: none;
-  margin: 5px 0 0;
   padding: 0;
+  margin: 0;
   background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: solid 1px #D1D1D1;
+  border-top: none;
   position: absolute;
-  width: 100%;
-  max-height: 200px;
-  overflow-y: auto;
+  top: 100%; /* Platzierung direkt unter dem Input-Feld */
+  left: 0;
+  width: 100%; /* Die Breite der Autocomplete-Liste an das Input-Feld anpassen */
   z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto; /* Scrollbar bei zu vielen Ergebnissen */
+  border-radius: 0 0 8px 8px;
 }
 
 .autocomplete li {
@@ -610,39 +622,34 @@ const removeGroup = (group: Group) => {
 }
 
 .autocomplete li:hover {
-  background-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.36);
   color: white;
 }
 
 /* Form Actions */
 .form-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 30px;
+  margin-top: 2%;
 }
 
 .btn {
-  padding: 12px 20px;
-  font-size: 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.btn-outline {
-  background-color: transparent;
-  color: #007bff;
-  border: 2px solid #007bff;
-  margin-right: 10px;
-}
-
-.btn-outline:hover {
-  background-color: #007bff;
+  background-color: #78A6FF;
   color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  align-self: center;
+}
+
+.btn:hover {
+  background-color: rgba(75, 129, 253, 0.86);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .btn:disabled {
-  background-color: #ccc;
+  background-color: #cccccc;
   cursor: not-allowed;
 }
 </style>

@@ -427,7 +427,7 @@ ul {
   border: solid 1px #D1D1D1;
   border-top: none;
   position: absolute;
-  width: 100%;
+  width: 70%;
   z-index: 1000;
   max-height: 200px;
   overflow-y: auto; /* Scrollbar bei zu vielen Ergebnissen */

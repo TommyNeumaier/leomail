@@ -165,7 +165,7 @@ onMounted(() => {
   background: white;
   padding: 30px;
   width: 70vw;
-  height: 80vh;
+  height: 85vh;
   border-radius: 12px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   position: relative;
@@ -224,8 +224,8 @@ h3 {
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #f9f9f9;
-  min-height: 40vh;
-  overflow-y: auto;
+  height: 45%; /* Festgelegte Höhe für die Box */
+  overflow-y: auto; /* Scrollen aktivieren, wenn der Inhalt zu groß ist */
   color: #333;
 }
 
@@ -238,21 +238,21 @@ h3 {
 
 .arrow {
   display: inline-block;
-  width: 30px;
-  height: 30px;
-  border: solid black;
-  border-width: 0 3px 3px 0;
-  padding: 5px;
+  width: 20px; /* Kleinere Breite für die Pfeile */
+  height: 20px; /* Kleinere Höhe für die Pfeile */
+  border: solid #78A6FF;
+  border-width: 0 4px 4px 0; /* Dünnere Linien für kleinere Pfeile */
+  padding: 3px; /* Weniger Padding, um die Pfeile kompakter zu machen */
   cursor: pointer;
-  transform: rotate(45deg);
+  transform: rotate(45deg); /* Standard-Rotation für die Pfeile */
 }
 
 .prev-arrow {
-  transform: rotate(135deg);
+  transform: rotate(135deg); /* Pfeil nach links */
 }
 
 .next-arrow {
-  transform: rotate(-45deg);
+  transform: rotate(-45deg); /* Pfeil nach rechts */
 }
 
 .arrow.disabled {
@@ -261,22 +261,24 @@ h3 {
 }
 
 .checkbox {
-  margin-top: 20px;
+  margin-top: 1%;
+  margin-bottom: 1%;
 }
 
 .checkbox input {
   margin-right: 10px;
 }
 
-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+.highlight {
+  background-color: #ffd700;
+  padding: 2px 5px;
+  border-radius: 4px;
 }
 
 .send-button {
-  background-color: #4CAF50;
+  background-color: #78A6FF;
   color: white;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border: none;
   border-radius: 5px;
   font-size: 1em;
@@ -285,12 +287,13 @@ button:disabled {
 }
 
 .send-button:hover {
-  background-color: #45a049;
+  background-color: rgba(75, 129, 253, 0.86);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-.highlight {
-  background-color: #ffd700;
-  padding: 2px 5px;
-  border-radius: 4px;
+.send-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 </style>
+
