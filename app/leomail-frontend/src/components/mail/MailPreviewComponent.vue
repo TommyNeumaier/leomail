@@ -119,6 +119,9 @@ watch(() => props.visible, (newValue) => {
 const recipientDisplay = computed(() => {
   if (currentEmailIndex.value >= allRecipients.value.length) return '';
   const user = allRecipients.value[currentEmailIndex.value];
+  if(user.companyName !== undefined) {
+    return `${user.companyName} <${user.mailAddress}>`;
+  }
   return `${user.firstName} ${user.lastName} <${user.mailAddress}>`;
 });
 

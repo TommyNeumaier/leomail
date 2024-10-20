@@ -1,3 +1,4 @@
+// src/services/auth.service.js
 import axios from 'axios';
 import {useAuthStore} from '@/stores/auth.store';
 import {useAppStore} from "@/stores/app.store";
@@ -44,7 +45,10 @@ export const refreshToken = async () => {
             });
 
             console.log("Refresh token response:", response.data);
-            const { access_token, refresh_token: new_refresh_token } = response.data;
+            const { access_token, refresh_token: new_refresh_token } = {
+                access_token: response.data.accessToken,
+                refresh_token: response.data.refreshToken,
+            };
             authStore.setTokens(access_token, new_refresh_token);
             return { access_token, refresh_token: new_refresh_token };
         } catch (error) {

@@ -47,7 +47,6 @@ public class ContactRepository {
         }
 
         NaturalContact naturalContact = new NaturalContact();
-        naturalContact.id = UUID.randomUUID().toString(); // Ensure unique ID generation
         naturalContact.firstName = contactDTO.firstName().trim();
         naturalContact.lastName = contactDTO.lastName().trim();
         naturalContact.mailAddress = contactDTO.mailAddress().trim();
@@ -66,7 +65,6 @@ public class ContactRepository {
      *
      * @param contactDTO Data of the contact to be added
      */
-    @Transactional
     public void addContact(CompanyContactAddDTO contactDTO) {
         if (CompanyContact.count("mailAddress", contactDTO.mailAddress()) > 0) {
             throw new ContactExistsInKeycloakException("Mail address already exists in database");
@@ -80,7 +78,6 @@ public class ContactRepository {
         }
 
         CompanyContact companyContact = new CompanyContact();
-        companyContact.id = UUID.randomUUID().toString();
         companyContact.companyName = contactDTO.companyName().trim();
         companyContact.mailAddress = contactDTO.mailAddress().trim();
 

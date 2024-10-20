@@ -7,6 +7,7 @@ import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import at.htlleonding.leomail.model.dto.project.ProjectAddDTO;
 import at.htlleonding.leomail.model.dto.project.ProjectOverviewDTO;
 import at.htlleonding.leomail.model.exceptions.ObjectContainsNullAttributesException;
+import at.htlleonding.leomail.services.MailService;
 import at.htlleonding.leomail.services.Utilities;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -23,6 +24,9 @@ public class ProjectRepository {
 
     @Inject
     EntityManager em;
+
+    @Inject
+    MailService mailService;
 
     /**
      * Retrieves personal projects for a given contact ID.
@@ -62,6 +66,13 @@ public class ProjectRepository {
 
         if (projectAddDTO.members() == null || projectAddDTO.members().isEmpty()) {
             throw new IllegalArgumentException("Project must have at least one member.");
+        }
+
+        // Optional Mail validation
+        if (!mailService.verifyOutlookCredentials(
+                projectAddDTO.mailInformation().mailAddress(),
+                projectAddDTO.mailInformation().password())) {
+            throw new IllegalArgumentException("Outlook credentials are invalid");
         }
 
         // Collect member IDs

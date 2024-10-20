@@ -4,17 +4,18 @@ import at.htlleonding.leomail.entities.*;
 import at.htlleonding.leomail.model.SMTPInformation;
 import at.htlleonding.leomail.services.GroupSplitter;
 import at.htlleonding.leomail.services.TemplateBuilder;
-import io.quarkus.mailer.Mail;
-import io.quarkus.mailer.Mailer;
-import io.smallrye.mutiny.Multi;
+import at.htlleonding.leomail.services.EncryptionService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.mail.*;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Properties;
 
 @ApplicationScoped
 public class MailRepository {
@@ -25,13 +26,20 @@ public class MailRepository {
     TemplateBuilder templateBuilder;
 
     @Inject
-    Mailer mailer;
-
-    @Inject
     GroupSplitter groupSplitter;
 
+    @Inject
+    EncryptionService encryptionService;
+
+    @Inject
+    UserRepository userRepository;
+
     /**
-     * Sends mails based on a template and SMTP information.
+     * Sendet E-Mails basierend auf einer Vorlage und SMTP-Informationen.
+     *
+     * @param projectId        Die Projekt-ID.
+     * @param accountId        Die Benutzer-ID (E-Mail).
+     * @param smtpInformation  Die SMTP-Informationen.
      */
     @Transactional
     public void sendMailsByTemplate(String projectId, String accountId, SMTPInformation smtpInformation) {
@@ -64,24 +72,26 @@ public class MailRepository {
                 smtpInformation.receiver().contacts().orElse(List.of())
         );
 
-        // Filter out contacts without a mail address
-        List<Contact> validReceivers = receivers.stream()
-                .filter(contact -> getMailAddress(contact) != null)
-                .collect(Collectors.toList());
-
         LOGGER.infof("Total Receivers: %d, Valid Receivers with Email: %d",
-                receivers.size(), validReceivers.size());
+                receivers.size(), receivers.size());
 
-        if (validReceivers.isEmpty()) {
+        if (receivers.isEmpty()) {
             LOGGER.error("No valid receivers with email addresses found.");
             throw new IllegalArgumentException("No valid receivers with email addresses found");
         }
 
-        List<String> renderedTemplates = templateBuilder.renderTemplates(template.id, validReceivers, smtpInformation.personalized());
-        SentTemplate usedTemplate = new SentTemplate(template, smtpInformation.scheduledAt(), Project.findById(projectId), Contact.findById(accountId));
+        List<String> renderedTemplates = templateBuilder.renderTemplates(template.id, receivers, smtpInformation.personalized());
+        NaturalContact sender = NaturalContact.find("id", accountId).firstResult();
+
+        if (sender == null) {
+            LOGGER.errorf("Sender with email %s not found.", accountId);
+            throw new IllegalArgumentException("Sender not found");
+        }
+
+        SentTemplate usedTemplate = new SentTemplate(template, smtpInformation.scheduledAt(), Project.findById(projectId), sender);
 
         for (int i = 0; i < renderedTemplates.size(); i++) {
-            SentMail sentMail = new SentMail(validReceivers.get(i), usedTemplate, renderedTemplates.get(i));
+            SentMail sentMail = new SentMail(receivers.get(i), usedTemplate, renderedTemplates.get(i));
             usedTemplate.mails.add(sentMail);
             LOGGER.debugf("Created SentMail for Contact ID %s: %s", sentMail.contact.id, sentMail.actualContent);
         }
@@ -95,9 +105,10 @@ public class MailRepository {
         LOGGER.info("MailsByTemplate process completed successfully.");
     }
 
-
     /**
-     * Sends the mails associated with a SentTemplate by its ID.
+     * Sendet die Mails, die mit einem SentTemplate verbunden sind, anhand der Benutzer-SMTP-Daten.
+     *
+     * @param id Die ID des SentTemplate.
      */
     @Transactional
     public void sendMail(Long id) {
@@ -120,56 +131,99 @@ public class MailRepository {
         }
 
         usedTemplate.sentOn = LocalDateTime.now();
-        sendMail(usedTemplate.mails);
+        sendMail(usedTemplate.mails, usedTemplate.sentBy);
         LOGGER.infof("Mails for SentTemplate ID %d sent successfully.", id);
     }
 
     /**
-     * Sends a list of SentMail objects.
+     * Sendet eine Liste von SentMail-Objekten unter Verwendung der individuellen SMTP-Daten des Benutzers.
+     *
+     * @param sentMails Die Liste der zu sendenden Mails.
+     * @param sender    Der Absender (NaturalContact).
      */
     @Transactional
-    public void sendMail(List<SentMail> sentMails) {
+    public void sendMail(List<SentMail> sentMails, Contact sender) {
         LOGGER.infof("Initiating sending of %d mails.", sentMails.size());
-        Multi.createFrom().iterable(sentMails)
-                .onItem()
-                .transform(sentMail -> {
-                    String mailAddress = getMailAddress(sentMail.contact);
-                    if (mailAddress == null) {
-                        LOGGER.warnf("Contact with ID %s does not have an email address. Skipping.", sentMail.contact.id);
-                        return null;
-                    }
 
-                    sentMail.sent = true;
-                    LOGGER.debugf("Preparing mail for %s with content: %s", mailAddress, sentMail.actualContent);
-                    return Mail.withHtml(mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent);
-                })
-                .filter(mail -> mail != null)
-                .onFailure().invoke(e -> LOGGER.error("Failed to send an email.", e))
-                .subscribe().with(mail -> {
-                    try {
-                        mailer.send(mail);
-                        LOGGER.debugf("Mail sent to %s successfully.", mail.getTo());
-                    } catch (Exception e) {
-                        LOGGER.errorf("Error sending email to %s: %s", mail.getTo(), e.getMessage());
-                    }
-                });
+        for (SentMail sentMail : sentMails) {
+            try {
+                String senderEmail = sender instanceof NaturalContact ? ((NaturalContact) sender).mailAddress : ((CompanyContact) sender).mailAddress;
+                String senderPassword = sender instanceof NaturalContact ? ((NaturalContact) sender).encryptedOutlookPassword : null;
+
+                if (senderPassword == null) {
+                    LOGGER.errorf("User %s hat kein Outlook-Passwort gespeichert.", senderEmail);
+                    continue; // Überspringe, wenn kein Passwort gespeichert ist
+                }
+
+                String decryptedPassword = encryptionService.decrypt(senderPassword);
+
+                if(sentMail.contact instanceof NaturalContact contact) {
+                    sendEmail(senderEmail, decryptedPassword, contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent);
+                } else if(sentMail.contact instanceof CompanyContact contact) {
+                    sendEmail(senderEmail, decryptedPassword, contact.mailAddress, sentMail.usedTemplate.headline, sentMail.actualContent);
+                }
+                sentMail.sent = true;
+            } catch (Exception e) {
+                LOGGER.errorf("Error sending email ");
+            }
+        }
     }
 
     /**
-     * Retrieves all unsent mails.
+     * Hilfsmethode zum Senden einer einzelnen E-Mail über Outlook SMTP.
+     *
+     * @param fromEmail Der Absender.
+     * @param password  Das Passwort des Absenders.
+     * @param toEmail   Der Empfänger.
+     * @param subject   Der Betreff der E-Mail.
+     * @param content   Der Inhalt der E-Mail.
+     * @throws Exception Wenn beim Senden ein Fehler auftritt.
      */
-    public List<SentMail> getAllUnsentMails() {
-        return SentMail.list("sent = false");
+    private void sendEmail(String fromEmail, String password, String toEmail, String subject, String content) throws Exception {
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", "smtp-mail.outlook.com");
+        properties.put("mail.smtp.port", "587");
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.starttls.enable", "true");
+
+        Session session = Session.getInstance(properties, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(fromEmail.replace("students.htl-leonding.ac.at", "htblaleonding.onmicrosoft.com"), password);
+            }
+        });
+
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(fromEmail));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+        message.setSubject(subject);
+        message.setText(content);
+        message.setHeader("Content-Type", "text/html");
+
+        Transport.send(message);
     }
 
-    // Helper method to get the mail address from a contact
+    /**
+     * Holt die E-Mail-Adresse aus einem Kontakt.
+     *
+     * @param contact Der Kontakt.
+     * @return Die E-Mail-Adresse oder null, wenn nicht vorhanden.
+     */
     private String getMailAddress(Contact contact) {
-        if (contact instanceof NaturalContact naturalContact) {
-            return naturalContact.mailAddress;
-        } else if (contact instanceof CompanyContact companyContact) {
-            return companyContact.mailAddress;
+        if (contact instanceof NaturalContact) {
+            return ((NaturalContact) contact).mailAddress;
+        } else if (contact instanceof CompanyContact) {
+            return ((CompanyContact) contact).mailAddress;
         } else {
             return null;
         }
+    }
+
+    /**
+     * Holt alle ungesendeten Mails.
+     *
+     * @return Eine Liste von ungesendeten Mails.
+     */
+    public List<SentMail> getAllUnsentMails() {
+        return SentMail.list("sent = false");
     }
 }

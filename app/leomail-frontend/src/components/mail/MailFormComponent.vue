@@ -21,9 +21,11 @@
                 v-if="searchTerm.length > 0 && (filteredUsers.length || filteredGroups.length)"
                 class="autocomplete"
             >
+
               <li v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)">
                 {{ user.firstName }} {{ user.lastName }} - {{ user.mailAddress }}
               </li>
+
               <li v-for="group in filteredGroups" :key="group.id" @click="selectGroup(group)">
                 Gruppe: {{ group.name }}
               </li>

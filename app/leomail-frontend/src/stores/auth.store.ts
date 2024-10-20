@@ -1,3 +1,4 @@
+// src/stores/auth.store.js
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import routerConfig from "@/configs/router.config";

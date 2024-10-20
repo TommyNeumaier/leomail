@@ -8,18 +8,19 @@ import NewProject from "@/views/NewProject.vue";
 import NewMail from "@/views/NewMail.vue";
 import { useAppStore } from '@/stores/app.store';
 import axios from 'axios';
-import {refreshToken, validateToken} from "@/services/auth.service";
-import {loadConfigFromFile} from "vite";
+import { refreshToken, validateToken } from "@/services/auth.service";
 import ProjectView from "@/views/ProjectView.vue";
 import ScheduledMailsView from "@/views/ScheduledMailsView.vue";
 import GroupView from "@/views/GroupView.vue";
 import TemplateView from "@/views/TemplateView.vue";
 import SettingsView from "@/views/SettingsView.vue";
-import AuthorisationView from "@/views/AuthorisationView.vue";
-import EmailAuthView from "@/views/EmailAuthView.vue";
+import AuthorisationComponent from "@/views/AuthorisationView.vue";
+import { Service } from "@/services/service";
+import PostLoginView from "@/views/PostLoginView.vue";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
+  { path: '/post-login', name: 'post-login', component: PostLoginView, meta: { requiresAuth: true } },
   { path: '/mail', name: 'mail', component: MailView, meta: { requiresAuth: true } },
   { path: '/mail/new', name: 'newMail', component: NewMail, meta: { requiresAuth: true } },
   { path: '/scheduledMails', name: 'scheduled', component: ScheduledMailsView, meta: { requiresAuth: true } },
@@ -30,8 +31,14 @@ const routes = [
   { path: '/projects/new', name: 'newProjects', component: NewProject, meta: { requiresAuth: true } },
   { path: '/contacts', name: 'contacts', component: PersonenView, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: ProfilView, meta: { requiresAuth: true } },
-  { path: '/authorisation', name: 'authorisation', component: AuthorisationView, meta: { requiresAuth: true } },
-  { path: '/mail/:id/:projectId', name: 'MailDetail', component: () => import('@/views/MailDetailView.vue'), props: true, meta: { requiresAuth: true } }
+  { path: '/authorisation', name: 'authorisation', component: AuthorisationComponent, meta: { requiresAuth: true } },
+  {
+    path: '/mail/:id/:projectId',
+    name: 'MailDetail',
+    component: () => import('@/views/MailDetailView.vue'),
+    props: true,
+    meta: { requiresAuth: true }
+  }
 ];
 
 const router = createRouter({
@@ -39,6 +46,13 @@ const router = createRouter({
   routes,
 });
 
+// Helper function to handle invalid tokens
+function handleInvalidToken(authStore, next) {
+  authStore.logout();
+  return next({ name: 'login' });
+}
+
+// Main navigation guard
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
@@ -46,58 +60,37 @@ router.beforeEach(async (to, from, next) => {
     const accessToken = authStore.accessToken;
 
     if (!accessToken) {
-      console.log('No access token found, redirecting to login');
+      console.log('Kein Zugriffstoken gefunden, Weiterleitung zum Login');
       return next({ name: 'login' });
     }
 
     try {
       const isValid = await validateToken(accessToken);
       if (isValid) {
-        return proceedWithAuthorization(to, next);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        // Proceed to the intended route
+        return next();
       } else {
-        console.log('Access token is invalid, attempting to refresh');
+        console.log('Zugriffstoken ist ungültig, versuche zu aktualisieren');
         try {
           const { access_token } = await refreshToken();
+          authStore.setAccessToken(access_token);
           axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-          return proceedWithAuthorization(to, next);
+          // Proceed to the intended route
+          return next();
         } catch (refreshError) {
-          console.log('Failed to refresh token, redirecting to login');
+          console.log('Token-Aktualisierung fehlgeschlagen, Weiterleitung zum Login');
           return handleInvalidToken(authStore, next);
         }
       }
     } catch (error) {
-      console.error('Error during token validation or refresh:', error);
+      console.error('Fehler bei der Token-Validierung oder Aktualisierung:', error);
       return handleInvalidToken(authStore, next);
     }
   } else {
-    return proceedWithAuthorization(to, next);
+    // If the route does not require auth, proceed normally
+    return next();
   }
 });
-
-function handleInvalidToken(authStore, next) {
-  authStore.logout();
-  return next({ name: 'login' });
-}
-
-function proceedWithAuthorization(to, next) {
-  const exceptions = ["/", "/projects/new", "/login", "/contacts", "/settings", "/profile", "/authorisation"];
-  const appStore = useAppStore();
-
-  if (appStore.project === '' && !exceptions.includes(to.path)) {
-    return next({ name: "projects" });
-  }
-
-  // TODO: Check if user has permission for this project, if not, then return him to the project view
-  /*
-  let hasPermission = Service.getInstance().checkPermission(appStore.project).then((value: boolean) => {
-    return value;
-  });
-
-  if (!hasPermission) {
-    return next({ name: "projekte" });
-  }
-  */
-  return next();
-}
 
 export default router;

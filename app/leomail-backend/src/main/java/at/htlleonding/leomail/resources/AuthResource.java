@@ -1,16 +1,21 @@
 package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.entities.Contact;
+import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.auth.JwtClaimTest;
 import at.htlleonding.leomail.model.dto.auth.JwtTest;
+import at.htlleonding.leomail.model.dto.auth.OutlookPasswordRequest;
 import at.htlleonding.leomail.repositories.ContactRepository;
 import at.htlleonding.leomail.repositories.UserRepository;
+import at.htlleonding.leomail.services.EncryptionService;
+import at.htlleonding.leomail.services.MailService;
 import io.quarkus.oidc.client.OidcClient;
 import io.quarkus.oidc.client.Tokens;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
@@ -37,10 +42,16 @@ public class AuthResource {
     ContactRepository contactRepository;
 
     @Inject
+    EncryptionService encryptionService;
+
+    @Inject
     SecurityIdentity identity;
 
     @Inject
     JsonWebToken jwt;
+
+    @Inject
+    MailService mailService;
 
     @Inject
     UserRepository userRepository;
@@ -231,6 +242,75 @@ public class AuthResource {
             LOGGER.error("Error retrieving roles", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error retrieving roles")
+                    .build();
+        }
+    }
+
+    /**
+     * Endpunkt zum Speichern und Verifizieren des Outlook-Passworts.
+     *
+     * @param request Die Outlook-Passwort-Anfrage.
+     * @return Ein Response-Objekt mit dem Ergebnis.
+     */
+    @POST
+    @Path("/save-outlook-password")
+    @Transactional
+    @Authenticated
+    public Response saveOutlookPassword(OutlookPasswordRequest request) {
+        try {
+            // Verifiziere die SMTP-Anmeldedaten
+            boolean isValid = mailService.verifyOutlookCredentials(request.email(), request.password());
+
+            if (!isValid) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("Ungültige Outlook-Anmeldedaten")
+                        .build();
+            }
+
+            // Verschlüssele das Passwort
+            String encryptedPassword = encryptionService.encrypt(request.password());
+
+            // Finde den Benutzer und speichere das verschlüsselte Passwort
+            NaturalContact user = userRepository.findByEmail(request.email());
+            if (user == null) {
+                user = userRepository.findByEmail(request.email().replace("htblaleonding.onmicrosoft.com", "students.htl-leonding.ac.at"));
+                if(user == null) {
+                    return Response.status(Response.Status.NOT_FOUND)
+                            .entity("Benutzer nicht gefunden")
+                            .build();
+                }
+            }
+
+            user.encryptedOutlookPassword = encryptedPassword;
+            userRepository.persist(user);
+
+            return Response.ok("Outlook-Passwort erfolgreich gespeichert").build();
+
+        } catch (Exception e) {
+            LOGGER.error("Fehler beim Speichern des Outlook-Passworts", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Fehler beim Speichern des Outlook-Passworts")
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/check-outlook-authorization")
+    @Authenticated
+    public Response checkOutlookAuthorization() {
+        try {
+            NaturalContact user = userRepository.findByEmail(jwt.getClaim("email"));
+            if (user.encryptedOutlookPassword == null) {
+                return Response.ok()
+                        .entity(false)
+                        .build();
+            }
+
+            return Response.ok(true).build();
+        } catch (Exception e) {
+            LOGGER.error("Fehler beim Überprüfen der Outlook-Autorisierung", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Fehler beim Überprüfen der Outlook-Autorisierung")
                     .build();
         }
     }

@@ -16,7 +16,6 @@ public abstract class Contact extends PanacheEntityBase {
 
     @Id
     @Column(length = 36)
-    @GeneratedValue(strategy = GenerationType.UUID)
     public String id;
 
     @Column(nullable = false)

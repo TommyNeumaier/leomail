@@ -230,4 +230,18 @@ export class Service {
             }
         });
     }
+
+    async saveOutlookPassword(formData: { email: string; password: string }) {
+        return axios.post(`/api/auth/save-outlook-password`, formData);
+    }
+
+    async checkOutlookAuthorization(): Promise<boolean> {
+        try {
+            const response = await axios.get('/api/auth/check-outlook-authorization');
+            return response.data; // Expected response: { isAuthorized: true/false }
+        } catch (error) {
+            console.error('Outlook-Autorisierungsprüfung fehlgeschlagen:', error);
+            throw error;
+        }
+    }
 }

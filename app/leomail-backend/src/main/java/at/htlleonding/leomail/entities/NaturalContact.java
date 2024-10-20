@@ -13,9 +13,6 @@ public class NaturalContact extends Contact {
     @Column(nullable = false)
     public String lastName;
 
-    @Column(nullable = false, unique = true)
-    public String mailAddress;
-
     public String prefixTitle;
 
     public String suffixTitle;
@@ -26,6 +23,12 @@ public class NaturalContact extends Contact {
 
     @Enumerated(EnumType.STRING)
     public Gender gender;
+
+    @Column(nullable = false, unique = true)
+    public String mailAddress;
+
+    @Column(name = "outlook_encrypted_password")
+    public String encryptedOutlookPassword;
 
     public NaturalContact() {
         super();

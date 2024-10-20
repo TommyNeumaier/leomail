@@ -8,7 +8,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@SequenceGenerator(name = "seq_sent_template", sequenceName = "seq_sent_template", allocationSize = 1, initialValue = 3)
+@SequenceGenerator(name = "seq_sent_template", sequenceName = "seq_sent_template", allocationSize = 1, initialValue = 1)
 public class SentTemplate extends PanacheEntityBase {
 
     @Id
