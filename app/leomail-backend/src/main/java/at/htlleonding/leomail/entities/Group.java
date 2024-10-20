@@ -2,7 +2,10 @@ package at.htlleonding.leomail.entities;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 @Entity
@@ -26,7 +29,7 @@ public class Group extends PanacheEntityBase {
     public Project project;
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
-    public List<Contact> members = new ArrayList<>();
+    public Set<Contact> members = new HashSet<>();
 
     public Group() {
     }
@@ -38,7 +41,7 @@ public class Group extends PanacheEntityBase {
         this.project = project;
     }
 
-    public Group(String name, String description, NaturalContact createdBy, Project project, List<Contact> members) {
+    public Group(String name, String description, NaturalContact createdBy, Project project, HashSet<Contact> members) {
         this(name, description, createdBy, project);
         this.members = members;
     }

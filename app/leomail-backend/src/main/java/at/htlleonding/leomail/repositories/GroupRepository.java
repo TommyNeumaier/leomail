@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -104,7 +105,7 @@ public class GroupRepository {
 
         validateMembersContactType(members);
 
-        List<Contact> memberList = fetchExistingContacts(members);
+        HashSet<Contact> memberList = fetchExistingContacts(members);
         addKeycloakUsers(memberList, members);
 
         Group newGroup = new Group(name, description, Contact.findById(accountId), Project.findById(projectId), memberList);
@@ -148,7 +149,7 @@ public class GroupRepository {
         group.name = name;
         group.description = description;
 
-        List<Contact> memberList = fetchExistingContacts(members);
+        HashSet<Contact> memberList = fetchExistingContacts(members);
         addKeycloakUsers(memberList, members);
         group.members = memberList;
 
@@ -263,7 +264,7 @@ public class GroupRepository {
     /**
      * Fetches existing contacts based on member IDs.
      */
-    private List<Contact> fetchExistingContacts(List<?> members) {
+    private HashSet<Contact> fetchExistingContacts(List<?> members) {
         List<String> memberIds = members.stream()
                 .map(member -> {
                     if (member instanceof NaturalContactSearchDTO naturalDTO) {
@@ -280,13 +281,13 @@ public class GroupRepository {
                         "SELECT c FROM Contact c WHERE c.id IN :memberIds",
                         Contact.class)
                 .setParameter("memberIds", memberIds)
-                .getResultList();
+                .getResultList().stream().collect(Collectors.toCollection(HashSet::new));
     }
 
     /**
      * Adds Keycloak users to the member list if they don't already exist.
      */
-    private void addKeycloakUsers(List<Contact> memberList, List<?> members) {
+    private void addKeycloakUsers(HashSet<Contact> memberList, List<?> members) {
         for (Object memberDTO : members) {
             String memberId;
             if (memberDTO instanceof NaturalContactSearchDTO naturalDTO) {
@@ -299,7 +300,7 @@ public class GroupRepository {
 
             Contact existingContact = Contact.findById(memberId);
             if (existingContact == null) {
-                // Fetch from Keycloak and save locally
+                // Add new contact fetched from Keycloak
                 if (memberDTO instanceof NaturalContactSearchDTO) {
                     NaturalContactSearchDTO userDTO = keycloakAdminService.findUserAsNaturalContactSearchDTO(memberId);
                     if (userDTO != null) {
@@ -310,23 +311,18 @@ public class GroupRepository {
                         newContact.kcUser = true;
                         newContact.id = userDTO.id();
                         em.persist(newContact);
-                        memberList.add(newContact);
-                        LOGGER.infof("Keycloak user with ID %s successfully saved locally.", memberId);
+                        // Add to memberList only if not already present
+                        if (!memberList.contains(newContact)) {
+                            memberList.add(newContact);
+                        }
                     } else {
-                        LOGGER.warnf("User with ID %s not found in Keycloak and could not be added.", memberId);
+                        LOGGER.warnf("User with ID %s not found in Keycloak.", memberId);
                     }
-                } else if (memberDTO instanceof CompanyContactSearchDTO) {
-                    // Handle company contacts if applicable
-                    // Since Keycloak users are natural persons, you might need a different approach here
-                    throw new IllegalArgumentException("Cannot add company contacts from Keycloak.");
                 }
             } else {
-                // Ensure the contact type matches
-                if ((memberDTO instanceof NaturalContactSearchDTO && existingContact instanceof NaturalContact) ||
-                        (memberDTO instanceof CompanyContactSearchDTO && existingContact instanceof CompanyContact)) {
+                // Ensure not to add duplicate contacts
+                if (!memberList.contains(existingContact)) {
                     memberList.add(existingContact);
-                } else {
-                    throw new IllegalArgumentException("Contact with ID " + existingContact.id + " does not match member type.");
                 }
             }
         }

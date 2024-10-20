@@ -3,25 +3,28 @@ package at.htlleonding.leomail.resources;
 import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.model.dto.auth.JwtClaimTest;
 import at.htlleonding.leomail.model.dto.auth.JwtTest;
-import at.htlleonding.leomail.model.enums.ContactType;
 import at.htlleonding.leomail.repositories.ContactRepository;
 import at.htlleonding.leomail.repositories.UserRepository;
 import io.quarkus.oidc.client.OidcClient;
 import io.quarkus.oidc.client.Tokens;
 import io.quarkus.security.Authenticated;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.FormParam;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Path("/auth")
@@ -32,6 +35,9 @@ public class AuthResource {
 
     @Inject
     ContactRepository contactRepository;
+
+    @Inject
+    SecurityIdentity identity;
 
     @Inject
     JsonWebToken jwt;
@@ -205,6 +211,26 @@ public class AuthResource {
             LOGGER.error("Error retrieving profile", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error retrieving profile")
+                    .build();
+        }
+    }
+
+    /*
+     * Endpoint to retrieve the user roles
+     *
+     * @return User profile or error status
+     */
+    @GET
+    @Path("/roles")
+    @Authenticated
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getRoles() {
+        try {
+            return Response.ok(identity.getRoles()).build();
+        } catch (Exception e) {
+            LOGGER.error("Error retrieving roles", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error retrieving roles")
                     .build();
         }
     }

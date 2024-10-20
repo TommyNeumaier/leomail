@@ -67,6 +67,15 @@ export const validateToken = async () => {
     }
 };
 
+export const getRoles = async () => {
+    try {
+        const response = await axios.get('/api/auth/roles');
+        return response.data;
+    } catch (error) {
+        return [];
+    }
+}
+
 export const logout = () => {
     const authStore = useAuthStore();
     authStore.logout();
