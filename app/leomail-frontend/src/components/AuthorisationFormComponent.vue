@@ -44,7 +44,7 @@ const handleAuth = async () => {
     });
 
     console.log("Authorization completed");
-    router.push("/projects");
+    router.push({name: "projects"});
   } catch (error) {
     console.log(error)
     errorMessage.value = "Ungültige Anmeldedaten oder Fehler beim Speichern des Passworts.";
