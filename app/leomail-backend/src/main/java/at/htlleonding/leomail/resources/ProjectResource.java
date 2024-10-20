@@ -1,6 +1,7 @@
 package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.model.dto.project.ProjectAddDTO;
+import at.htlleonding.leomail.model.dto.project.ProjectDetailDTO;
 import at.htlleonding.leomail.repositories.ProjectRepository;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
@@ -41,5 +42,31 @@ public class ProjectResource {
     @Produces("application/json")
     public Response getProjectName(@QueryParam("pid") String pid) {
         return Response.ok(projectRepository.getProjectName(pid)).build();
+    }
+
+    @GET
+    @Path("get/single")
+    @Authenticated
+    @Produces("application/json")
+    public Response getProject(@QueryParam("pid") String pid) {
+        return Response.ok(projectRepository.getProject(pid)).build();
+    }
+
+    @DELETE
+    @Path("delete")
+    @Authenticated
+    @Transactional
+    public Response deleteProject(@QueryParam("pid") String pid) {
+        projectRepository.deleteProject(pid);
+        return Response.ok().build();
+    }
+
+    @PUT
+    @Path("update")
+    @Authenticated
+    @Transactional
+    public Response updateProject(ProjectDetailDTO project) {
+        projectRepository.updateProject(project);
+        return Response.ok().build();
     }
 }

@@ -221,4 +221,21 @@ public class TemplateResource {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }
     }
+
+    @DELETE
+    @Path("/deleteUsedTemplate")
+    @Authenticated
+    public Response deleteUsedTemplate(@QueryParam("tid") String tid, @QueryParam("pid") String pid) {
+        try {
+            String userId = jwt.getClaim("sub");
+            if (permissionService.hasPermission(pid, userId)) {
+                templateRepository.deleteUsedTemplate(tid, pid);
+                return Response.noContent().build();
+            } else {
+                return Response.status(Response.Status.FORBIDDEN).build();
+            }
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
 }

@@ -5,6 +5,7 @@ import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.auth.JwtClaimTest;
 import at.htlleonding.leomail.model.dto.auth.JwtTest;
 import at.htlleonding.leomail.model.dto.auth.OutlookPasswordRequest;
+import at.htlleonding.leomail.model.dto.project.MailAddressDTO;
 import at.htlleonding.leomail.repositories.ContactRepository;
 import at.htlleonding.leomail.repositories.UserRepository;
 import at.htlleonding.leomail.services.EncryptionService;
@@ -311,6 +312,28 @@ public class AuthResource {
             LOGGER.error("Fehler beim Überprüfen der Outlook-Autorisierung", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Fehler beim Überprüfen der Outlook-Autorisierung")
+                    .build();
+        }
+    }
+
+    @POST
+    @Path("/validate-outlook-password")
+    @Authenticated
+    public Response validateOutlookPassword(OutlookPasswordRequest mailAddressDTO) {
+        try {
+            boolean ok = mailService.verifyOutlookCredentials(mailAddressDTO.email(), mailAddressDTO.password());
+
+            if (!ok) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(false)
+                        .build();
+            }
+
+            return Response.ok(true).build();
+        } catch (Exception e) {
+            LOGGER.error("Fehler beim Überprüfen des Outlook-Passworts", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Fehler beim Überprüfen des Outlook-Passworts")
                     .build();
         }
     }
