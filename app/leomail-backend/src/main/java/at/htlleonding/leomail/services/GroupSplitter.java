@@ -34,7 +34,6 @@ public class GroupSplitter {
     public List<Contact> getAllContacts(List<String> groups, List<String> contacts) {
         Set<Contact> allContacts = new HashSet<>();
 
-        // Process individual contacts
         List<Contact> contactList = contacts.stream()
                 .map(this::findOrCreateContact)
                 .filter(Objects::nonNull)

@@ -1,4 +1,3 @@
-<!-- NewMailComponent.vue -->
 <template>
   <div id="mailFormContainer">
     <div id="formHeader">
@@ -6,6 +5,7 @@
     </div>
     <div id="formContent">
       <form @submit.prevent="handlePreview" id="mailForm">
+        <!-- Empfänger Auswahl -->
         <div class="form-group">
           <label for="recipients" class="form-label">Empfänger:</label>
           <div class="input-container">
@@ -32,6 +32,7 @@
           </div>
         </div>
 
+        <!-- Ausgewählte Empfänger anzeigen -->
         <div id="selectedUsersList">
           <div id="selectedRecipients">
             <div class="tag" v-for="user in selectedUsers" :key="user.id">
@@ -45,6 +46,7 @@
           </div>
         </div>
 
+        <!-- Sendezeit auswählen -->
         <div class="form-group">
           <label for="sendLater" class="form-label">Senden am:</label>
           <div class="input-container flex">
@@ -73,6 +75,7 @@
           </div>
         </div>
 
+        <!-- Vorlage auswählen -->
         <div class="form-group">
           <label for="template" class="form-label">Vorlage:</label>
           <div id="mailFlexBox">
@@ -100,19 +103,22 @@
           </div>
         </div>
 
+        <!-- Vorschau anzeigen Button -->
         <div class="form-actions">
           <button type="button" @click="handlePreview" :disabled="!canPreview" class="btn btn-outline">
             Vorschau anzeigen
           </button>
         </div>
       </form>
+
+      <!-- Mail Preview Component -->
       <MailPreviewComponent
           v-if="showPreview"
           :selectedTemplate="selectedTemplate"
-          :selectedUsers="selectedUsers"
-          :selectedGroups="selectedGroups"
+          :selectedUsers="previewRecipients"
           :personalized="personalized"
           :visible="showPreview"
+          :scheduledAt="parseDate()"
           @close="closePreview"
           @send-mail="sendMail"
       />
@@ -122,6 +128,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import debounce from 'lodash/debounce';
 import { Service } from '@/services/service';
 import { useAppStore } from '@/stores/app.store';
 import { useRouter } from 'vue-router';
@@ -138,14 +145,15 @@ interface Template {
 }
 
 interface User {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   mailAddress: string;
+  displayName: string;
 }
 
 interface Group {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -167,11 +175,61 @@ const loading = ref(false);
 const personalized = ref(true);
 const showPreview = ref(false);
 
-const canPreview = computed(() => selectedUsers.value.length > 0 && selectedTemplate.value);
+// Neuer Ref für die Vorschau-Empfänger
+const previewRecipients = ref<User[]>([]);
 
-const handlePreview = () => {
-  if (canPreview.value) {
-    showPreview.value = true;
+const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value);
+
+const handlePreview = async () => {
+  // Überprüfe, ob eine Vorlage ausgewählt wurde und mindestens ein Empfänger vorhanden ist
+  if (selectedUsers.value.length === 0 && selectedGroups.value.length === 0) {
+    alert('Es sind keine Empfänger für die Vorschau vorhanden.');
+    return;
+  }
+
+  if (!selectedTemplate.value) {
+    alert('Bitte wählen Sie eine Vorlage aus.');
+    return;
+  }
+
+  try {
+    // Erstelle eine Kopie der individuell ausgewählten Nutzer
+    let combinedUsers: User[] = [...selectedUsers.value];
+
+    // Wenn Gruppen ausgewählt sind, lade ihre Mitglieder
+    if (selectedGroups.value.length > 0) {
+      // Verwende Promise.all, um alle Gruppenmitglied-Abfragen parallel durchzuführen
+      const groupUsersPromises = selectedGroups.value.map(group =>
+          Service.getInstance().getUsersInGroup(group.id, appStore.$state.project)
+      );
+
+      const groupsResponses = await Promise.all(groupUsersPromises);
+
+      groupsResponses.forEach(response => {
+        combinedUsers = combinedUsers.concat(response.data);
+      });
+    }
+
+    // Entferne doppelte Nutzer basierend auf der Nutzer-ID
+    const uniqueUsersMap = new Map<string, User>();
+    combinedUsers.forEach(user => {
+      uniqueUsersMap.set(user.id, user);
+    });
+    combinedUsers = Array.from(uniqueUsersMap.values());
+
+    // Setze die Vorschau-Empfänger
+    previewRecipients.value = combinedUsers;
+
+    console.log('Preview Recipients:', previewRecipients.value); // Debugging
+
+    if (previewRecipients.value.length > 0 && selectedTemplate.value) {
+      showPreview.value = true;
+    } else {
+      alert('Es sind keine Empfänger für die Vorschau vorhanden.');
+    }
+  } catch (error) {
+    console.error('Fehler beim Laden der Gruppenmitglieder:', error);
+    alert('Fehler beim Laden der Gruppenmitglieder.');
   }
 };
 
@@ -202,14 +260,14 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
-const onSearchInput = () => {
+const onSearchInput = debounce(() => {
   if (searchTerm.value.length > 0) {
     fetchUsersAndGroups(searchTerm.value);
   } else {
     users.value = [];
     groups.value = [];
   }
-};
+}, 300);
 
 const onTemplateSearch = () => {
   filterFunction();
@@ -242,7 +300,7 @@ const getTemplates = async () => {
       ...template,
       visible: true
     }));
-    console.log(fetchedTemplates.value);
+    console.log('Fetched Templates:', fetchedTemplates.value); // Debugging
   } catch (error) {
     console.error('Error fetching templates:', error);
   }
@@ -252,28 +310,38 @@ const parseDate = () => {
   if (checked.value) {
     const date = scheduledDate.value;
     const time = scheduledTime.value;
-    return `${date}T${time}:00.000Z`;
+    if (date && time) {
+      return `${date}T${time}:00.000Z`;
+    } else {
+      alert('Bitte geben Sie sowohl Datum als auch Uhrzeit für den geplanten Versand ein.');
+      return null;
+    }
   } else {
     return null;
   }
 };
 
-const sortSelectedUsers = (selectedUsers: User[]): number[] => {
-  return selectedUsers.map(user => user.id).sort((a, b) => a - b);
+const sortSelectedUsers = (selectedUsers: User[]): string[] => {
+  return selectedUsers.map(user => user.id).sort();
+};
+
+const handleSubmit = () => {
+  sendMail();
 };
 
 const sendMail = async () => {
   try {
     const mailForm = {
       receiver: {
-        contacts: sortSelectedUsers(selectedUsers.value),
-        groups: selectedGroups.value.map(group => group.id)
+        contacts: sortSelectedUsers(selectedUsers.value),  // Individuelle Nutzer
+        groups: selectedGroups.value.map(group => parseInt(group.id)) // Gruppen
       },
       templateId: selectedTemplate.value?.id,
       personalized: personalized.value,
       scheduledAt: parseDate()
     };
 
+    console.log(mailForm)
     const response = await Service.getInstance().sendEmails(mailForm, appStore.$state.project);
     console.log('Erfolgreich gesendet:', response.data);
 
@@ -282,13 +350,9 @@ const sendMail = async () => {
 
     router.push({ name: 'mail', query: { mailsend: 'true' } });
   } catch (error) {
-    console.error('Fehler beim Senden der Daten:', error);
+    console.error('Fehler beim Senden der E-Mail:', error);
     alert('Fehler beim Senden der E-Mail.');
   }
-};
-
-const handleSubmit = () => {
-  sendMail();
 };
 
 const fetchUsersAndGroups = async (query: string) => {
@@ -300,9 +364,8 @@ const fetchUsersAndGroups = async (query: string) => {
     const groupsResponse = await Service.getInstance().searchGroups(appStore.$state.project, query);
     groups.value = groupsResponse.data;
   } catch (error) {
-    console.error('Error fetching users or groups:', error);
-    users.value = [];
-    groups.value = [];
+    console.error('Fehler beim Abrufen von Benutzern oder Gruppen:', error);
+    // Optional: Setze eine Fehlermeldung, falls erforderlich
   } finally {
     loading.value = false;
   }
@@ -329,25 +392,14 @@ const selectUser = (user: User) => {
   groups.value = [];
 };
 
-const selectGroup = async (group: Group) => {
+const selectGroup = (group: Group) => {
   if (!selectedGroups.value.find(g => g.id === group.id)) {
     selectedGroups.value.push(group);
-
-    try {
-      const response = await Service.getInstance().getUsersInGroup(group.id, appStore.$state.project);
-      const usersInGroup = response.data;
-
-      usersInGroup.forEach((user: User) => {
-        if (!selectedUsers.value.some(u => u.id === user.id)) {
-          selectedUsers.value.push(user);
-        }
-      });
-
-      console.log('Benutzer in Gruppe:', usersInGroup);
-    } catch (error) {
-      console.error('Fehler beim Abrufen der Benutzer in der Gruppe:', error);
-    }
   }
+
+  searchTerm.value = '';
+  users.value = [];
+  groups.value = [];
 };
 
 const removeUser = (user: User) => {
@@ -445,8 +497,8 @@ const removeGroup = (group: Group) => {
 
 /* Tags für ausgewählte Benutzer/Gruppen */
 #selectedUsersList {
-  width: 80vw;
-  height: 10vh;
+  width: 100%;
+  height: auto;
   border: 1px solid #ccc;
   padding: 10px;
   overflow-y: auto;
@@ -524,38 +576,6 @@ const removeGroup = (group: Group) => {
 .autocomplete li:hover {
   background-color: #007bff;
   color: white;
-}
-
-/* Tags für ausgewählte Benutzer/Gruppen */
-#selectedUsersList {
-  width: 100%;
-  height: auto;
-  border: 1px solid #ccc;
-  padding: 10px;
-  overflow-y: auto;
-}
-
-#selectedRecipients {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5%;
-  margin-bottom: 20px;
-}
-
-/* Checkbox */
-.flex {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.form-checkbox {
-  transform: scale(1.3);
-}
-
-.form-checkbox-label {
-  font-size: 1rem;
-  color: #333;
 }
 
 /* Form Actions */

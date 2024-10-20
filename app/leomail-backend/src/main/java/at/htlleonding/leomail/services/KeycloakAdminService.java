@@ -103,27 +103,36 @@ public class KeycloakAdminService {
      *
      * @param user UserRepresentation to be saved or updated
      */
-    @Transactional
     public void saveOrUpdateKeycloakUser(UserRepresentation user) {
-        // Check if the user already exists in the application database
+        // Validierung der E-Mail-Adresse
+        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            LOGGER.warnf("User '%s' hat keine gültige E-Mail-Adresse. Überspringe das Speichern.", user.getId());
+            return; // Oder entscheiden Sie, ob Sie eine Ausnahme werfen möchten
+        }
+
+        // Überprüfen, ob der Benutzer bereits existiert
         NaturalContact existingContact = NaturalContact.findById(user.getId());
         if (existingContact != null) {
-            // Update existing contact if necessary
+            // Aktualisieren vorhandener Kontakt
             existingContact.firstName = user.getFirstName() != null ? user.getFirstName() : "";
             existingContact.lastName = user.getLastName() != null ? user.getLastName() : "";
             existingContact.mailAddress = user.getEmail();
             existingContact.persist();
             LOGGER.infof("Updated existing Keycloak user '%s' in application database.", existingContact.id);
         } else {
-            // Create a new contact
             NaturalContact contact = new NaturalContact();
             contact.id = user.getId();
             contact.firstName = user.getFirstName() != null ? user.getFirstName() : "";
             contact.lastName = user.getLastName() != null ? user.getLastName() : "";
             contact.mailAddress = user.getEmail();
             contact.kcUser = true;
+
+            // Optional: Weitere Felder setzen, z.B. Projektzuordnung
+            // contact.project = Project.findById(projectId);
+
             contact.persist();
             LOGGER.infof("Saved new Keycloak user '%s' to application database.", contact.id);
         }
     }
+
 }

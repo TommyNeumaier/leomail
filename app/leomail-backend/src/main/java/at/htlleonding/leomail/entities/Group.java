@@ -1,9 +1,7 @@
 package at.htlleonding.leomail.entities;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
@@ -44,5 +42,9 @@ public class Group extends PanacheEntityBase {
     public Group(String name, String description, NaturalContact createdBy, Project project, HashSet<Contact> members) {
         this(name, description, createdBy, project);
         this.members = members;
+    }
+
+    public Set<Contact> getMembers() {
+        return members;
     }
 }

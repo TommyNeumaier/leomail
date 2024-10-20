@@ -3,10 +3,10 @@
     <div class="modal-content">
       <span class="close-button" @click="close">✕</span>
 
-      <div v-if="currentEmailIndex !== null">
+      <div v-if="allRecipients.length > 0">
         <h3>Vorschau für <b>{{ selectedTemplate?.name }}</b></h3>
 
-        <p class="indexing">{{ currentEmailIndex + 1 }} / {{ selectedUsers.length }}</p>
+        <p class="indexing">{{ currentEmailIndex + 1 }} / {{ allRecipients.length }}</p>
 
         <div class="info-row">
           <label>Betreff:</label>
@@ -18,14 +18,15 @@
         </div>
         <div class="info-row">
           <label>An:</label>
-          <input type="text" :value="selectedUsers[currentEmailIndex]?.firstName + ' ' + selectedUsers[currentEmailIndex]?.lastName + ` <${selectedUsers[currentEmailIndex]?.mailAddress}>`" disabled />
+          <input type="text" :value="recipientDisplay" disabled/>
         </div>
 
         <div class="email-preview" v-html="filledTemplate"></div>
 
         <div class="navigation-buttons">
           <span class="arrow prev-arrow" @click="prevEmail" :class="{ 'disabled': currentEmailIndex === 0 }"></span>
-          <span class="arrow next-arrow" @click="nextEmail" :class="{ 'disabled': currentEmailIndex === selectedUsers.length - 1 }"></span>
+          <span class="arrow next-arrow" @click="nextEmail"
+                :class="{ 'disabled': currentEmailIndex === allRecipients.length - 1 }"></span>
         </div>
 
         <div class="checkbox">
@@ -40,26 +41,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import type { Template, User } from '@/types';
-import { Service } from "@/services/service";
-import {useAppStore} from "@/stores/app.store";  // Importiere den Service zum Laden von Benutzern
+import {computed, onMounted, ref, watch} from 'vue';
+import type {Template, User} from '@/types';
 
 const emit = defineEmits(['close', 'send-mail']);
 
-const props = defineProps({
-  selectedTemplate: Object as () => Template | null,
-  selectedUsers: Array as () => User[],
-  selectedGroups: Array as () => number[],  // Füge die Gruppen als Prop hinzu
-  visible: Boolean,
-  personalized: Boolean,
-  scheduledAt: String || null,
-});
+const props = defineProps<{
+  selectedTemplate: Template | null;
+  selectedUsers: User[];
+  visible: boolean;
+  personalized: boolean;
+  scheduledAt: string | null;
+}>();
 
-const currentEmailIndex = ref<number | null>(0);
+const currentEmailIndex = ref<number>(0);
 const filledTemplate = ref<string>('');
 const confirmed = ref(false);
-const allSelectedUsers = ref<User[]>([]);  // Hier werden alle Benutzer, inklusive der Gruppenbenutzer, gespeichert
+const allRecipients = ref<User[]>([]);
 
 const formattedSendTime = computed(() => {
   if (props.scheduledAt) {
@@ -68,68 +66,66 @@ const formattedSendTime = computed(() => {
   return 'Jetzt';
 });
 
-// Funktion zur Template-Befüllung
 const fillTemplate = (template: Template, user: User) => {
-  let filledContent = template.content
-      .replace('{firstname}', `<span class="highlight">${user.firstName}</span>`)
-      .replace('{lastname}', `<span class="highlight">${user.lastName}</span>`)
-      .replace('{mailAddress}', `<span class="highlight">${user.mailAddress}</span>`);
-  return filledContent;
+  if (!template || !user) {
+    console.error('Template oder User ist undefined');
+    return '';
+  }
+  return template.content
+      .replace(/{firstname}/g, `<span class="highlight">${user.firstName}</span>`)
+      .replace(/{lastname}/g, `<span class="highlight">${user.lastName}</span>`)
+      .replace(/{mailAddress}/g, `<span class="highlight">${user.mailAddress}</span>`);
 };
 
 const updateFilledTemplate = () => {
-  if (currentEmailIndex.value !== null) {
-    const user = props.selectedUsers[currentEmailIndex.value];
+  if (currentEmailIndex.value < allRecipients.value.length) {
+    const user = allRecipients.value[currentEmailIndex.value];
     filledTemplate.value = fillTemplate(props.selectedTemplate!, user);
+    console.log('Filled Template in Preview:', filledTemplate.value); // Debugging
   }
 };
 
 const nextEmail = () => {
-  if (currentEmailIndex.value !== null && currentEmailIndex.value < props.selectedUsers.length - 1) {
+  if (currentEmailIndex.value < allRecipients.value.length - 1) {
     currentEmailIndex.value++;
     updateFilledTemplate();
   }
 };
 
 const prevEmail = () => {
-  if (currentEmailIndex.value !== null && currentEmailIndex.value > 0) {
+  if (currentEmailIndex.value > 0) {
     currentEmailIndex.value--;
     updateFilledTemplate();
   }
 };
 
-// Funktion zum Laden der ersten E-Mail und aller Benutzer, auch der Gruppenbenutzer
-const loadFirstEmail = async () => {
-  try {
-    // Füge Benutzer aus den Gruppen hinzu
-    if (props.selectedGroups.length > 0) {
-      for(const groupId of props.selectedGroups) {
-        const response = await Service.getInstance().getUsersInGroups(groupId, useAppStore().$state.projectId);
-        allSelectedUsers.value.push(...response.data);
-      }
-    } else {
-      allSelectedUsers.value = [...props.selectedUsers];  // Nur die ausgewählten Benutzer
-    }
-
-    // Lade die erste E-Mail-Vorschau
-    if (props.selectedTemplate && allSelectedUsers.value.length > 0) {
-      filledTemplate.value = fillTemplate(props.selectedTemplate, allSelectedUsers.value[0]);
-      currentEmailIndex.value = 0;
-    }
-  } catch (error) {
-    console.error("Fehler beim Laden der Benutzer aus Gruppen:", error);
+const loadRecipients = () => {
+  allRecipients.value = props.selectedUsers;
+  if (props.selectedTemplate && allRecipients.value.length > 0) {
+    filledTemplate.value = fillTemplate(props.selectedTemplate, allRecipients.value[0]);
+    currentEmailIndex.value = 0;
+    console.log('Initial Filled Template in Preview:', filledTemplate.value); // Debugging
   }
 };
 
-// Watcher auf visible, um sicherzustellen, dass die erste Vorschau geladen wird
 watch(() => props.visible, (newValue) => {
   if (newValue) {
-    loadFirstEmail();  // Lade die Vorschau beim Öffnen
+    loadRecipients();
+    console.log(allRecipients.value)
   }
 });
 
+
+const recipientDisplay = computed(() => {
+  if (currentEmailIndex.value >= allRecipients.value.length) return '';
+  const user = allRecipients.value[currentEmailIndex.value];
+  return `${user.firstName} ${user.lastName} <${user.mailAddress}>`;
+});
+
 const close = () => {
-  currentEmailIndex.value = null;
+  // Reset the index and filled template
+  currentEmailIndex.value = 0;
+  filledTemplate.value = '';
   emit('close');
 };
 
@@ -140,13 +136,13 @@ const emitSendMail = () => {
 };
 
 onMounted(() => {
-  if (props.selectedUsers.length > 0) {
-    currentEmailIndex.value = 0; // Setze die Vorschau auf den ersten Benutzer
+  loadRecipients();
+  if (allRecipients.value.length > 0) {
+    currentEmailIndex.value = 0;
     updateFilledTemplate();
   }
 });
 </script>
-
 
 <style scoped>
 .mail-preview-modal {

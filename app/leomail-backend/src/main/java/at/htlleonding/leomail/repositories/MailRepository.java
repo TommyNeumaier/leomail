@@ -43,9 +43,19 @@ public class MailRepository {
             throw new IllegalArgumentException("Scheduled time is in the past");
         }
 
+        if (projectId == null || projectId.trim().isEmpty()) {
+            LOGGER.error("Project ID is null or empty.");
+            throw new IllegalArgumentException("Project ID is required");
+        }
+
+        if (accountId == null || accountId.trim().isEmpty()) {
+            LOGGER.error("Account ID is null or empty.");
+            throw new IllegalArgumentException("Account ID is required");
+        }
+
         Template template = Template.findById(smtpInformation.templateId());
         if (template == null) {
-            LOGGER.errorf("Template with ID %d not found.", smtpInformation.templateId());
+            LOGGER.errorf("Template with ID %s not found.", smtpInformation.templateId());
             throw new IllegalArgumentException("Template not found");
         }
 
@@ -84,6 +94,7 @@ public class MailRepository {
 
         LOGGER.info("MailsByTemplate process completed successfully.");
     }
+
 
     /**
      * Sends the mails associated with a SentTemplate by its ID.
