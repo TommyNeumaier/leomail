@@ -106,6 +106,7 @@ const selectUser = (user: ContactMember) => {
   users.value = [];
 };
 
+
 const removeUser = (user: ContactMember) => {
   selectedMembers.value = selectedMembers.value.filter(u => u.id !== user.id);
 };
@@ -129,7 +130,6 @@ const addGroup = async () => {
     console.log('Group created:', response.data);
     emitEvents('group-added', response.data);
     clearForm();
-    alert('Group successfully created!');
   } catch (error: any) {
     console.error('Error adding group:', error);
     alert(`Error adding group: ${error.response?.data?.error || error.message}`);
@@ -181,7 +181,12 @@ watch(() => props.selectedTemplate, (newTemplate) => {
   if (newTemplate) {
     groupName.value = newTemplate.name;
     groupDescription.value = newTemplate.description;
-    selectedMembers.value = newTemplate.members;
+
+    // Prüfen, ob die Mitglieder bereits in selectedMembers existieren
+    const uniqueMembers = newTemplate.members.filter(newMember =>
+        !selectedMembers.value.find(existingMember => existingMember.id === newMember.id)
+    );
+    selectedMembers.value.push(...uniqueMembers);
   } else {
     clearForm();
   }
@@ -191,9 +196,10 @@ onMounted(() => {
   if (props.selectedTemplate) {
     groupName.value = props.selectedTemplate.name;
     groupDescription.value = props.selectedTemplate.description;
-    selectedMembers.value = props.selectedTemplate.members;
+    selectedMembers.value = [...props.selectedTemplate.members]; // Kopiere die Liste
   }
 });
+
 
 const errorMessage = ref<string | null>(null);
 
@@ -242,14 +248,6 @@ const validateForm = () => {
         <div class="boxLabel">
           <label for="members" class="group-label">Mitglieder hinzufügen</label><br>
         </div>
-        <div class="multiselect">
-          <div class="selected" v-for="user in selectedMembers" :key="user.id">
-            <span v-if="user.type === 'natural'">{{ user.firstName }} {{ user.lastName }}</span>
-            <span v-else-if="user.type === 'company'">{{ user.companyName }}</span>
-            <span class="remove" @click="removeUser(user)">×</span>
-          </div>
-          <input type="text" v-model="searchTerm" class="formGroup" placeholder="Benutzer suchen">
-
           <input
               type="text"
               v-model="searchTerm"
@@ -271,7 +269,6 @@ const validateForm = () => {
             <li v-if="loading">Laden...</li>
           </ul>
         </div>
-      </div>
 
       <div id="selectedUsersList">
         <div id="selectedRecipients">

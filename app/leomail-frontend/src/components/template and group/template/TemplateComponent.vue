@@ -25,9 +25,9 @@ const inputHeading = ref('');
 const selectedGreeting = ref<number | null>(null);
 const content = ref('');
 const greetingData = ref<Greeting[]>([]);
-const checkedCompany = ref(false);
-const checkedIndividual = ref(true);
-const pickedEntity = ref<string>('');
+//const checkedCompany = ref(false);
+//const checkedIndividual = ref(true);
+//const pickedEntity = ref<string>('');
 const toolbarOptions = ref([
   [{'font': []}],
   [{'size': ['small', false, 'large', 'huge']}],
@@ -151,7 +151,7 @@ watch(
     }
 );
 
-const handleEntities = (entity: string) => {
+/*const handleEntities = (entity: string) => {
   pickedEntity.value = entity;
   if (entity === 'company') {
     checkedCompany.value = true;
@@ -160,7 +160,7 @@ const handleEntities = (entity: string) => {
     checkedCompany.value = false;
     checkedIndividual.value = true;
   }
-};
+};*/
 </script>
 
 <template>
@@ -184,6 +184,8 @@ const handleEntities = (entity: string) => {
         </select>
       </div>
     </div>
+
+    <!--
 
     <div class="personContainer">
       <div class="personBox">
@@ -210,10 +212,12 @@ const handleEntities = (entity: string) => {
         <label for="company">Unternehmen</label>
       </div>
     </div>
+
+
     <img src="../../../assets/icons/icons8-info-250.png" id="tooltip" width="20"
          v-tooltip="{ value: 'Vorname: {firstname} Nachname: {lastname} Email-Adresse: {mailAddress}', showDelay: 200, hideDelay: 400 }"
          label="Save">
-
+     -->
     <div class="editor-wrapper">
       <div id="editor" class="quill-editor"></div>
     </div>
@@ -234,30 +238,6 @@ const handleEntities = (entity: string) => {
 </template>
 
 <style scoped>
-/* checkbox */
-.personBox {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 15%;
-}
-
-.personBox label {
-  margin-left: 5%;
-}
-
-.personContainer {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-}
-
-#tooltip {
-  display: flex;
-  margin-left: 97%;
-  margin-bottom: 0.2%;
-}
-
 #formFlexBox {
   display: flex;
   flex-direction: row;
@@ -365,5 +345,30 @@ form {
   font-weight: var(--font-weight-bold);
   box-shadow: none;
 }
+
+/* checkbox
+.personBox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 15%;
+}
+
+.personBox label {
+  margin-left: 5%;
+}
+
+.personContainer {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+#tooltip {
+  display: flex;
+  margin-left: 97%;
+  margin-bottom: 0.2%;
+}
+*/
 </style>
 

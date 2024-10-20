@@ -91,7 +91,7 @@
             </p>
           </div>
           <p id="mailHeadline">{{ email.meta.mailHeadline }}</p>
-          <p id="sentOnMail">{{ email.keyDates.sentOn }}</p>
+          <p id="sentOnMail">{{ email.sentOnDate }}</p>
         </div>
         <transition name="fade" @after-enter="startTimeout">
           <div v-if="isMailSent" class="notification-box">
@@ -173,17 +173,9 @@ const getMails = async () => {
 
     fetchedMails.value = response.data.map((mail: any) => {
       const sentOnDate = parseISO(mail.keyDates.sentOn);
-      let formattedSentOn: string;
-
-      if (isToday(sentOnDate)) {
-        formattedSentOn = format(sentOnDate, 'HH:mm');
-      } else if (isYesterday(sentOnDate)) {
-        formattedSentOn = 'gestern';
-      } else if (isSameDay(sentOnDate, subDays(new Date(), 2))) {
-        formattedSentOn = 'vorgestern';
-      } else {
-        formattedSentOn = format(sentOnDate, 'yyyy-MM-dd');
-      }
+      let formatted;
+      formatted = format(sentOnDate, 'dd.MM.yyyy, HH:mm');
+      console.log("formated" + formatted);
 
       const mappedMails: MailDetails[] = mail.mails
           .filter((mailDetail: any) => {
@@ -209,7 +201,7 @@ const getMails = async () => {
         ...mail,
         mails: mappedMails,
         visible: true,
-        sentOnDate: sentOnDate,
+        sentOnDate: formatted,
       };
     });
 
@@ -258,7 +250,7 @@ const increment = () => {
 const handleEmailClick = (mailId: number) => {
   console.log('Clicked email id:', mailId);
   // Implement navigation or other actions as needed
-  router.push({ name: 'usedTemplate', params: { tid: mailId, pid: appStore.$state.project } });
+  router.push({ name: 'MailDetail', params: { id: mailId, projectId: appStore.$state.project } });
 };
 
 
@@ -328,7 +320,7 @@ watch(
 
 <style scoped>
 #sentOnMail {
-  width: 10%;
+  width: 15%;
   margin: 0 auto; /* zentriert das Element */
   text-align: center;
 }

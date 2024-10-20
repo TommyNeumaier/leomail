@@ -1,7 +1,7 @@
 <template>
   <HeaderLoginComponent></HeaderLoginComponent>
   <div id="login-container">
-    <h2 id="headline">Login</h2>
+    <h2 id="headline">Mail-Account Authorisation</h2>
     <form @submit.prevent="handleLogin">
       <div class="form-group">
         <label for="username" class="login-label">Benutzername:</label><br>
@@ -47,7 +47,7 @@ const handleLogin = async () => {
   color: red;
 }
 #headline {
-  font-weight: var(--font-weight-medium);
+  font-weight: bold;
   text-align: center;
 }
 
@@ -67,7 +67,7 @@ const handleLogin = async () => {
 }
 
 form {
-  margin-top: 3vh;
+  margin-top: 5vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -108,109 +108,11 @@ form {
   border-radius: 5px;
   padding: 0.9vw 0.6vw;
   width: 30vw;
-  font-size: 0.8em;
+  font-size: 1em;
 }
 
 .formLogin:focus {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-
-@media (min-width: 1024px) {
-  #login-container {
-    width: 50%;
-  }
-
-  .formLogin {
-    font-size: 1.1em;
-  }
-}
-
-@media (min-width: 1001px) {
-  #login-container {
-    width: 40%;
-    align-items: center;
-    justify-content: center;
-    height: 60vh;
-  }
-
-  .formLogin {
-    font-size: 0.8rem;
-    width: 30vw;
-  }
-
-  #loginButton {
-    width: 100%;
-  }
-
-  form {
-    justify-content: center;
-  }
-}
-
-@media (max-width: 1000px) {
-  #login-container {
-    width: 50%;
-    align-items: center;
-    justify-content: center;
-    height: 60vh;
-  }
-
-  .formLogin {
-    font-size: 1.5rem;
-    width: 40vw;
-  }
-
-  #loginButton {
-    width: 100%;
-  }
-
-  form {
-    justify-content: center;
-  }
-}
-
-@media (max-width: 800px) {
-  #login-container {
-    width: 70%;
-    align-items: center;
-    justify-content: center;
-    height: 60vh;
-  }
-
-  .formLogin {
-    font-size: 1.5rem;
-    width: 50vw;
-  }
-
-  #loginButton {
-    width: 100%;
-  }
-
-  form {
-    justify-content: center;
-  }
-}
-
-@media (max-width: 500px) {
-  #login-container {
-    width: 90%;
-    align-items: center;
-    justify-content: center;
-    height: 50vh;
-  }
-
-  .formLogin {
-    font-size: 1em;
-    width: 70vw;
-  }
-
-  #loginButton {
-    width: 100%;
-  }
-
-  form {
-    justify-content: center;
-  }
-}
 </style>

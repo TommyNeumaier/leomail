@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, defineProps, defineEmits } from "vue";
+import { computed, ref, watch } from "vue";
 import { Service } from "@/services/service";
 
 interface BaseContact {

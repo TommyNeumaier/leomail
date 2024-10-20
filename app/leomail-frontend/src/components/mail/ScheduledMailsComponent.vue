@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
-import {Service} from "@/services/service";
-import {parseISO, format, isToday, isYesterday, subDays, isSameDay} from 'date-fns';
-import {useRouter} from 'vue-router';
-import {useRoute} from "vue-router";
-import {useAppStore} from "@/stores/app.store";
+import { computed, onMounted, ref, watch } from 'vue';
+import { Service } from '@/services/service';
+import { parseISO, format, isToday } from 'date-fns';
+import { useRouter, useRoute } from 'vue-router';
+import { useAppStore } from '@/stores/app.store';
 
 const route = useRoute();
 const router = useRouter();
@@ -51,62 +50,70 @@ interface Mail {
 }
 
 const fetchedMails = ref<Mail[]>([]);
-const startIndex = ref(1);
-const endIndex = ref(10);
-const totalMails = ref(50);
+const totalMails = ref(0);
 const limit = ref(10);
+const startIndex = ref(1);
+const endIndex = ref(limit.value);
 const checkAllMails = ref(false);
 const appStore = useAppStore();
 
 const getMails = async () => {
-  const response = await Service.getInstance().getUsedTemplates(true, appStore.$state.project);
-  console.log(response.data);
-  fetchedMails.value = response.data.map((mail: any) => {
-    const scheduledAt = parseISO(mail.keyDates.scheduledAt);
-    let formattedScheduledAt;
+  try {
+    const response = await Service.getInstance().getUsedTemplates(true, appStore.$state.project);
+    fetchedMails.value = response.data.map((mail: any) => {
+      const scheduledAt = parseISO(mail.keyDates.scheduledAt);
+      const formattedScheduledAt = isToday(scheduledAt)
+          ? format(scheduledAt, 'HH:mm')
+          : format(scheduledAt, 'dd.MM.yyyy, HH:mm');
 
-    if (isToday(scheduledAt)) {
-      formattedScheduledAt = format(scheduledAt, 'HH:mm');
-    } else {
-      formattedScheduledAt = format(scheduledAt, 'dd.MM.yyyy, HH:mm');
-    }
-    return {
-      id: mail.id,
-      meta: {
-        templateName: mail.meta.templateName,
-        mailHeadline: mail.meta.mailHeadline,
-        mailContent: mail.meta.mailContent,
-        greetingId: mail.meta.greetingId,
-      },
-      keyDates: {
-        created: mail.keyDates.created,
-        sentOn: mail.keyDates.sentOn,
-        scheduledAt: formattedScheduledAt,
-      },
-      accountInformation: {
-        createdBy: mail.accountInformation.createdBy,
-        sentBy: mail.accountInformation.sentBy,
-      },
-      mails: mail.mails.map((mailDetail: any) => ({
-        contact: {
-          id: mailDetail.contact.id,
-          firstName: mailDetail.contact.firstName,
-          lastName: mailDetail.contact.lastName,
-          mailAddress: mailDetail.contact.mailAddress,
+      return {
+        id: mail.id,
+        meta: {
+          templateName: mail.meta.templateName,
+          mailHeadline: mail.meta.mailHeadline,
+          mailContent: mail.meta.mailContent,
+          greetingId: mail.meta.greetingId,
         },
-        content: mailDetail.content,
-      }))
-    }
-  })
-  console.log(fetchedMails.value);
-}
+        keyDates: {
+          created: mail.keyDates.created,
+          sentOn: mail.keyDates.sentOn,
+          scheduledAt: formattedScheduledAt,
+        },
+        accountInformation: {
+          createdBy: mail.accountInformation.createdBy,
+          sentBy: mail.accountInformation.sentBy,
+        },
+        mails: mail.mails.map((mailDetail: any) => ({
+          contact: {
+            id: mailDetail.contact.id,
+            firstName: mailDetail.contact.firstName,
+            lastName: mailDetail.contact.lastName,
+            mailAddress: mailDetail.contact.mailAddress,
+          },
+          content: mailDetail.content,
+        }))
+      };
+    });
 
-onMounted(() => {
-  getMails();
-})
+    totalMails.value = fetchedMails.value.length;
+    updatePaginationIndices();
+  } catch (error) {
+    console.error('Error fetching mails:', error);
+  }
+};
+
+const updatePaginationIndices = () => {
+  endIndex.value = Math.min(startIndex.value + limit.value - 1, totalMails.value);
+};
+
+const paginatedMails = computed(() => {
+  const start = startIndex.value - 1;
+  const end = endIndex.value;
+  return fetchedMails.value.slice(start, end);
+});
 
 const decrement = () => {
-  if (startIndex.value - limit.value >= 0) {
+  if (startIndex.value - limit.value >= 1) {
     startIndex.value -= limit.value;
     endIndex.value = startIndex.value + limit.value - 1;
   } else {
@@ -120,37 +127,31 @@ const increment = () => {
     startIndex.value += limit.value;
     endIndex.value = startIndex.value + limit.value - 1;
   } else {
+    startIndex.value = Math.max(totalMails.value - limit.value + 1, 1);
+    endIndex.value = totalMails.value;
   }
 };
 
 const handleEmailClick = (mailId: number) => {
   console.log('Clicked email id:', mailId);
+  router.push({ name: 'MailDetail', params: { id: mailId, projectId: appStore.$state.project } });
 };
+
+onMounted(() => {
+  getMails();
+});
 
 watch(() => route.query.mailsend, (newValue) => {
   if (newValue === 'true') {
     isMailSent.value = true;
-    startTimeout();
+    setTimeout(() => {
+      isMailSent.value = false;
+      const query = { ...route.query };
+      delete query.mailsend;
+      router.replace({ path: route.path, query });
+    }, 5000);
   }
 });
-
-/*const startTimeout = () => {
-  setTimeout(() => {
-    isMailSent.value = false;
-
-    const query = { ...route.query }; // Kopiere die aktuellen Query-Parameter
-    delete query.mailsend; // Entferne den 'mailsend' Parameter
-    router.replace({ path: route.path, query }); // Aktualisiere die URL
-  }, 2000); // 5 Sekunden Timeout
-};
-
-onMounted(() => {
-  if (route.query.mailsend === 'true') {
-    isMailSent.value = true;
-    startTimeout();
-  }
-});
-*/
 </script>
 
 <template>
@@ -160,22 +161,22 @@ onMounted(() => {
     </div>
 
     <div id="search-container">
-      <input type="text" id="search" placeholder="suche">
+      <input type="text" id="search" placeholder="suche" />
       <div id="searchIconBox">
-        <img src="../../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10">
+        <img src="../../assets/icons/search.png" alt="Suche" id="search-icon" width="auto" height="10" />
       </div>
     </div>
 
     <div id="bigFeaturesContainer">
       <div id="mailFeaturesContainer">
         <div>
-          <input type="checkbox" v-model="checkAllMails" id="checkbox"/>
+          <input type="checkbox" v-model="checkAllMails" id="checkbox" />
         </div>
         <div>
-          <img src="../../assets/reload.png" alt="Reload" id="reload-icon" width="auto" height="12">
+          <img src="../../assets/reload.png" alt="Reload" id="reload-icon" width="auto" height="12" @click="getMails" />
         </div>
         <div>
-          <img src="../../assets/trash.png" alt="Trash" id="trash-icon" width="auto" height="12">
+          <img src="../../assets/trash.png" alt="Trash" id="trash-icon" width="auto" height="12" />
         </div>
       </div>
 
@@ -190,11 +191,11 @@ onMounted(() => {
           </div>
         </div>
         <div id="pagesButtonBox">
-          <button @click="decrement" :disabled="startIndex == 0" class="icon-button">
-            <img src="../../assets/icons/pfeil-links.png" alt="Decrement" class="icon">
+          <button @click="decrement" :disabled="startIndex === 1" class="icon-button">
+            <img src="../../assets/icons/pfeil-links.png" alt="Decrement" class="icon" />
           </button>
-          <button @click="increment" :disabled="endIndex == totalMails - 1" class="icon-button">
-            <img src="../../assets/icons/pfeil-rechts.png" alt="Increment" class="icon">
+          <button @click="increment" :disabled="endIndex === totalMails" class="icon-button">
+            <img src="../../assets/icons/pfeil-rechts.png" alt="Increment" class="icon" />
           </button>
         </div>
       </div>
@@ -202,20 +203,19 @@ onMounted(() => {
 
     <div id="mailsBox">
       <div id="mailContentBox">
-        <div v-for="email in fetchedMails" :key="email.id" @click="handleEmailClick(email.id)" class="emailElement">
-          <div id="checkboxContainer"><input type="checkbox" id="checkbox"/></div>
+        <div v-for="email in paginatedMails" :key="email.id" @click="handleEmailClick(email.id)" class="emailElement">
+          <div id="checkboxContainer"><input type="checkbox" id="checkbox" /></div>
           <div class="contactName">
             <p class="allContacts">
-            <span v-for="(mailDetail, index) in email.mails" :key="mailDetail.contact.id">
-              {{ mailDetail.contact.lastName }} {{ mailDetail.contact.firstName}}<span v-if="index < email.mails.length - 1">,</span>
-            </span>
+              <span v-for="(mailDetail, index) in email.mails" :key="mailDetail.contact.id">
+                {{ mailDetail.contact.lastName }} {{ mailDetail.contact.firstName }}<span v-if="index < email.mails.length - 1">,</span>
+              </span>
             </p>
           </div>
           <p id="mailHeadline">{{ email.meta.mailHeadline }}</p>
-          <!--<p>{{ email.keyDates.content.slice(0, 10) }}...</p>-->
           <p id="sentOnMail">{{ email.keyDates.scheduledAt }}</p>
         </div>
-        <transition name="fade" @after-enter="startTimeout">
+        <transition name="fade">
           <div v-if="isMailSent" class="notification-box">
             <p>E-Mail wurde erfolgreich gesendet!</p>
           </div>
@@ -254,7 +254,7 @@ onMounted(() => {
 }
 
 .notification-box {
-  background-color: green;
+  background-color: lightgreen;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -263,10 +263,11 @@ onMounted(() => {
   position: absolute;
   top: 85vh;
   left: 75vw;
+  transform: translate(-50%, -50%);
 }
 
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 1s; /* Dauer der Einblendung/Ausblendung */
+  transition: opacity 2s; /* Dauer der Einblendung/Ausblendung */
 }
 
 .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */
@@ -285,6 +286,10 @@ onMounted(() => {
   height: 4vh;
   justify-content: center;
   align-items: center;
+}
+
+.emailElement:hover {
+  background-color: #f5f5f5;
 }
 
 #form {

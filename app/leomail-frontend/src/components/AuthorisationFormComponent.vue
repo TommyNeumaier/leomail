@@ -7,7 +7,6 @@ import router from "@/configs/router.config";
 const profileData = ref();
 const email = ref();
 const password = ref();
-const displayName = ref();
 const errorMessage = ref();
 
 
@@ -23,16 +22,12 @@ const getProfile = async () => {
 
 const handleAuth = () => {
   console.log('Authorisation completed');
-  console.log(router.currentRoute)
+  router.push('/projects').then(() => {});
 };
 </script>
 
 <template>
   <form @submit.prevent="handleAuth">
-    <div class="form-group">
-      <label for="username" class="auth-label">Anzeigename:</label><br>
-      <input type="text" id="username" class="formAuth" v-model="displayName" required />
-    </div>
     <div class="form-group">
       <label for="username" class="auth-label">Email-Adresse:</label><br>
       <input type="text" id="username" class="formAuth" v-model="email" disabled />
@@ -52,7 +47,7 @@ const handleAuth = () => {
 }
 
 form {
-  margin-top: 3vh;
+  margin-top: 5vh;
   display: flex;
   flex-direction: column;
   justify-content: center;

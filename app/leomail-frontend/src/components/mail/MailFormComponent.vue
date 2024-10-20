@@ -59,23 +59,28 @@
             <label for="sendLater" class="form-checkbox-label">später senden</label>
           </div>
           <div v-if="checked" class="datetime-picker">
-            <input
-                type="date"
-                v-model="scheduledDate"
-                class="datepicker"
-                id="datepicker"
-                :min="minDate"
-            />
-            <input
-                type="time"
-                v-model="scheduledTime"
+            <VueDatePicker v-if="checked"
+                           locale="de-AT"
+                           v-model="date"
+                           class="datepicker"
+                           id="datepicker"
+                           now-button-label="Current"
+                           format="dd-MM-yyyy"
+                           :enable-time-picker="false"
+                           placeholder='Datum auswählen'
+                           :min-date="format(new Date(), 'yyyy-MM-dd')">
+            </VueDatePicker>
+            <VueDatePicker
+                v-model="time"
                 class="timepicker"
+                time-picker
                 placeholder="Uhrzeit auswählen"
             />
           </div>
         </div>
 
         <!-- Vorlage auswählen -->
+
         <div class="form-group">
           <label for="template" class="form-label">Vorlage:</label>
           <div id="mailFlexBox">
@@ -127,13 +132,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import debounce from 'lodash/debounce';
-import { Service } from '@/services/service';
-import { useAppStore } from '@/stores/app.store';
-import { useRouter } from 'vue-router';
+
+import {computed, onMounted, ref, watch} from 'vue';
+import {Service} from '@/services/service';
+import {useAppStore} from '@/stores/app.store';
+import {useRouter} from 'vue-router';
 import MailPreviewComponent from '@/components/mail/MailPreviewComponent.vue';
-import { format } from 'date-fns';
+import {format} from 'date-fns';
 
 interface Template {
   id: number;
@@ -241,10 +246,45 @@ const closeDropdown = () => {
   dropdownVisible.value = false;
 };
 
-const scheduledDate = ref('');
-const scheduledTime = ref('');
+/* date picker */
+const date = ref({
+  day: new Date().getDate().toString().padStart(2, "0"),
+  month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
+  year: new Date().getFullYear()
+});
 
-const minDate = format(new Date(), 'yyyy-MM-dd');
+const time = ref({
+  hours: new Date().getHours().toString().padStart(2, "0"),
+  minutes: new Date().getMinutes().toString().padStart(2, "0"),
+});
+
+const scheduledAt = ref({
+  ...date.value,
+  ...time.value
+});
+
+watch(date, (newDate) => {
+  console.log("newDate structure:", newDate);
+  scheduledAt.value.year = newDate.getFullYear().toString();
+  scheduledAt.value.month = (newDate.getMonth() + 1).toString().padStart(2, "0");
+  scheduledAt.value.day = newDate.getDate().toString().padStart(2, "0");
+});
+
+watch(time, (newTime) => {
+  console.log("newTime structure:", newTime);
+  scheduledAt.value.hours = newTime.hours.toString().padStart(2, "0");
+  scheduledAt.value.minutes = newTime.minutes.toString().padStart(2, "0");
+});
+
+const parseDate = () => {
+  if (checked.value) {
+    return `${scheduledAt.value.year}-${scheduledAt.value.month}-${scheduledAt.value.day}T${scheduledAt.value.hours}:${scheduledAt.value.minutes}:00.000Z`;
+  } else {
+    return null;
+  }
+}
+
+/**/
 
 onMounted(() => {
   getTemplates();
@@ -260,14 +300,14 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
-const onSearchInput = debounce(() => {
+const onSearchInput = () => {
   if (searchTerm.value.length > 0) {
     fetchUsersAndGroups(searchTerm.value);
   } else {
     users.value = [];
     groups.value = [];
   }
-}, 300);
+};
 
 const onTemplateSearch = () => {
   filterFunction();
@@ -306,27 +346,8 @@ const getTemplates = async () => {
   }
 };
 
-const parseDate = () => {
-  if (checked.value) {
-    const date = scheduledDate.value;
-    const time = scheduledTime.value;
-    if (date && time) {
-      return `${date}T${time}:00.000Z`;
-    } else {
-      alert('Bitte geben Sie sowohl Datum als auch Uhrzeit für den geplanten Versand ein.');
-      return null;
-    }
-  } else {
-    return null;
-  }
-};
-
 const sortSelectedUsers = (selectedUsers: User[]): string[] => {
   return selectedUsers.map(user => user.id).sort();
-};
-
-const handleSubmit = () => {
-  sendMail();
 };
 
 const sendMail = async () => {
@@ -348,7 +369,7 @@ const sendMail = async () => {
     selectedUsers.value = [];
     selectedGroups.value = [];
 
-    router.push({ name: 'mail', query: { mailsend: 'true' } });
+    router.push({name: 'mail', query: {mailsend: 'true'}});
   } catch (error) {
     console.error('Fehler beim Senden der E-Mail:', error);
     alert('Fehler beim Senden der E-Mail.');
@@ -383,20 +404,33 @@ watch(searchTerm, (newTerm) => {
 const filteredUsers = computed(() => users.value);
 const filteredGroups = computed(() => groups.value);
 
-const selectUser = (user: User) => {
-  if (!selectedUsers.value.find(u => u.id === user.id)) {
-    selectedUsers.value.push(user);
-  }
-  searchTerm.value = '';
-  users.value = [];
-  groups.value = [];
-};
-
 const selectGroup = (group: Group) => {
   if (!selectedGroups.value.find(g => g.id === group.id)) {
     selectedGroups.value.push(group);
   }
 
+  searchTerm.value = '';
+  users.value = [];
+  groups.value = [];
+};
+
+const handleSubmit = () => {
+  sendMail();
+};
+
+watch(searchTerm, (newTerm) => {
+  if (newTerm.length > 0) {
+    fetchUsersAndGroups(newTerm);
+  } else {
+    users.value = [];
+    groups.value = [];
+  }
+});
+
+const selectUser = (user: User) => {
+  if (!selectedUsers.value.find(u => u.id === user.id)) {
+    selectedUsers.value.push(user);
+  }
   searchTerm.value = '';
   users.value = [];
   groups.value = [];
@@ -416,7 +450,7 @@ const removeGroup = (group: Group) => {
 #mailFormContainer {
   width: 86.5%;
   margin-top: 2%;
-  margin-left: 1.5%;
+  margin-lexft: 1.5%;
   display: flex;
   flex-direction: column;
 }

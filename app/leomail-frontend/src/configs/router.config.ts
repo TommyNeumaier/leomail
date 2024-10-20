@@ -16,6 +16,7 @@ import GroupView from "@/views/GroupView.vue";
 import TemplateView from "@/views/TemplateView.vue";
 import SettingsView from "@/views/SettingsView.vue";
 import AuthorisationView from "@/views/AuthorisationView.vue";
+import EmailAuthView from "@/views/EmailAuthView.vue";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -30,7 +31,7 @@ const routes = [
   { path: '/contacts', name: 'contacts', component: PersonenView, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: ProfilView, meta: { requiresAuth: true } },
   { path: '/authorisation', name: 'authorisation', component: AuthorisationView, meta: { requiresAuth: true } },
- // { path: '/mail/:id/:projectId', name: 'MailDetail', component: () => import('@/views/MailDetailView.vue'), props: true, meta: { requiresAuth: true } }
+  { path: '/mail/:id/:projectId', name: 'MailDetail', component: () => import('@/views/MailDetailView.vue'), props: true, meta: { requiresAuth: true } }
 ];
 
 const router = createRouter({
@@ -79,7 +80,7 @@ function handleInvalidToken(authStore, next) {
 }
 
 function proceedWithAuthorization(to, next) {
-  const exceptions = ["/", "/projects/new", "/login", "/contacts", "/settings", "/profile"];
+  const exceptions = ["/", "/projects/new", "/login", "/contacts", "/settings", "/profile", "/authorisation"];
   const appStore = useAppStore();
 
   if (appStore.project === '' && !exceptions.includes(to.path)) {
