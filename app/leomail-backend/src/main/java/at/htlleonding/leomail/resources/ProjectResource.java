@@ -56,7 +56,7 @@ public class ProjectResource {
     @Path("delete")
     @Authenticated
     @Transactional
-    public Response deleteProject(@QueryParam("pid") String pid) {
+    public Response deleteProject(String pid) {
         projectRepository.deleteProject(pid);
         return Response.ok().build();
     }

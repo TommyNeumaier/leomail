@@ -269,17 +269,19 @@ public class TemplateRepository {
         }
     }
 
-    public void deleteUsedTemplate(String tid, String pid) {
-        SentTemplate template = SentTemplate.findById(tid);
+    public void deleteUsedTemplates(List<String> tids, String pid) {
+        for(String tid : tids) {
+            SentTemplate template = SentTemplate.findById(tid);
 
-        if (template == null) {
-            throw new IllegalArgumentException("Template with id " + tid + " not found");
+            if (template == null) {
+                throw new IllegalArgumentException("Template with id " + tid + " not found");
+            }
+
+            if (!permissionService.hasPermission(pid, template.createdBy.id)) {
+                throw new SecurityException("User has no permission to delete this template");
+            }
+
+            template.delete();
         }
-
-        if (!permissionService.hasPermission(pid, template.createdBy.id)) {
-            throw new SecurityException("User has no permission to delete this template");
-        }
-
-        template.delete();
     }
 }

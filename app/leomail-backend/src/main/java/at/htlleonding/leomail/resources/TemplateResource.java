@@ -223,13 +223,14 @@ public class TemplateResource {
     }
 
     @DELETE
-    @Path("/deleteUsedTemplate")
+    @Path("/deleteUsedTemplates")
     @Authenticated
-    public Response deleteUsedTemplate(@QueryParam("tid") String tid, @QueryParam("pid") String pid) {
+    @Transactional
+    public Response deleteUsedTemplate(List<String> tids, @QueryParam("pid") String pid) {
         try {
             String userId = jwt.getClaim("sub");
             if (permissionService.hasPermission(pid, userId)) {
-                templateRepository.deleteUsedTemplate(tid, pid);
+                templateRepository.deleteUsedTemplates(tids, pid);
                 return Response.noContent().build();
             } else {
                 return Response.status(Response.Status.FORBIDDEN).build();
