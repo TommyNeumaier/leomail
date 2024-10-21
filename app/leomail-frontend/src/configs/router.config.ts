@@ -17,6 +17,8 @@ import SettingsView from "@/views/SettingsView.vue";
 import AuthorisationComponent from "@/views/AuthorisationView.vue";
 import { Service } from "@/services/service";
 import PostLoginView from "@/views/PostLoginView.vue";
+import {pinia} from "@/main";
+import axiosInstance from "@/axiosInstance";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -54,7 +56,7 @@ function handleInvalidToken(authStore, next) {
 
 // Main navigation guard
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore();
+  const authStore = useAuthStore(pinia);
 
   if (to.meta.requiresAuth) {
     const accessToken = authStore.accessToken;
@@ -67,14 +69,14 @@ router.beforeEach(async (to, from, next) => {
     try {
       const isValid = await validateToken();
       if (isValid) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         return next();
       } else {
         console.log('Zugriffstoken ist ungültig, versuche zu aktualisieren');
         try {
           const { access_token } = await refreshToken();
           authStore.setTokens(access_token, authStore.$state._refreshToken);
-          axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
           // Proceed to the intended route
           return next();
         } catch (refreshError) {

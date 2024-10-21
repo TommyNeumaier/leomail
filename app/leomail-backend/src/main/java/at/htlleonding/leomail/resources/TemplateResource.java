@@ -164,7 +164,6 @@ public class TemplateResource {
     public Response updateTemplate(TemplateDTO templateDTO) {
         try {
             String userId = jwt.getClaim("sub");
-            System.out.println(templateDTO.id());
             if (permissionService.hasPermission(templateDTO.projectId(), userId)) {
                 TemplateDTO updatedTemplate = templateRepository.updateTemplate(templateDTO);
                 return Response.ok(updatedTemplate).build();
@@ -210,7 +209,6 @@ public class TemplateResource {
     @Authenticated
     @Produces("application/json")
     public Response getUsedTemplate(@QueryParam("tid") String tid, @QueryParam("pid") String pid) {
-        System.out.println("tid " + tid + " pid " + pid);
         try {
             String userId = jwt.getClaim("sub");
             UsedTemplateDTO usedTemplate = templateRepository.getUsedTemplate(tid, pid, userId);

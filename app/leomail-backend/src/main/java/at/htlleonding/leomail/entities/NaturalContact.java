@@ -1,7 +1,6 @@
 package at.htlleonding.leomail.entities;
 
 import jakarta.persistence.*;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import at.htlleonding.leomail.model.enums.Gender;
 
 @Entity

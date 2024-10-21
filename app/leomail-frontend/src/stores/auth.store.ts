@@ -28,5 +28,15 @@ export const useAuthStore = defineStore('auth', {
             routerConfig.push('/login').then(() => {});
         }
     },
-    persist: true
+    persist: {
+        enabled: true,
+        strategies: [
+            {
+                key: 'accessToken',
+            },
+            {
+                key: '_refreshToken',
+            },
+        ],
+    }
 });

@@ -160,19 +160,23 @@ public class TemplateRepository {
 
         for (SentTemplate template : usedTemplateList) {
             TemplateAccountInformationDTO accountInformation = new TemplateAccountInformationDTO(
-                    template.createdBy.id,
-                    template.sentBy != null ? template.sentBy.id : null);
+                    template.template.createdBy.id,
+                    template.senderId != null ? template.senderId : null);
 
             TemplateDateInformationDTO dateInformation = new TemplateDateInformationDTO(
-                    template.created,
+                    template.template.created,
                     template.sentOn != null ? template.sentOn : null,
                     template.scheduledAt != null ? template.scheduledAt : null);
 
+            Hibernate.initialize(template.template.greeting);
+
             TemplateMetaInformationDTO metaInformation = new TemplateMetaInformationDTO(
-                    template.name.trim(),
-                    template.headline.trim(),
-                    template.content.trim(),
-                    template.greeting.id);
+                    template.template.name.trim(),
+                    template.template.headline.trim(),
+                    template.template.content.trim(),
+                    template.template.greeting.id,
+                    template.template.greeting.content.trim()
+            );
 
             List<SentMailDTO> mailList = new ArrayList<>();
             for (SentMail mail : template.mails) {
@@ -212,19 +216,20 @@ public class TemplateRepository {
         }
 
         TemplateAccountInformationDTO accountInformation = new TemplateAccountInformationDTO(
-                template.createdBy.id,
-                template.sentBy != null ? template.sentBy.id : null);
+                template.template.createdBy.id,
+                template.senderId != null ? template.senderId : null);
 
         TemplateDateInformationDTO dateInformation = new TemplateDateInformationDTO(
-                template.created,
+                template.template.created,
                 template.sentOn != null ? template.sentOn : null,
                 template.scheduledAt != null ? template.scheduledAt : null);
 
         TemplateMetaInformationDTO metaInformation = new TemplateMetaInformationDTO(
-                template.name.trim(),
-                template.headline.trim(),
-                template.content.trim(),
-                template.greeting.id);
+                template.template.name.trim(),
+                template.template.headline.trim(),
+                template.template.content.trim(),
+                template.template.greeting.id,
+                template.template.greeting.content.trim());
 
         List<SentMailDTO> mailList = new ArrayList<>();
         for (SentMail mail : template.mails) {
@@ -277,7 +282,7 @@ public class TemplateRepository {
                 throw new IllegalArgumentException("Template with id " + tid + " not found");
             }
 
-            if (!permissionService.hasPermission(pid, template.createdBy.id)) {
+            if (!permissionService.hasPermission(pid, template.template.createdBy.id)) {
                 throw new SecurityException("User has no permission to delete this template");
             }
 

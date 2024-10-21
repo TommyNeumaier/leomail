@@ -69,4 +69,12 @@ public class ProjectResource {
         projectRepository.updateProject(project);
         return Response.ok().build();
     }
+
+    @GET
+    @Path("get/mail")
+    @Authenticated
+    @Produces("application/json")
+    public Response getProjectMail(@QueryParam("pid") String pid) {
+        return Response.ok(projectRepository.getProjectMail(jwt.getSubject(), pid)).build();
+    }
 }

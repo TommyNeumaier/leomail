@@ -1,68 +1,46 @@
 package at.htlleonding.leomail.entities;
 
+import at.htlleonding.leomail.model.MailType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@SequenceGenerator(name = "seq_sent_template", sequenceName = "seq_sent_template", allocationSize = 1, initialValue = 1)
 public class SentTemplate extends PanacheEntityBase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_sent_template")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(length = 128, nullable = false)
-    public String name;
-
-    @CreationTimestamp
-    public LocalDateTime created;
-
-    @Column(length = 256, nullable = false)
-    public String headline;
-
-    @Column(length = 8192, nullable = false)
-    public String content;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    public Contact createdBy;
+    public Template template;
+
+    public LocalDateTime scheduledAt;
+
+    public LocalDateTime sentOn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     public Project project;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    public TemplateGreeting greeting;
-
-    public LocalDateTime sentOn;
-
-    public LocalDateTime scheduledAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    public Contact sentBy;
-
-    @OneToMany(mappedBy = "usedTemplate", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "usedTemplate", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<SentMail> mails = new ArrayList<>();
 
-    public SentTemplate() {
-        this.created = LocalDateTime.now();
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    public MailType mailType;
 
-    public SentTemplate(String name, String headline, String content, Contact createdBy, TemplateGreeting greeting) {
-        this();
-        this.name = name;
-        this.headline = headline;
-        this.content = content;
-        this.createdBy = createdBy;
-        this.greeting = greeting;
-    }
+    @Column(nullable = false)
+    public String senderId;
 
-    public SentTemplate(Template template, LocalDateTime scheduledAt, Project project, Contact sentBy) {
-        this(template.name, template.headline, template.content, template.createdBy, template.greeting);
+    public SentTemplate() {}
+
+    public SentTemplate(Template template, LocalDateTime scheduledAt, Project project, MailType mailType, String senderId) {
+        this.template = template;
         this.scheduledAt = scheduledAt;
         this.project = project;
-        this.sentBy = sentBy;
+        this.mailType = mailType;
+        this.senderId = senderId;
     }
 }

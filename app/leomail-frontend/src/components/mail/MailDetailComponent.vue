@@ -57,7 +57,7 @@ const recipients = ref([]);
 const currentRecipientIndex = ref(0);
 const filledTemplate = ref('');
 
-// Initialisiere Profil und E-Mail-Daten
+// Initialize profile and email data
 const mailId = ref(route.params.id);
 const projectId = ref(route.params.projectId);
 
@@ -66,25 +66,23 @@ const getProfile = async () => {
   senderName.value = `${response.data.firstName} ${response.data.lastName} <${response.data.mailAddress}>`;
 };
 
-// E-Mail-Details abrufen
+// Fetch email details
 const fetchMailDetail = async () => {
   const response = await Service.getInstance().getUsedTemplate(mailId.value, projectId.value);
   mailDetail.value = response.data;
 
-  console.log(mailDetail.value.keyDates.sentOn);
   if (mailDetail.value && mailDetail.value.keyDates && mailDetail.value.keyDates.sentOn) {
     const sentOnDate = parseISO(mailDetail.value.keyDates.sentOn);
     mailDetail.value.keyDates.sentOn = format(sentOnDate, 'dd.MM.yyyy, HH:mm');
   }
 
-  // Empfänger abrufen
   if (mailDetail.value && mailDetail.value.mails && mailDetail.value.mails.length > 0) {
     recipients.value = mailDetail.value.mails.map(mailItem => mailItem.contact);
     updateFilledTemplate();
   }
 };
 
-// Empfänger-Wechsel
+// Recipient navigation
 const nextRecipient = () => {
   if (currentRecipientIndex.value < recipients.value.length - 1) {
     currentRecipientIndex.value++;
@@ -99,21 +97,36 @@ const prevRecipient = () => {
   }
 };
 
-// Template befüllen
-const fillTemplate = (template: string, recipient: any) => {
-  return template
-      .replace(/{firstname}/g, recipient.firstName)
-      .replace(/{lastname}/g, recipient.lastName)
-      .replace(/{mailAddress}/g, recipient.mailAddress);
+// Fill template with greeting
+const fillTemplate = (templateContent: string, greetingContent: string, recipient: any) => {
+  // Replace placeholders in greeting
+  let filledGreeting = greetingContent
+      .replace(/{firstname}/g, recipient.firstName || '')
+      .replace(/{lastname}/g, recipient.lastName || '')
+      .replace(/{mailAddress}/g, recipient.mailAddress || '');
+
+  // Replace placeholders in template content
+  let filledContent = templateContent
+      .replace(/{firstname}/g, recipient.firstName || '')
+      .replace(/{lastname}/g, recipient.lastName || '')
+      .replace(/{mailAddress}/g, recipient.mailAddress || '');
+
+  // Combine greeting and content
+  return `${filledGreeting}\n\n${filledContent}`;
 };
 
-// Aktualisiere die Vorschau
+// Update the preview
 const updateFilledTemplate = () => {
-  const currentRecipient = recipients.value[currentRecipientIndex.value];
-  filledTemplate.value = fillTemplate(mailDetail.value.meta.mailContent, currentRecipient);
+  const currentMail = mailDetail.value.mails[currentRecipientIndex.value];
+
+  if (currentMail && currentMail.content) {
+    filledTemplate.value = currentMail.content;
+  } else {
+    filledTemplate.value = '';
+  }
 };
 
-// Berechnetes Feld für den angezeigten Empfänger
+// Computed property for displayed recipient
 const recipientDisplay = computed(() => {
   const recipient = recipients.value[currentRecipientIndex.value];
   return `${recipient.firstName} ${recipient.lastName} <${recipient.mailAddress}>`;
@@ -124,7 +137,6 @@ onMounted(() => {
   getProfile();
 });
 </script>
-
 
 <style scoped>
 #mailDetailContainer {

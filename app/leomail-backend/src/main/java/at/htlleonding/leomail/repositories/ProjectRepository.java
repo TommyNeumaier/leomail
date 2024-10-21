@@ -8,8 +8,10 @@ import at.htlleonding.leomail.model.dto.project.MailAddressDTO;
 import at.htlleonding.leomail.model.dto.project.ProjectAddDTO;
 import at.htlleonding.leomail.model.dto.project.ProjectDetailDTO;
 import at.htlleonding.leomail.model.dto.project.ProjectOverviewDTO;
+import at.htlleonding.leomail.model.dto.user.MailAddressInformationDTO;
 import at.htlleonding.leomail.model.exceptions.ObjectContainsNullAttributesException;
 import at.htlleonding.leomail.services.MailService;
+import at.htlleonding.leomail.services.PermissionService;
 import at.htlleonding.leomail.services.Utilities;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -19,16 +21,20 @@ import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProjectRepository {
 
     @Inject
-    EntityManager em;
+    MailService mailService;
 
     @Inject
-    MailService mailService;
+    PermissionService permissionService;
+
+    @Inject
+    EntityManager em;
 
     /**
      * Retrieves personal projects for a given contact ID.
@@ -37,11 +43,10 @@ public class ProjectRepository {
      * @return A list of ProjectOverviewDTO.
      */
     public List<ProjectOverviewDTO> getPersonalProjects(String contactId) {
-        return em.createQuery(
-                        "SELECT NEW at.htlleonding.leomail.model.dto.project.ProjectOverviewDTO(p.id, p.name) " +
-                                "FROM Project p JOIN p.members m WHERE m.id = :contactId", ProjectOverviewDTO.class)
-                .setParameter("contactId", contactId)
-                .getResultList();
+        NaturalContact contact = NaturalContact.findById(contactId);
+        return em.createQuery("SELECT p FROM Project p WHERE :contact member of p.members", Project.class)
+                .setParameter("contact", contact)
+                .getResultList().stream().map(project -> new ProjectOverviewDTO(project.id, project.name)).toList();
     }
 
     /**
@@ -79,58 +84,33 @@ public class ProjectRepository {
                 .collect(Collectors.toList());
 
         // Fetch existing contacts
-        List<Contact> existingContacts = em.createQuery("SELECT c FROM Contact c WHERE c.id IN :ids", Contact.class)
-                .setParameter("ids", memberIds)
-                .getResultList();
+        List<NaturalContact> members = NaturalContact.list("id IN ?1", memberIds);
 
-        Map<String, Contact> existingContactsMap = existingContacts.stream()
-                .collect(Collectors.toMap(Contact::getId, c -> c));
-
-        List<NaturalContact> members = new ArrayList<>();
-
-        for (NaturalContactSearchDTO memberDTO : projectAddDTO.members()) {
-            Contact contact = existingContactsMap.get(memberDTO.id());
-            if (contact == null) {
-                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " does not exist.");
-            }
-            if (!(contact instanceof NaturalContact)) {
-                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " is not a natural contact.");
-            }
-            NaturalContact naturalContact = (NaturalContact) contact;
-            if (!naturalContact.kcUser) {
-                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " is not a Keycloak user.");
-            }
-            members.add(naturalContact);
+        if (members.size() != memberIds.size()) {
+            throw new IllegalArgumentException("Some contacts do not exist or are invalid.");
         }
 
         // Fetch the creator contact
-        Contact creatorContact = em.find(Contact.class, creatorId);
+        NaturalContact creatorContact = NaturalContact.findById(creatorId);
         if (creatorContact == null) {
             throw new IllegalArgumentException("Creator contact does not exist.");
         }
-        if (!(creatorContact instanceof NaturalContact)) {
-            throw new IllegalArgumentException("Creator contact is not a natural contact.");
-        }
-        NaturalContact naturalCreator = (NaturalContact) creatorContact;
-        if (!naturalCreator.kcUser) {
-            throw new IllegalArgumentException("Creator contact is not a Keycloak user.");
-        }
 
         // Ensure the creator is in the members list
-        if (!members.contains(naturalCreator)) {
-            members.add(naturalCreator);
+        if (!members.contains(creatorContact)) {
+            members.add(creatorContact);
         }
 
         // Create and persist the new project
         Project project = new Project(
                 projectAddDTO.name(),
                 projectAddDTO.description(),
-                naturalCreator,
+                creatorContact,
                 projectAddDTO.mailInformation().mailAddress(),
                 projectAddDTO.mailInformation().password(),
-                new ArrayList<>(members)
+                members
         );
-        em.persist(project);
+        project.persist();
     }
 
     /**
@@ -140,28 +120,32 @@ public class ProjectRepository {
      * @return The name of the project.
      */
     public String getProjectName(String pid) {
-        return em.createQuery("SELECT p.name FROM Project p WHERE p.id = :pid", String.class)
-                .setParameter("pid", pid)
-                .getSingleResult();
+        Project project = Project.findById(pid);
+        if (project == null) {
+            throw new IllegalArgumentException("Project not found.");
+        }
+        return project.name;
     }
 
     public ProjectDetailDTO getProject(String pid) {
-        Project project = em.find(Project.class, pid);
+        Project project = Project.findById(pid);
         if (project == null) {
             throw new IllegalArgumentException("Project with ID " + pid + " does not exist.");
         }
 
-        List<NaturalContactSearchDTO> contactSearchDTOS = new ArrayList<>();
-        for(NaturalContact contact : project.members) {
-            contactSearchDTOS.add(new NaturalContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress));
-        }
+        // Initialize members collection
+        project.members.size();
+
+        List<NaturalContactSearchDTO> contactSearchDTOS = project.members.stream()
+                .map(contact -> new NaturalContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress))
+                .collect(Collectors.toList());
 
         return new ProjectDetailDTO(
                 project.id,
                 project.name,
                 project.description,
                 new MailAddressDTO(project.mailAddress, null),
-                contactSearchDTOS
+                contactSearchDTOS.stream().filter(c -> !Objects.equals(c.id(), project.createdBy.id)).collect(Collectors.toList())
         );
     }
 
@@ -180,77 +164,68 @@ public class ProjectRepository {
             throw new IllegalArgumentException("Mail information must not be null.");
         }
 
-        // Optional Mail validation
-        if (!mailService.verifyOutlookCredentials(
-                projectDetailDTO.mailInformation().mailAddress(),
-                projectDetailDTO.mailInformation().password())) {
-            throw new IllegalArgumentException("Outlook credentials are invalid");
+        if (projectDetailDTO.mailInformation().password() != null || projectDetailDTO.mailInformation().mailAddress() != null) {
+            if (!mailService.verifyOutlookCredentials(
+                    projectDetailDTO.mailInformation().mailAddress(),
+                    projectDetailDTO.mailInformation().password())) {
+                throw new IllegalArgumentException("Outlook credentials are invalid");
+            }
         }
 
-        // Collect member IDs
         List<String> memberIds = projectDetailDTO.members().stream()
                 .map(NaturalContactSearchDTO::id)
                 .collect(Collectors.toList());
 
         // Fetch existing contacts
-        List<Contact> existingContacts = em.createQuery("SELECT c FROM Contact c WHERE c.id IN :ids", Contact.class)
-                .setParameter("ids", memberIds)
-                .getResultList();
+        List<NaturalContact> members = NaturalContact.list("id IN ?1", memberIds);
 
-        Map<String, Contact> existingContactsMap = existingContacts.stream()
-                .collect(Collectors.toMap(Contact::getId, c -> c));
-
-        List<NaturalContact> members = new ArrayList<>();
-
-        for (NaturalContactSearchDTO memberDTO : projectDetailDTO.members()) {
-            Contact contact = existingContactsMap.get(memberDTO.id());
-            if (contact == null) {
-                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " does not exist.");
-            }
-            if (!(contact instanceof NaturalContact)) {
-                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " is not a natural contact.");
-            }
-            NaturalContact naturalContact = (NaturalContact) contact;
-            if (!naturalContact.kcUser) {
-                throw new IllegalArgumentException("Contact with ID " + memberDTO.id() + " is not a Keycloak user.");
-            }
-            members.add(naturalContact);
+        if (members.size() != memberIds.size()) {
+            throw new IllegalArgumentException("Some contacts do not exist or are invalid.");
         }
 
-        // Fetch the creator contact
+        // Fetch the project
         Project project = Project.findById(projectDetailDTO.id());
-        Contact creatorContact = em.find(Contact.class, project.createdBy.id);
-        if (creatorContact == null) {
-            throw new IllegalArgumentException("Creator contact does not exist.");
-        }
-        if (!(creatorContact instanceof NaturalContact)) {
-            throw new IllegalArgumentException("Creator contact is not a natural contact.");
-        }
-
-        // Ensure the creator is in the members list
-        if (!members.contains(creatorContact)) {
-            members.add((NaturalContact) creatorContact);
-        }
-
         if (project == null) {
             throw new IllegalArgumentException("Project with ID " + projectDetailDTO.id() + " does not exist.");
         }
 
+        // Ensure the creator is in the members list
+        if (!members.contains(project.createdBy)) {
+            members.add(project.createdBy);
+        }
+
         project.name = projectDetailDTO.name();
         project.description = projectDetailDTO.description();
-        project.mailAddress = projectDetailDTO.mailInformation().mailAddress();
-        project.password = projectDetailDTO.mailInformation().password();
-        project.members = new ArrayList<>(members);
+        project.members = members;
+
+        if (projectDetailDTO.mailInformation().mailAddress() != null) {
+            project.mailAddress = projectDetailDTO.mailInformation().mailAddress();
+            project.password = projectDetailDTO.mailInformation().password();
+        }
 
         return projectDetailDTO;
     }
 
     public void deleteProject(String pid) {
-        Project project = em.find(Project.class, pid);
+        Project project = Project.findById(pid);
         if (project == null) {
             throw new IllegalArgumentException("Project with ID " + pid + " does not exist.");
         }
 
-        em.remove(project);
+        project.delete();
+    }
+
+    public MailAddressInformationDTO getProjectMail(String uid, String pid) {
+        Project project = Project.find("id = ?1", pid).firstResult();
+
+        if (project == null) {
+            throw new IllegalArgumentException("Project with ID " + pid + " does not exist.");
+        }
+
+        if (!permissionService.hasPermission(pid, uid)) {
+            throw new RuntimeException("Permission denied");
+        }
+
+        return new MailAddressInformationDTO(project.name, project.mailAddress, project.id);
     }
 }

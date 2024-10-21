@@ -8,7 +8,7 @@ import {pinia} from "@/main";
 const setupAxiosInterceptors = () => {
     axiosInstance.interceptors.request.use(
         (config) => {
-            const authStore = useAuthStore(pinia); // Use the Pinia instance
+            const authStore = useAuthStore(pinia); 
             const token = authStore.$state.accessToken;
 
             if (token && !config.headers['Authorization']) {

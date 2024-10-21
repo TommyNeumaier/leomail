@@ -85,6 +85,7 @@ const loadProjectData = async () => {
   try {
     const response = await Service.getInstance().getProject(appStore.$state.project);
     const projectData = response.data;
+    console.log(projectData)
 
     projectName.value = projectData.name;
     displayName.value = projectData.displayName;
@@ -166,7 +167,7 @@ const validateForm = () => {
     errorMessages.value.mail = '';
   }
 
-  if (!isEmailVerified.value) {
+  if (!isEmailVerified.value && isEmailChanged.value) {
     errorMessages.value.emailVerification = 'E-Mail muss verifiziert sein, bevor das Projekt erstellt werden kann.';
     valid = false;
   } else {
@@ -193,13 +194,12 @@ const handleSubmit = async () => {
         name: projectName.value,
         description: description.value,
         mailInformation: {
-          mailAddress: mail.value,
-          password: password.value,
+          mailAddress: isEmailChanged.value ? mail.value : undefined,
+          password: isEmailChanged.value ? password.value : undefined,
         },
         members: selectedUsers.value,
       };
 
-      // Aufruf der Service-Methode, um das Projekt zu aktualisieren
       await Service.getInstance().updateProject(projectData);
 
       alert('Projekt erfolgreich aktualisiert');

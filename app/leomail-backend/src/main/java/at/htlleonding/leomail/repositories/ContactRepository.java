@@ -8,7 +8,6 @@ import at.htlleonding.leomail.entities.Template; // Ensure you have this entity
 import at.htlleonding.leomail.model.dto.contacts.*;
 import at.htlleonding.leomail.model.exceptions.ObjectContainsNullAttributesException;
 import at.htlleonding.leomail.model.exceptions.contacts.ContactExistsInKeycloakException;
-import at.htlleonding.leomail.model.exceptions.contacts.ContactInUseException;
 import at.htlleonding.leomail.model.exceptions.contacts.ContactKcUserException;
 import at.htlleonding.leomail.services.KeycloakAdminService;
 import at.htlleonding.leomail.services.Utilities;

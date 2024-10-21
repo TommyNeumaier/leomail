@@ -11,10 +11,9 @@ import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.store';
 import { Service } from '@/services/service';
-import Spinner from '@/components/Spinner.vue'; // Ensure you have a Spinner component
+import Spinner from '@/components/Spinner.vue';
 
 const router = useRouter();
-const authStore = useAuthStore();
 
 onMounted(async () => {
   try {

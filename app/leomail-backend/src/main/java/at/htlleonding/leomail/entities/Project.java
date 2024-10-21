@@ -1,6 +1,5 @@
 package at.htlleonding.leomail.entities;
 
-import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import jakarta.persistence.*;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import java.time.LocalDateTime;
@@ -22,7 +21,7 @@ public class Project extends PanacheEntityBase {
     public String password;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    public Contact createdBy;
+    public NaturalContact createdBy;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     public List<Group> groups = new ArrayList<>();
@@ -45,14 +44,14 @@ public class Project extends PanacheEntityBase {
         this.createdOn = LocalDateTime.now();
     }
 
-    public Project(String name, String description, Contact createdBy) {
+    public Project(String name, String description, NaturalContact createdBy) {
         this.name = name;
         this.description = description;
         this.createdBy = createdBy;
         this.createdOn = LocalDateTime.now();
     }
 
-    public Project(String name, String description, Contact createdBy, String mailAddress, String password, List<NaturalContact> members) {
+    public Project(String name, String description, NaturalContact createdBy, String mailAddress, String password, List<NaturalContact> members) {
         this(name, description, createdBy);
         this.mailAddress = mailAddress;
         this.password = password;

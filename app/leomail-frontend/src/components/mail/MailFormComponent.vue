@@ -1,5 +1,4 @@
 <template>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
   <div id="mailFormContainer">
     <div id="formHeader">
       <h1>Neue E-Mail</h1>
@@ -8,11 +7,11 @@
       <form @submit.prevent="handlePreview" id="mailForm">
         <!-- Absender Auswahl -->
         <div class="form-group">
-          <label for="senderMail" class="form-label">Absender E-Mail:</label>
+          <label for="senderMail" class="form-label">Senden als: </label>
           <div class="input-with-icon">
             <select v-model="selectedSender" class="form-input">
-              <option :value="personalMail">Persönliche Mail: <{{ personalMail }}></option>
-              <option :value="projectMail">Projekt Mail: <{{ projectMail }}></option>
+              <option :value="personalMail">{{profileData.firstName}} {{profileData.lastName}} <{{ personalMail }}></option>
+              <option :value="projectMail.id">{{ projectMail.displayName}} <{{ projectMail.mailAddress }}></option>
             </select>
             <i class="fas fa-chevron-down"></i>
           </div>
@@ -196,17 +195,28 @@ const showPreview = ref(false);
 const previewRecipients = ref<User[]>([]);
 
 // Neue Referenzen für Absender-Mails
-const profileData = ref<User[]>([]);
+const profileData = ref({
+  firstName: '',
+  lastName: '',
+  mailAddress: '',
+  schoolClass: '',
+  departement: ''
+});
 const personalMail = ref();
-const projectMail = 'projekt.mail@domain.com';
-const selectedSender = ref(); // Standardmäßig die persönliche Mail
+const projectMail = ref({ id: '', mailAddress: '', displayName: ''});
+const selectedSender = ref();
 
 const getProfile = async () => {
-  const response = await Service.getInstance().getProfile();
-  profileData.value = response.data;
-  console.log("addresse" + profileData.value.mailAddress);
-  personalMail.value = profileData.value.mailAddress;
-  selectedSender.value = profileData.value.mailAddress;
+  const response = await Service.getInstance().getProfile().then(response => {
+    profileData.value = response.data;
+    personalMail.value = profileData.value.mailAddress;
+    selectedSender.value = profileData.value.mailAddress;
+  });
+};
+
+const fetchProjectMail = async () => {
+  const response = await Service.getInstance().fetchProjectMailData(appStore.$state.project);
+  projectMail.value = response.data;
 };
 
 const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value);
@@ -268,8 +278,7 @@ const closePreview = () => {
 };
 
 /* date picker */
-const date = ref({
-});
+const date = ref({} as Date | null);
 
 const time = ref({
   hours: new Date().getHours().toString().padStart(2, "0"),
@@ -277,6 +286,10 @@ const time = ref({
 });
 
 const parseDate = () => {
+  if (!date.value) {
+    return null;
+  }
+
   const d = date.value;
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0'); // getMonth() gibt 0-basiert (Januar = 0)
@@ -299,6 +312,7 @@ const isScheduled = () => {
 onMounted(() => {
   getProfile();
   getTemplates();
+  fetchProjectMail();
 
   document.addEventListener('click', handleClickOutside);
 });
@@ -370,27 +384,31 @@ const sendMail = async () => {
   try {
     const mailForm = {
       receiver: {
-        contacts: sortSelectedUsers(selectedUsers.value),  // Individuelle Nutzer
-        groups: selectedGroups.value.map(group => parseInt(group.id)) // Gruppen
+        contacts: sortSelectedUsers(selectedUsers.value),
+        groups: selectedGroups.value.map(group => parseInt(group.id))
       },
       templateId: selectedTemplate.value?.id,
       personalized: personalized.value,
-      scheduledAt: parseDate()
+      scheduledAt: isScheduled(),
+      from: {
+        mailType: selectedSender.value === personalMail.value ? 'PERSONAL' : 'PROJECT',
+        id: selectedSender.value === personalMail.value ? '' : appStore.$state.project
+      }
     };
 
-    console.log(mailForm)
+    console.log(mailForm);
     const response = await Service.getInstance().sendEmails(mailForm, appStore.$state.project);
     console.log('Erfolgreich gesendet:', response.data);
 
     selectedUsers.value = [];
     selectedGroups.value = [];
 
-    router.push({name: 'mail', query: {mailsend: 'true'}});
+    router.push({ name: 'mail', query: { mailsend: 'true' } });
   } catch (error) {
     console.error('Fehler beim Senden der E-Mail:', error);
     alert('Fehler beim Senden der E-Mail.');
   }
-};
+  }
 
 const fetchUsersAndGroups = async (query: string) => {
   loading.value = true;
@@ -407,15 +425,6 @@ const fetchUsersAndGroups = async (query: string) => {
     loading.value = false;
   }
 };
-
-watch(searchTerm, (newTerm) => {
-  if (newTerm.length > 0) {
-    fetchUsersAndGroups(newTerm);
-  } else {
-    users.value = [];
-    groups.value = [];
-  }
-});
 
 const filteredUsers = computed(() => users.value);
 const filteredGroups = computed(() => groups.value);

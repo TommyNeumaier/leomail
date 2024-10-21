@@ -177,26 +177,17 @@ const handleSubmit = () => {
       return;
     }
 
-    console.log('Form submitted:', formState.value, selectedUsers.value);
-    axios.post("/api/project/add", {
-      name: formState.value.name,
-      description: formState.value.description,
-      mailInformation: {
-        mailAddress: formState.value.mailAddress,
-        password: formState.value.password
-      },
-      members: selectedUsers.value,
-    }).then(() => {
+    Service.getInstance().addProject(formState.value, selectedUsers.value).then(() => {
       router.push({ name: 'projects' });
+      formState.value.name = '';
+      formState.value.description = '';
+      formState.value.mailAddress = '';
+      formState.value.password = '';
+      selectedUsers.value = [];
     }).catch((error) => {
-      console.error('Error creating project:', error);
+      console.error('Error adding project:', error);
+      alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
     });
-
-    formState.value.name = '';
-    formState.value.description = '';
-    formState.value.mailAddress = '';
-    formState.value.password = '';
-    selectedUsers.value = [];
   }
 };
 

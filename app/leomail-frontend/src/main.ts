@@ -23,6 +23,7 @@ app.directive('tooltip', Tooltip);
 
 
 export const pinia = createPinia();
+pinia.use(piniaPersist);
 app.use(pinia);
 app.use(routerConfig);
 app.use(PrimeVue, {
@@ -31,6 +32,5 @@ app.use(PrimeVue, {
     }
 })
 
-pinia.use(piniaPersist);
 
 app.mount('#app');

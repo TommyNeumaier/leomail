@@ -2,7 +2,6 @@ package at.htlleonding.leomail.model.dto.contacts;
 
 import at.htlleonding.leomail.contracts.ContactSearchResult;
 import at.htlleonding.leomail.entities.Contact;
-import at.htlleonding.leomail.entities.NaturalContact;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("natural") // Must match the name in @JsonSubTypes.Type

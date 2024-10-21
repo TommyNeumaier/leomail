@@ -1,5 +1,6 @@
 import axios from "axios";
 import axiosInstance from "@/axiosInstance";
+import type {User} from "@/components/project/ProjectComponent.vue";
 
 export class Service {
     private static instance: Service;
@@ -263,22 +264,40 @@ export class Service {
 
     // Holt ein einzelnes Projekt basierend auf der Projekt-ID
     public getProject(projectId: string) {
-        return axios.get(`/api/project/get/single`, {
+        return axiosInstance.get(`/project/get/single`, {
             params: {
                 "pid": projectId
             }
         });
     }
 
-    // Löscht ein Projekt basierend auf der Projekt-ID
     public deleteProject(projectId: string) {
-        return axios.delete(`/api/project/delete`, {
+        return axiosInstance.delete(`/project/delete`, {
             data: projectId
         });
     }
 
-    // Aktualisiert ein Projekt basierend auf den übergebenen Projektdaten
     public updateProject(projectData: any) {
-        return axios.put(`/api/project/update`, projectData);
+        return axiosInstance.put(`/project/update`, projectData);
+    }
+
+    async addProject(formData: any, members: User[]) {
+        return axiosInstance.post(`/project/add`, {
+            name: formData.name,
+            description: formData.description,
+            mailInformation: {
+                mailAddress: formData.mailAddress,
+                password: formData.password
+            },
+            members: members
+        });
+    }
+
+    async fetchProjectMailData(projectId: string) {
+        return axiosInstance.get(`/project/get/mail`, {
+            params: {
+                "pid": projectId
+            }
+        });
     }
 }

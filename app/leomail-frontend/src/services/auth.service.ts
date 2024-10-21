@@ -1,10 +1,11 @@
 import axiosInstance from '@/axiosInstance';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAppStore } from '@/stores/app.store';
+import {pinia} from "@/main";
 
 export const login = async (username: string, password: string) => {
-    const authStore = useAuthStore();
-    const appStore = useAppStore();
+    const authStore = useAuthStore(pinia);
+    const appStore = useAppStore(pinia);
 
     try {
         const response = await axiosInstance.post(
@@ -71,6 +72,6 @@ export const getRoles = async () => {
 }
 
 export const logout = () => {
-    const authStore = useAuthStore();
+    const authStore = useAuthStore(pinia);
     authStore.logout();
 };

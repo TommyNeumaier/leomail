@@ -5,7 +5,6 @@ import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.auth.JwtClaimTest;
 import at.htlleonding.leomail.model.dto.auth.JwtTest;
 import at.htlleonding.leomail.model.dto.auth.OutlookPasswordRequest;
-import at.htlleonding.leomail.model.dto.project.MailAddressDTO;
 import at.htlleonding.leomail.repositories.ContactRepository;
 import at.htlleonding.leomail.repositories.UserRepository;
 import at.htlleonding.leomail.services.EncryptionService;
@@ -133,7 +132,6 @@ public class AuthResource {
             if (response.getStatus() == 200) {
                 return Response.ok(response.readEntity(String.class)).build();
             } else {
-                System.out.println(response.readEntity(String.class));
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid credentials").build();
             }
         } catch (Exception e) {
@@ -187,7 +185,6 @@ public class AuthResource {
                     String givenName = jwt.getClaim("given_name");
                     String familyName = jwt.getClaim("family_name");
                     String email = jwt.getClaim("email");
-                    System.out.println(jwt.getClaimNames());
                     if (email == null || email.isEmpty()) {
                         return Response.status(Response.Status.BAD_REQUEST)
                                 .entity("Email is required in the token")

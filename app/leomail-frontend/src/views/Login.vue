@@ -32,7 +32,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth.store';
 import HeaderLoginComponent from '@/components/header/HeaderLoginComponent.vue';
 import {login} from "@/services/auth.service";
 
@@ -41,7 +40,6 @@ const password = ref('');
 const errorMessage = ref('');
 
 const router = useRouter();
-const authStore = useAuthStore();
 
 const handleLogin = async () => {
   try {

@@ -2,12 +2,10 @@ package at.htlleonding.leomail.services;
 
 import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.entities.Group;
-import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import at.htlleonding.leomail.repositories.ContactRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
 import java.util.*;

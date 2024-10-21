@@ -4,5 +4,12 @@ export const useAppStore = defineStore('app', {
     state: () => ({
         project: '',
     }),
-    persist: true
+    persist: {
+        enabled: true,
+        strategies: [
+            {
+                key: 'project',
+            },
+        ],
+    }
 });
