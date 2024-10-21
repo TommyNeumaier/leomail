@@ -130,7 +130,6 @@ const selectedMailIds = ref<number[]>([]);
 const getMails = async () => {
   try {
     const response = await Service.getInstance().getUsedTemplates(false, appStore.$state.project);
-    console.log('Fetched Mails:', response.data);
 
     fetchedMails.value = response.data.map((mail: any) => {
       const sentOnDate = parseISO(mail.keyDates.sentOn);
@@ -182,15 +181,10 @@ const selectAllMails = () => {
 };
 
 const clickedEmailForm = () => {
-  console.log('Current Route:', router.currentRoute.value);
   router.push({ name: 'newMail' });
 };
 
 const handleEmailClick = (mailId: number) => {
-  console.log('Clicked email id:', mailId);
-  console.log('Clicked project id:', appStore.$state.project);
-
-  // Navigation zur MailDetail-Seite mit den Parametern id und projectId
   router.push({
     name: 'MailDetail',
     params: {
@@ -211,11 +205,10 @@ const deleteSelectedMails = async () => {
   }
 
   try {
-    for (const tid of selectedMailIds.value) {
-      await Service.getInstance().deleteTemplate(tid, appStore.$state.project);
-    }
-    alert('Ausgewählte E-Mails wurden gelöscht.');
-    selectedMailIds.value = [];
+    await Service.getInstance().deleteSentMails(selectedMailIds.value, appStore.$state.project).then(() => {
+      alert('Ausgewählte E-Mails wurden gelöscht.');
+      selectedMailIds.value = [];
+    });
     await getMails();
   } catch (error) {
     console.error('Fehler beim Löschen der E-Mails:', error);

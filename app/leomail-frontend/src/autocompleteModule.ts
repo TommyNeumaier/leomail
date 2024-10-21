@@ -16,10 +16,6 @@ class AutocompleteModule {
             this.updateSuggestions();
         });
 
-        this.editor.on('selection-change', () => {
-            console.log('Selection changed:', this.editor.getSelection());
-        });
-
         document.addEventListener('click', (event) => {
             if (this.suggestionBox && !this.suggestionBox.contains(event.target as Node)) {
                 this.hideSuggestions();
@@ -74,8 +70,6 @@ class AutocompleteModule {
             // Positioniere die Vorschlagsbox
             const bounds = this.editor.getBounds(triggerIndex);
             if (bounds) {
-                console.log(bounds.bottom)
-                console.log(bounds.right)
                 const offsetX = 250;
                 this.suggestionBox.style.bottom = `${bounds.bottom}vh`;
                 this.suggestionBox.style.left = `${bounds.left + offsetX}px`;
@@ -102,18 +96,15 @@ class AutocompleteModule {
 
 
     private updateSuggestions() {
-        console.log('updateSuggestions called');
 
         const range = this.editor.getText().length;
         if (range) {
             // Holen Sie sich den gesamten Text bis zur Cursor-Position
             const currentText = this.editor.getText(0, range);
-            console.log('Current Text:', currentText);
 
             // Überprüfen, ob `{` im Text vorhanden ist
             const triggerIndex = currentText.lastIndexOf('{');
             const closingBracketIndex = currentText.indexOf('}', range);
-            console.log('Trigger Index:', triggerIndex);
 
             if (closingBracketIndex !== -1 && closingBracketIndex < range) {
                 this.hideSuggestions();
@@ -123,7 +114,6 @@ class AutocompleteModule {
             const textAfterTrigger = currentText.slice(triggerIndex + 1, range);
             if (triggerIndex !== -1 && !textAfterTrigger.includes('}')) {
                 const textAfterTrigger = currentText.slice(triggerIndex + 1, range).trim();
-                console.log('Text After Trigger:', textAfterTrigger);
 
                 if (textAfterTrigger.length === 0 || textAfterTrigger === '}') {
                     this.showSuggestions(triggerIndex, '');
@@ -143,7 +133,6 @@ class AutocompleteModule {
         this.focusEditor(); // Sicherstellen, dass der Editor fokussiert ist
 
         const range = this.editor.getSelection();
-        console.log('Inserting suggestion. Current selection:', range);
 
         if (range) {
             const currentText = this.editor.getText();
@@ -153,8 +142,6 @@ class AutocompleteModule {
             this.editor.insertText(start, value);
             this.editor.setSelection(start + value.length, 0);
             this.hideSuggestions();
-        } else {
-            console.log('No range available for insertion.');
         }
     }
 }

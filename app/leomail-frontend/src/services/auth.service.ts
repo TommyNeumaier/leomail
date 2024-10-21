@@ -27,7 +27,7 @@ export const login = async (username: string, password: string) => {
 };
 
 export const refreshToken = async () => {
-    const authStore = useAuthStore(pinia); // Use the Pinia instance
+    const authStore = useAuthStore(pinia); 
     const refresh_Token = authStore._refreshToken;
 
     if (refresh_Token) {
@@ -40,9 +40,8 @@ export const refreshToken = async () => {
                 }
             );
 
-            const { access_token: newAccessToken, refresh_token: newRefreshToken } = response.data;
+            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
             authStore.setTokens(newAccessToken, newRefreshToken);
-
             return { access_token: newAccessToken, refresh_token: newRefreshToken };
         } catch (error) {
             authStore.logout();

@@ -125,13 +125,10 @@ const addGroup = async () => {
       description: groupDescription.value,
       members: selectedMembers.value
     };
-    console.log('Group Payload:', formData); // Inspect the payload
     const response = await Service.getInstance().addGroup(appStore.$state.project, formData);
-    console.log('Group created:', response.data);
     emitEvents('group-added', response.data);
     clearForm();
   } catch (error: any) {
-    console.error('Error adding group:', error);
     alert(`Error adding group: ${error.response?.data?.error || error.message}`);
   }
 };
@@ -152,14 +149,11 @@ const updateGroup = async () => {
       description: groupDescription.value,
       members: selectedMembers.value
     };
-    console.log('Group Update Payload:', formData); // Inspect the payload
     const response = await Service.getInstance().updateGroup(appStore.$state.project, formData);
-    console.log('Group updated:', response.data);
     emitEvents('group-saved', response.data);
     clearForm();
     alert('Group successfully updated!');
   } catch (error: any) {
-    console.error('Error updating group:', error);
     alert(`Error updating group: ${error.response?.data?.error || error.message}`);
   }
 };

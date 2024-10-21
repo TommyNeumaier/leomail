@@ -274,7 +274,7 @@ public class TemplateRepository {
         }
     }
 
-    public void deleteUsedTemplates(List<String> tids, String pid) {
+    public void deleteUsedTemplates(List<String> tids, String pid, String uid) {
         for(String tid : tids) {
             SentTemplate template = SentTemplate.findById(tid);
 
@@ -282,7 +282,7 @@ public class TemplateRepository {
                 throw new IllegalArgumentException("Template with id " + tid + " not found");
             }
 
-            if (!permissionService.hasPermission(pid, template.template.createdBy.id)) {
+            if (!permissionService.hasPermission(pid, uid)) {
                 throw new SecurityException("User has no permission to delete this template");
             }
 

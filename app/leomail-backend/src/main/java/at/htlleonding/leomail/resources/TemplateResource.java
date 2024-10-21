@@ -220,19 +220,15 @@ public class TemplateResource {
         }
     }
 
-    @DELETE
+    @POST
     @Path("/deleteUsedTemplates")
     @Authenticated
     @Transactional
     public Response deleteUsedTemplate(List<String> tids, @QueryParam("pid") String pid) {
         try {
             String userId = jwt.getClaim("sub");
-            if (permissionService.hasPermission(pid, userId)) {
-                templateRepository.deleteUsedTemplates(tids, pid);
-                return Response.noContent().build();
-            } else {
-                return Response.status(Response.Status.FORBIDDEN).build();
-            }
+            templateRepository.deleteUsedTemplates(tids, pid, userId);
+            return Response.noContent().build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         }

@@ -57,9 +57,7 @@ const addTemplate = async () => {
       greeting: selectedGreeting.value,
       projectId: appStore.$state.project
     };
-    console.log(formData);
     const response = await Service.getInstance().addTemplate(formData);
-    console.log('Erfolgreich gesendet:', response.data);
     emitEvents('group-added', formData);
     clearForm();
   } catch (error) {
@@ -77,9 +75,7 @@ const updateTemplate = async () => {
       greeting: selectedGreeting.value,
       projectId: appStore.$state.project
     };
-    console.log("Updated data to emit:", updatedData);  // Debugging
     const response = await Service.getInstance().updateTemplate(updatedData);
-    console.log('Erfolgreich gesendet:', response.data);
     emitEvents('group-saved', updatedData);
     props.selectedTemplate = null;
     clearForm();
@@ -93,7 +89,6 @@ const removeTemplate = async () => {
   if (confirmed) {
     try {
       const response = await Service.getInstance().removeTemplate(props.selectedTemplate?.id, appStore.$state.project);
-      console.log('Erfolgreich gesendet:', response.data);
       emitEvents('group-removed', props.selectedTemplate);
       clearForm();
     } catch (error) {
@@ -115,7 +110,6 @@ const clearForm = () => {
 
 onMounted(() => {
   clearForm();
-  console.log('clearForm');
   getGreetings();
 
   const editor = new Quill('#editor', {

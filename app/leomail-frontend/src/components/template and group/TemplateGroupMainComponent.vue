@@ -31,7 +31,6 @@ const getData = async () => {
     } else if (route.path.includes('groups')) {
       response = await Service.getInstance().getPersonalGroups(appStore.$state.project);
     }
-    console.log(response);
     fetchedData.value = response.data;
   } catch (error) {
     console.error('Fehler beim Abrufen der Daten:', error);
@@ -54,7 +53,6 @@ const handleClick = (item) => {
   if(route.path.includes('groups')) {
     Service.getInstance().getGroupDetails(appStore.$state.project, item.id).then((response) => {
       selectedTemplate.value = response.data;
-      console.log(response)
     });
   }
 };
@@ -71,7 +69,6 @@ const handleRemovedObject = (removedObject) => {
 };
 
 const handleSavedObject = (savedObject = {}) => {
-  console.log("Saved object received:", savedObject); // Überprüfe das empfangene Objekt
   if (!savedObject || Object.keys(savedObject).length === 0) {
     console.error('Saved object is invalid or undefined!');
     return;

@@ -13,7 +13,6 @@ export class Service {
     }
 
     public addTemplate(formData: any) {
-        console.log("du schickst gleich die daten");
         return axiosInstance.post(`/template/add`, formData);
     }
 
@@ -39,12 +38,10 @@ export class Service {
     }
 
     public updateTemplate(formData: any) {
-        console.log(formData)
         return axiosInstance.post(`/template/update`, formData);
     }
 
     public sendEmails(formData: any, projectId: string) {
-        console.log("du schickst gleich die daten");
         return axiosInstance.post(`/mail/sendByTemplate`, formData, {
             params: {
                 "pid": projectId
@@ -249,7 +246,6 @@ export class Service {
 
     async checkOutlookPassword(email: string, password: string): Promise<boolean> {
         try {
-            console.log(email, password);
             const response = await axiosInstance.post('/auth/validate-outlook-password', {
                 email: email,
                 password: password,
@@ -295,6 +291,14 @@ export class Service {
 
     async fetchProjectMailData(projectId: string) {
         return axiosInstance.get(`/project/get/mail`, {
+            params: {
+                "pid": projectId
+            }
+        });
+    }
+
+    async deleteSentMails(stids: string[], projectId: string) {
+        return axiosInstance.post(`/template/deleteUsedTemplates`, stids,{
             params: {
                 "pid": projectId
             }

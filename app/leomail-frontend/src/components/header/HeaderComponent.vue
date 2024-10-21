@@ -30,13 +30,11 @@ const getProfile = async () => {
   const response = await Service.getInstance().getProfile();
   profileData.value = response.data;
   name.value = profileData.value.firstName + " " + profileData.value.lastName;
-  console.log(name.value);
 };
 
 const getProjectName = async () => {
   const response = await Service.getInstance().getProjectName(useAppStore().$state.project);
   projectName.value = response.data;
-  console.log(projectName.value);
 };
 </script>
 

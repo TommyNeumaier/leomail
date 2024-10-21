@@ -25,7 +25,6 @@ onMounted(() => {
 const getProfile = async () => {
   const response = await Service.getInstance().getProfile();
   profileData.value = response.data;
-  console.log(profileData.value.firstName)
   firstname.value = profileData.value.firstName;
   lastname.value = profileData.value.lastName;
   email.value = profileData.value.mailAddress;

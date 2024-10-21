@@ -260,7 +260,6 @@ const handlePreview = async () => {
     // Setze die Vorschau-Empfänger
     previewRecipients.value = combinedUsers;
 
-    console.log('Preview Recipients:', previewRecipients.value); // Debugging
 
     if (previewRecipients.value.length > 0 && selectedTemplate.value) {
       showPreview.value = true;
@@ -305,7 +304,6 @@ const isScheduled = () => {
   if(checked.value == true) {
     return parseDate()
   } else{
-    console.log('checkedValue' + checked.value)
     return null;
   }
 };
@@ -373,7 +371,6 @@ const getTemplates = async () => {
       ...template,
       visible: true
     }));
-    console.log('Fetched Templates:', fetchedTemplates.value); // Debugging
   } catch (error) {
     console.error('Error fetching templates:', error);
   }
@@ -399,9 +396,7 @@ const sendMail = async () => {
       }
     };
 
-    console.log(mailForm);
     const response = await Service.getInstance().sendEmails(mailForm, appStore.$state.project);
-    console.log('Erfolgreich gesendet:', response.data);
 
     selectedUsers.value = [];
     selectedGroups.value = [];

@@ -52,7 +52,6 @@ const getContacts = async () => {
     });
     contactData.value = data;
     filteredContacts.value = data;
-    console.log('Filtered contacts:', filteredContacts.value);
   } catch (error) {
     console.error('Error fetching contacts:', error);
   }
@@ -67,7 +66,6 @@ const handleClickedContact = async (item: Contact, index: number) => {
   try {
     const response = await Service.getInstance().getContact(item.id!);
     selectedContact.value = response.data;
-    console.log(selectedContact.value);
   } catch (error) {
     console.error('Error fetching contact details:', error);
   }

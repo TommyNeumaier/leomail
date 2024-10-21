@@ -133,7 +133,6 @@ const increment = () => {
 };
 
 const handleEmailClick = (mailId: number) => {
-  console.log('Clicked email id:', mailId);
   router.push({ name: 'MailDetail', params: { id: mailId, projectId: appStore.$state.project } });
 };
 

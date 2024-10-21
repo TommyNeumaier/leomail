@@ -60,7 +60,6 @@ const confirmed = ref(false);
 const allRecipients = ref<User[]>([]);
 
 const formattedSendTime = computed(() => {
-  console.log(props.scheduledAt)
   if (props.scheduledAt) {
     return props.scheduledAt;
    // return new Date(props.scheduledAt).toLocaleString();
@@ -83,7 +82,6 @@ const updateFilledTemplate = () => {
   if (currentEmailIndex.value < allRecipients.value.length) {
     const user = allRecipients.value[currentEmailIndex.value];
     filledTemplate.value = fillTemplate(props.selectedTemplate!, user);
-    console.log('Filled Template in Preview:', filledTemplate.value); // Debugging
   }
 };
 
@@ -106,14 +104,12 @@ const loadRecipients = () => {
   if (props.selectedTemplate && allRecipients.value.length > 0) {
     filledTemplate.value = fillTemplate(props.selectedTemplate, allRecipients.value[0]);
     currentEmailIndex.value = 0;
-    console.log('Initial Filled Template in Preview:', filledTemplate.value); // Debugging
   }
 };
 
 watch(() => props.visible, (newValue) => {
   if (newValue) {
     loadRecipients();
-    console.log(allRecipients.value)
   }
 });
 

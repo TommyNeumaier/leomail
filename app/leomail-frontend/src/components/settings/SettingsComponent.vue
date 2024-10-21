@@ -85,7 +85,6 @@ const loadProjectData = async () => {
   try {
     const response = await Service.getInstance().getProject(appStore.$state.project);
     const projectData = response.data;
-    console.log(projectData)
 
     projectName.value = projectData.name;
     displayName.value = projectData.displayName;

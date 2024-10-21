@@ -6,8 +6,6 @@ import ProfilView from "@/views/ProfilView.vue";
 import { useAuthStore } from "@/stores/auth.store";
 import NewProject from "@/views/NewProject.vue";
 import NewMail from "@/views/NewMail.vue";
-import { useAppStore } from '@/stores/app.store';
-import axios from 'axios';
 import { refreshToken, validateToken } from "@/services/auth.service";
 import ProjectView from "@/views/ProjectView.vue";
 import ScheduledMailsView from "@/views/ScheduledMailsView.vue";
@@ -15,7 +13,6 @@ import GroupView from "@/views/GroupView.vue";
 import TemplateView from "@/views/TemplateView.vue";
 import SettingsView from "@/views/SettingsView.vue";
 import AuthorisationComponent from "@/views/AuthorisationView.vue";
-import { Service } from "@/services/service";
 import PostLoginView from "@/views/PostLoginView.vue";
 import {pinia} from "@/main";
 import axiosInstance from "@/axiosInstance";
@@ -48,13 +45,11 @@ const router = createRouter({
   routes,
 });
 
-// Helper function to handle invalid tokens
 function handleInvalidToken(authStore, next) {
   authStore.logout();
   return next({ name: 'login' });
 }
 
-// Main navigation guard
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore(pinia);
 
@@ -62,7 +57,6 @@ router.beforeEach(async (to, from, next) => {
     const accessToken = authStore.accessToken;
 
     if (!accessToken) {
-      console.log('Kein Zugriffstoken gefunden, Weiterleitung zum Login');
       return next({ name: 'login' });
     }
 
@@ -72,24 +66,19 @@ router.beforeEach(async (to, from, next) => {
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         return next();
       } else {
-        console.log('Zugriffstoken ist ungültig, versuche zu aktualisieren');
         try {
           const { access_token } = await refreshToken();
           authStore.setTokens(access_token, authStore.$state._refreshToken);
           axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-          // Proceed to the intended route
           return next();
         } catch (refreshError) {
-          console.log('Token-Aktualisierung fehlgeschlagen, Weiterleitung zum Login');
           return handleInvalidToken(authStore, next);
         }
       }
     } catch (error) {
-      console.error('Fehler bei der Token-Validierung oder Aktualisierung:', error);
       return handleInvalidToken(authStore, next);
     }
   } else {
-    // If the route does not require auth, proceed normally
     return next();
   }
 });
