@@ -1,5 +1,6 @@
 package at.htlleonding.leomail.entities;
 
+import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import jakarta.persistence.*;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import java.time.LocalDateTime;
@@ -38,7 +39,7 @@ public class Project extends PanacheEntityBase {
             joinColumns = @JoinColumn(name = "project_id"),
             inverseJoinColumns = @JoinColumn(name = "contact_id")
     )
-    public List<Contact> members = new ArrayList<>();
+    public List<NaturalContact> members = new ArrayList<>();
 
     public Project() {
         this.createdOn = LocalDateTime.now();
@@ -51,7 +52,7 @@ public class Project extends PanacheEntityBase {
         this.createdOn = LocalDateTime.now();
     }
 
-    public Project(String name, String description, Contact createdBy, String mailAddress, String password, List<Contact> members) {
+    public Project(String name, String description, Contact createdBy, String mailAddress, String password, List<NaturalContact> members) {
         this(name, description, createdBy);
         this.mailAddress = mailAddress;
         this.password = password;

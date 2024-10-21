@@ -66,10 +66,6 @@ public class ProjectRepository {
             throw new IllegalArgumentException("Mail information must not be null.");
         }
 
-        if (projectAddDTO.members() == null || projectAddDTO.members().isEmpty()) {
-            throw new IllegalArgumentException("Project must have at least one member.");
-        }
-
         // Optional Mail validation
         if (!mailService.verifyOutlookCredentials(
                 projectAddDTO.mailInformation().mailAddress(),
@@ -155,14 +151,17 @@ public class ProjectRepository {
             throw new IllegalArgumentException("Project with ID " + pid + " does not exist.");
         }
 
+        List<NaturalContactSearchDTO> contactSearchDTOS = new ArrayList<>();
+        for(NaturalContact contact : project.members) {
+            contactSearchDTOS.add(new NaturalContactSearchDTO(contact.id, contact.firstName, contact.lastName, contact.mailAddress));
+        }
+
         return new ProjectDetailDTO(
                 project.id,
                 project.name,
                 project.description,
                 new MailAddressDTO(project.mailAddress, null),
-                project.members.stream()
-                        .map(NaturalContactSearchDTO::fromNaturalContact)
-                        .collect(Collectors.toList())
+                contactSearchDTOS
         );
     }
 
@@ -179,10 +178,6 @@ public class ProjectRepository {
 
         if (projectDetailDTO.mailInformation() == null) {
             throw new IllegalArgumentException("Mail information must not be null.");
-        }
-
-        if (projectDetailDTO.members() == null || projectDetailDTO.members().isEmpty()) {
-            throw new IllegalArgumentException("Project must have at least one member.");
         }
 
         // Optional Mail validation
@@ -223,7 +218,8 @@ public class ProjectRepository {
         }
 
         // Fetch the creator contact
-        Contact creatorContact = em.find(Contact.class, projectDetailDTO.id());
+        Project project = Project.findById(projectDetailDTO.id());
+        Contact creatorContact = em.find(Contact.class, project.createdBy.id);
         if (creatorContact == null) {
             throw new IllegalArgumentException("Creator contact does not exist.");
         }
@@ -236,7 +232,6 @@ public class ProjectRepository {
             members.add((NaturalContact) creatorContact);
         }
 
-        Project project = em.find(Project.class, projectDetailDTO.id());
         if (project == null) {
             throw new IllegalArgumentException("Project with ID " + projectDetailDTO.id() + " does not exist.");
         }

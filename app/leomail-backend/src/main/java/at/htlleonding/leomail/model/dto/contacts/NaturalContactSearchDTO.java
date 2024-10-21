@@ -12,18 +12,6 @@ public record NaturalContactSearchDTO(
         String lastName,
         String mailAddress
 ) implements ContactSearchResult {
-    public static NaturalContactSearchDTO fromNaturalContact(Contact contact1) {
-        if (!(contact1 instanceof NaturalContact contact)) {
-            throw new IllegalArgumentException("Contact is not a NaturalContact");
-        }
-
-        return new NaturalContactSearchDTO(
-                contact.id,
-                contact.firstName,
-                contact.lastName,
-                contact.mailAddress
-        );
-    }
 
     @Override
     public String getId() {
