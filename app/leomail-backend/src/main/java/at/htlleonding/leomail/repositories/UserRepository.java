@@ -2,12 +2,22 @@ package at.htlleonding.leomail.repositories;
 
 import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.entities.NaturalContact;
+import at.htlleonding.leomail.entities.Project;
 import at.htlleonding.leomail.model.dto.ProfileDTO;
+import at.htlleonding.leomail.model.dto.user.AvailableMailAddressesDTO;
+import at.htlleonding.leomail.model.dto.user.MailAddressInformationDTO;
+import at.htlleonding.leomail.services.PermissionService;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import java.util.List;
 
 @ApplicationScoped
 public class UserRepository implements PanacheRepository<NaturalContact> {
+
+    @Inject
+    PermissionService permissionService;
 
     public boolean checkUser(String sub) {
         Contact contact = Contact.findById(sub);
@@ -43,5 +53,16 @@ public class UserRepository implements PanacheRepository<NaturalContact> {
             user.encryptedOutlookPassword = encryptedPassword;
             persist(user);
         }
+    }
+
+    public AvailableMailAddressesDTO getAvailableMailAddresses(String sub, String pid) {
+        if (!permissionService.hasPermission(sub, pid)) {
+            throw new RuntimeException("Permission denied");
+        }
+
+        NaturalContact contact = NaturalContact.findById(sub);
+        Project project = Project.findById(pid);
+        return new AvailableMailAddressesDTO(new MailAddressInformationDTO(contact.firstName + " " + contact.lastName, contact.mailAddress, contact.id),
+                new MailAddressInformationDTO(project.name, project.mailAddress, project.id));
     }
 }
