@@ -244,4 +244,19 @@ export class Service {
             throw error;
         }
     }
+
+    async checkOutlookPassword(email: string, password: string): Promise<boolean> {
+        try {
+            console.log(email, password);
+            const response = await axios.post('/api/auth/validate-outlook-password', {
+                email: email,
+                password: password,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Fehler bei der Überprüfung des Outlook-Passworts:', error);
+            throw error;
+        }
+    }
+
 }

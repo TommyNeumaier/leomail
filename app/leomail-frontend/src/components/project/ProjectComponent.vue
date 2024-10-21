@@ -17,6 +17,8 @@ const selectedUsers = ref<User[]>([]);
 const searchTerm = ref('');
 const users = ref<User[]>([]);
 const loading = ref(false);
+const isChecking = ref(false);  // Neue Variable zum Verfolgen des Ladezustands
+const isEmailVerified = ref(false);  // Neue Variable für Verifizierungsstatus
 
 // Funktion, um Benutzer basierend auf der Suchanfrage abzurufen
 const fetchUsers = async (query: string) => {
@@ -124,8 +126,14 @@ const validateForm = () => {
     errors.value.selectedUsers = '';
   }
 
+  if (!isEmailVerified.value) {
+    errors.value.email = 'E-Mail muss verifiziert sein, um fortzufahren';
+    valid = false;
+  }
+
   return valid;
 };
+
 
 // Formular abschicken
 const handleSubmit = () => {
@@ -157,6 +165,31 @@ const handleSubmit = () => {
 const handleBack = () => {
   router.push({ name: 'projects' });
 };
+
+const checkAccount = async () => {
+  if (!formState.value.mailAddress || !formState.value.password) {
+    alert("Bitte füllen Sie alle Felder aus.");
+    return;
+  }
+
+  isChecking.value = true;
+
+  try {
+    const isOutlookValid = await Service.getInstance().checkOutlookPassword(formState.value.mailAddress, formState.value.password);
+
+    if (isOutlookValid) {
+      alert("Account und Outlook-Passwort sind gültig!");
+    } else {
+      alert("E-Mail oder Passwort sind ungültig.");
+    }
+  } catch (error) {
+    console.error("Fehler bei der Überprüfung:", error);
+    alert("Es gab ein Problem bei der Überprüfung des Accounts.");
+  } finally {
+    isChecking.value = false;  // Laden beendet
+  }
+};
+
 </script>
 
 <template>
@@ -166,7 +199,6 @@ const handleBack = () => {
       <h3 id="headline">Neues Projekt</h3>
     </div>
     <div id="contentBox">
-
       <form @submit.prevent="handleSubmit">
 
         <!-- Projektname -->
@@ -225,6 +257,7 @@ const handleBack = () => {
                 v-model="formState.mailAddress"
             >
             <span class="error">{{ errors.email }}</span>
+            <span v-if="!isEmailVerified && formState.mailAddress" class="error">E-Mail muss verifiziert sein, um fortzufahren.</span>
           </div>
 
           <div class="form-flex-item" style="margin-left: 7%">
@@ -239,6 +272,19 @@ const handleBack = () => {
             >
             <span class="error">{{ errors.password }}</span>
           </div>
+        </div>
+
+        <!-- Button zur Account-Überprüfung -->
+        <div class="form-flex-item">
+          <button
+              type="button"
+              id="checkAccountButton"
+              @click="checkAccount"
+              :disabled="isChecking"
+          >
+            {{ isChecking ? 'Überprüfe...' : 'Account Überprüfung' }}
+          </button>
+          <span v-if="isChecking" class="loader"></span> <!-- Ladezeichen -->
         </div>
 
         <!-- Benutzer hinzufügen -->
@@ -265,19 +311,25 @@ const handleBack = () => {
           <span class="error">{{ errors.selectedUsers }}</span>
         </div>
 
-
         <!-- Ausgewählte Benutzer anzeigen -->
         <div id="selectedUsersList">
           <div id="selectedRecipients">
             <div class="tag" v-for="user in selectedUsers" :key="user.id">
-              {{ user.firstName }} {{ user.lastName }} <span class="tag-remove" @click="removeUser(user)">✕</span>
+              {{ user.firstName }} {{ user.lastName }}
+              <span @click="removeUser(user)" class="tag-remove">✕</span>
             </div>
           </div>
         </div>
 
-        <!-- Buttons -->
+        <!-- Button zum Speichern -->
         <div id="buttonBox">
-          <button type="submit" id="submitButton">Speichern</button>
+          <button
+              type="submit"
+              id="submitButton"
+              :disabled="!isEmailVerified || !validateForm()"
+          >
+            Erstellen
+          </button>
         </div>
       </form>
     </div>
@@ -286,6 +338,36 @@ const handleBack = () => {
 
 
 <style scoped>
+#checkAccountButton{
+  all: unset;
+  font-size:0.6em;
+  color: #78A6FF;
+  border-bottom: solid 1px #78A6FF;
+}
+
+#checkAccountButton:hover {
+  font-weight: bold;
+}
+/* Spinner (Loader) */
+.loader {
+  border: 2px solid #f3f3f3; /* Hintergrund des Kreises */
+  border-top: 2px solid #78A6FF; /* Farbe des sich drehenden Teils */
+  border-radius: 50%;
+  width: 18px;  /* kleinere Größe */
+  height: 18px; /* kleinere Größe */
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle; /* Vertikal ausrichten */
+  margin-left: 10px; /* Abstand zum Text im Button */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+
 /* Tags für ausgewählte Benutzer/Gruppen */
 #selectedUsersList {
   width: 80%;
@@ -304,11 +386,11 @@ const handleBack = () => {
 }
 
 .tag {
-  background-color: lightblue;
+  background-color: rgba(0, 123, 255, 0.45);
   color: white;
-  border-radius: 20px;
+  border-radius: 10px;
   padding: 6px 12px;
-  font-size: 0.7rem;
+  font-size: 0.6em;
   display: inline-flex;
   align-items: center;
 }
@@ -477,7 +559,7 @@ li {
 }
 
 li:hover {
-  background-color: lightblue; /* Hintergrund beim Hover */
+  background-color: #78A6FF; /* Hintergrund beim Hover */
   color: white;
   transition: background-color 0.2s ease;
 }
@@ -518,6 +600,8 @@ li:hover .user-info small {
   color: white;
   border: #78A6FF solid 1px;
   font-size: 0.8rem;
+  display: flex;
+  justify-content: flex-end;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 

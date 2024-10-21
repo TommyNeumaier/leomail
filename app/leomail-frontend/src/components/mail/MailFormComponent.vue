@@ -199,13 +199,14 @@ const previewRecipients = ref<User[]>([]);
 const profileData = ref<User[]>([]);
 const personalMail = ref();
 const projectMail = 'projekt.mail@domain.com';
-const selectedSender = ref(personalMail); // Standardmäßig die persönliche Mail
+const selectedSender = ref(); // Standardmäßig die persönliche Mail
 
 const getProfile = async () => {
   const response = await Service.getInstance().getProfile();
   profileData.value = response.data;
-  console.log(profileData.value.firstName)
+  console.log("addresse" + profileData.value.mailAddress);
   personalMail.value = profileData.value.mailAddress;
+  selectedSender.value = profileData.value.mailAddress;
 };
 
 const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value);
