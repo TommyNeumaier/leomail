@@ -57,5 +57,3 @@ app/leomail-backend/http/priv/
 
 # Git Secret
 .gitsecret/keys/random_seed
-app/leomail-backend/src/main/resources/application.properties
-app/leomail-frontend/src/configs/keycloak.config.ts
