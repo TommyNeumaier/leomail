@@ -93,8 +93,8 @@ jobs:
         if: matrix.service == 'frontend'
         working-directory: ./app/leomail-frontend
         run: |
-          npm i --legacy-peer-deps
-          npx ng build
+          npm i
+          npm run build
           docker build --tag ghcr.io/tommyneumaier/leomail/leomail-vue:latest .
           docker push ghcr.io/tommyneumaier/leomail/leomail-vue:latest
 
