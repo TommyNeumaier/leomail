@@ -292,10 +292,13 @@ const parseDate = () => {
 
   const d = date.value;
   const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0'); // getMonth() gibt 0-basiert (Januar = 0)
+  const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
 
-  return `${year}-${month}-${day}T${time.value.hours}:${time.value.minutes}:00.000Z`;
+  const hours = String(time.value.hours).padStart(2, '0');
+  const minutes = String(time.value.minutes).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;
 };
 
 const isScheduled = () => {
