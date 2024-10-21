@@ -19,20 +19,11 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: POSTGRES_DB
+          value: "${POSTGRES_DB}"
         - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: POSTGRES_USER
+          value: "${POSTGRES_USER}"
         - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: POSTGRES_PASSWORD
+          value: "${POSTGRES_PASSWORD}"
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
@@ -53,4 +44,3 @@ spec:
       port: 5432
       targetPort: 5432
   type: ClusterIP
-  

@@ -110,6 +110,12 @@ jobs:
           echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
+      - name: Replace env vars in postgres.yaml
+        run: |
+          sed -i 's/\${POSTGRES_DB}/${{ secrets.POSTGRES_DB }}/g' .github/k8s/postgres.yaml
+          sed -i 's/\${POSTGRES_USER}/${{ secrets.POSTGRES_USER }}/g' .github/k8s/postgres.yaml
+          sed -i 's/\${POSTGRES_PASSWORD}/${{ secrets.POSTGRES_PASSWORD }}/g' .github/k8s/postgres.yaml
+
       # Apply Kubernetes Resources for backend
       - name: Deploy Quarkus Backend to Kubernetes
         if: matrix.service == 'backend' && success()
@@ -128,9 +134,6 @@ jobs:
         run: |
           kubectl apply -f .github/k8s/postgres.yaml
           kubectl apply -f .github/k8s/ingress.yaml
-          kubectl set env deployment/postgres POSTGRES_DB="${{ secrets.POSTGRES_DB }}"
-          kubectl set env deployment/postgres POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
-          kubectl set env deployment/postgres POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
 
       # Verify Backend Deployment
       - name: Verify Backend Deployment
