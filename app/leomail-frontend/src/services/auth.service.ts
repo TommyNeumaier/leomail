@@ -1,58 +1,50 @@
-// src/services/auth.service.js
-import axios from 'axios';
-import {useAuthStore} from '@/stores/auth.store';
-import {useAppStore} from "@/stores/app.store";
+import axiosInstance from '@/axiosInstance';
+import { useAuthStore } from '@/stores/auth.store';
+import { useAppStore } from '@/stores/app.store';
 
 export const login = async (username: string, password: string) => {
-    try {
-        const authStore = useAuthStore();
-        const appStore = useAppStore();
+    const authStore = useAuthStore();
+    const appStore = useAppStore();
 
-        await axios.post('/api/auth/login', new URLSearchParams({
-            username,
-            password
-        }), {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            isLoginRequest: true
-        }).then((response) => {
-            appStore.project = '';
-            const {access_token: accessToken, refresh_token: refreshToken} = response.data;
-            authStore.setTokens(accessToken, refreshToken);
-        });
+    try {
+        const response = await axiosInstance.post(
+            '/auth/login',
+            new URLSearchParams({ username, password }),
+            {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            }
+        );
+
+        appStore.project = '';
+        const { access_token: accessToken, refresh_token: refreshToken } = response.data;
+        authStore.setTokens(accessToken, refreshToken);
+
         return true;
     } catch (error) {
-        throw new Error("Kein Benutzer, passend zu den eingegebenen Daten, gefunden.");
+        throw new Error('Invalid username or password.');
     }
 };
 
 export const refreshToken = async () => {
     const authStore = useAuthStore();
-    const refreshToken = authStore.$state._refreshToken;
+    const refresh_Token = authStore.$state._refreshToken;
 
-    if (refreshToken) {
-        console.log("Attempting to refresh token with:", refreshToken);
+    if (refresh_Token) {
         try {
-            const response = await axios.post('/api/auth/refresh', new URLSearchParams({
-                'refresh_token': refreshToken,
-            }), {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Bearer ' + authStore.$state.accessToken,
-                },
-                isRefreshRequest: true
-            });
+            const response = await axiosInstance.post(
+                '/auth/refresh',
+                new URLSearchParams({ refresh_token: refresh_Token }),
+                {
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                }
+            );
 
-            console.log("Refresh token response:", response.data);
-            const { access_token, refresh_token: new_refresh_token } = {
-                access_token: response.data.accessToken,
-                refresh_token: response.data.refreshToken,
-            };
-            authStore.setTokens(access_token, new_refresh_token);
-            return { access_token, refresh_token: new_refresh_token };
+            const { access_token: newAccessToken, refresh_token: newRefreshToken } = response.data;
+            authStore.setTokens(newAccessToken, newRefreshToken);
+
+            return { access_token: newAccessToken, refresh_token: newRefreshToken };
         } catch (error) {
-            console.error("Error refreshing token:", error);
+            console.error('Error refreshing token:', error);
             authStore.logout();
             throw error;
         }
@@ -62,9 +54,12 @@ export const refreshToken = async () => {
     }
 };
 
+// Other methods remain unchanged, but use axiosInstance instead of axios
+
+
 export const validateToken = async () => {
     try {
-        const response = await axios.get('/api/auth/validate');
+        const response = await axiosInstance.get('/api/auth/validate');
         return response.data;
     } catch (error) {
         return false;
@@ -73,7 +68,7 @@ export const validateToken = async () => {
 
 export const getRoles = async () => {
     try {
-        const response = await axios.get('/api/auth/roles');
+        const response = await axiosInstance.get('/api/auth/roles');
         return response.data;
     } catch (error) {
         return [];

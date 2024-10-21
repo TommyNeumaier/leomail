@@ -1,46 +1,38 @@
-import axios from 'axios';
+// src/setupAxiosInterceptors.ts
+
+import axiosInstance from '@/axiosInstance';
 import { useAuthStore } from '@/stores/auth.store';
 import { refreshToken } from '@/services/auth.service';
 
 const setupAxiosInterceptors = (store: any) => {
-    axios.interceptors.request.use(
+    axiosInstance.interceptors.request.use(
         (config) => {
             const authStore = useAuthStore(store);
             const token = authStore.accessToken;
 
-            if (token && !config.isLoginRequest) {
+            if (token && !config.headers['Authorization']) {
                 config.headers['Authorization'] = `Bearer ${token}`;
             }
 
             return config;
         },
-        (error) => {
-            return Promise.reject(error);
-        }
+        (error) => Promise.reject(error)
     );
 
-    axios.interceptors.response.use(
-        (response) => {
-            return response;
-        },
+    axiosInstance.interceptors.response.use(
+        (response) => response,
         async (error) => {
             const originalRequest = error.config;
             const authStore = useAuthStore(store);
 
-            if (originalRequest._retry || originalRequest.isRefreshRequest) {
-                return Promise.reject(error);
-            }
-
-            if (error.response.status === 401 && !originalRequest._retry) {
+            if (error.response && error.response.status === 401 && !originalRequest._retry) {
                 originalRequest._retry = true;
-                originalRequest.isRefreshRequest = true;
                 try {
                     const newToken = await refreshToken();
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken.access_token}`;
+                    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newToken.access_token}`;
                     originalRequest.headers['Authorization'] = `Bearer ${newToken.access_token}`;
-                    return axios(originalRequest);
+                    return axiosInstance(originalRequest);
                 } catch (err) {
-                    console.error('Refresh token error:', err);
                     authStore.logout();
                     return Promise.reject(err);
                 }
