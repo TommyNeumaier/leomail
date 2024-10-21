@@ -29,9 +29,9 @@ spec:
         - name: QUARKUS_PROFILE
           value: prod
         - name: QUARKUS_DATASOURCE_USERNAME
-          value: "${POSTGRES_USER}"
+          value: ${POSTGRES_USER}
         - name: QUARKUS_DATASOURCE_PASSWORD
-          value: "${POSTGRES_PASWORD}"
+          value: ${POSTGRES_PASSWORD}
         - name: QUARKUS_DATASOURCE_JDBC_URL
           value: jdbc:postgresql://postgres-service:5432/${POSTGRES_DB}
         volumeMounts:
