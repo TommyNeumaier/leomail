@@ -36,6 +36,7 @@ app/leomail-frontend/.env.*.local
 app/leomail-frontend/.eslintcache
 app/leomail-frontend/.nuxt/
 app/leomail-frontend/public/
+app/leomail-frontend/package-lock.json
 
 # Quarkus Backend
 app/leomail-backend/target/
