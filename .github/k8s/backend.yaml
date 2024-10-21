@@ -15,7 +15,10 @@ spec:
       initContainers:
         - name: init-generate-encryption-key
           image: alpine
-          command: ['sh', '-c', 'apk add --no-cache openssl && openssl rand -base64 32 > /etc/encryption/encryption-key']
+          command:
+            - sh
+            - -c
+            - apk add --no-cache openssl && openssl rand -base64 32 > /etc/encryption/encryption-key
           volumeMounts:
             - name: encryption-volume
               mountPath: /etc/encryption
@@ -29,11 +32,11 @@ spec:
             - name: QUARKUS_PROFILE
               value: prod
             - name: QUARKUS_DATASOURCE_USERNAME
-              value: "${POSTGRES_USER}"
+              value: $POSTGRES_USER
             - name: QUARKUS_DATASOURCE_PASSWORD
-              value: "${POSTGRES_PASSWORD}"
+              value: $POSTGRES_PASSWORD
             - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://postgres-service:5432/${POSTGRES_DB}"
+              value: jdbc:postgresql://postgres-service:5432/$POSTGRES_DB
           volumeMounts:
             - name: encryption-volume
               mountPath: /etc/encryption
