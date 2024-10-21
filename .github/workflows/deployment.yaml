@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
   pull_request:
     branches:
       - main
@@ -118,9 +117,6 @@ jobs:
           sed -i 's|\${POSTGRES_DB}|***|g' .github/k8s/backend.yaml
           sed -i 's|\${POSTGRES_USER}|***|g' .github/k8s/backend.yaml
           sed -i 's|\${POSTGRES_PASSWORD}|***|g' .github/k8s/backend.yaml
-
-      - name: Output backend.yaml for debugging
-        run: cat .github/k8s/backend.yaml
 
       # Apply Kubernetes Resources for backend
       - name: Deploy Quarkus Backend to Kubernetes
