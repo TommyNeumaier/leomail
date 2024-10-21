@@ -12,7 +12,6 @@ spec:
       labels:
         app: quarkus
     spec:
-      # Init container to generate the encryption key and store it in a shared volume
       initContainers:
       - name: init-generate-encryption-key
         image: alpine
@@ -23,7 +22,6 @@ spec:
 
       containers:
       - name: quarkus
-        imagePullPolicy: Always
         image: ghcr.io/tommyneumaier/leomail/leomail-quarkus:latest
         ports:
         - containerPort: 8080
@@ -33,15 +31,15 @@ spec:
         - name: QUARKUS_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
-              name: postgres-secret 
-              key: POSTGRES_USER      
+              name: postgres-secret
+              key: POSTGRES_USER
         - name: QUARKUS_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: postgres-secret  
-              key: POSTGRES_PASSWORD 
-        - name: QUARKUS_DATASOURCE_URL
-          value: jdbc:postgresql://postgres-service:5432/leomail-database
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: QUARKUS_DATASOURCE_JDBC_URL
+          value: jdbc:postgresql://postgres-service:5432/${POSTGRES_DB}
         volumeMounts:
         - name: encryption-volume
           mountPath: /etc/encryption
