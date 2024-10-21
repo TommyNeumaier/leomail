@@ -18,7 +18,7 @@ public class EncryptionService {
     private static final int IV_SIZE = 12;
     private static final int TAG_LENGTH_BIT = 128; //
 
-    @ConfigProperty(name = "quarkus.application.encryption.key")
+    @ConfigProperty(name = "encryption.key")
     public String encryptionKeyBase64;
 
     /**
