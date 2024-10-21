@@ -84,7 +84,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('app/frontend/package-lock.json') }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('app/leomail-frontend/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-
 
@@ -128,10 +128,9 @@ jobs:
         run: |
           kubectl apply -f .github/k8s/postgres.yaml
           kubectl apply -f .github/k8s/ingress.yaml
-          kubectl set env deployment/postgres POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          kubectl set env deployment/postgres POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          kubectl set env deployment/postgres POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-
+          kubectl set env deployment/postgres POSTGRES_DB="${{ secrets.POSTGRES_DB }}"
+          kubectl set env deployment/postgres POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
+          kubectl set env deployment/postgres POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
 
       # Verify Backend Deployment
       - name: Verify Backend Deployment
