@@ -3,12 +3,13 @@
 import axiosInstance from '@/axiosInstance';
 import { useAuthStore } from '@/stores/auth.store';
 import { refreshToken } from '@/services/auth.service';
+import {pinia} from "@/main";
 
-const setupAxiosInterceptors = (store: any) => {
+const setupAxiosInterceptors = () => {
     axiosInstance.interceptors.request.use(
         (config) => {
-            const authStore = useAuthStore(store);
-            const token = authStore.accessToken;
+            const authStore = useAuthStore(pinia); // Use the Pinia instance
+            const token = authStore.$state.accessToken;
 
             if (token && !config.headers['Authorization']) {
                 config.headers['Authorization'] = `Bearer ${token}`;
@@ -23,9 +24,14 @@ const setupAxiosInterceptors = (store: any) => {
         (response) => response,
         async (error) => {
             const originalRequest = error.config;
-            const authStore = useAuthStore(store);
+            const authStore = useAuthStore(pinia);
 
-            if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            if (
+                error.response &&
+                error.response.status === 401 &&
+                !originalRequest._retry &&
+                !originalRequest.url.includes('/auth/refresh')
+            ) {
                 originalRequest._retry = true;
                 try {
                     const newToken = await refreshToken();

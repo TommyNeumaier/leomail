@@ -19,20 +19,12 @@ const authStore = useAuthStore();
 onMounted(async () => {
   try {
     const isOutlookAuthorized = await Service.getInstance().checkOutlookAuthorization();
-    console.log(isOutlookAuthorized)
-
     if (isOutlookAuthorized) {
-      // Update store state
-      // Redirect to 'projects'
       router.replace({ name: 'projects' });
     } else {
-      // Redirect to 'authorisation' to handle Outlook password submission
       router.replace({ name: 'authorisation' });
     }
   } catch (error) {
-    console.error('Fehler bei der Outlook-Autorisierung:', error);
-    // Optionally, handle the error (e.g., show a notification)
-    // Redirect to 'authorisation' as a fallback
     router.replace({ name: 'authorisation' });
   }
 });

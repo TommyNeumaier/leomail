@@ -13,11 +13,11 @@ export class Service {
 
     public addTemplate(formData: any) {
         console.log("du schickst gleich die daten");
-        return axiosInstance.post(`/api/template/add`, formData);
+        return axiosInstance.post(`/template/add`, formData);
     }
 
     public getTemplates(projectId: string) {
-        return axiosInstance.get(`/api/template/get`, {
+        return axiosInstance.get(`/template/get`, {
             params: {
                 "pid": projectId
             }
@@ -25,11 +25,11 @@ export class Service {
     }
 
     public getGreetings() {
-        return axiosInstance.get(`/api/template/greetings`);
+        return axiosInstance.get(`/template/greetings`);
     }
 
     public removeTemplate(templateId: any, projectId: string) {
-        return axiosInstance.delete(`/api/template/delete`, {
+        return axiosInstance.delete(`/template/delete`, {
             params: {
                 "tid": templateId,
                 "pid": projectId
@@ -39,12 +39,12 @@ export class Service {
 
     public updateTemplate(formData: any) {
         console.log(formData)
-        return axiosInstance.post(`/api/template/update`, formData);
+        return axiosInstance.post(`/template/update`, formData);
     }
 
     public sendEmails(formData: any, projectId: string) {
         console.log("du schickst gleich die daten");
-        return axiosInstance.post(`/api/mail/sendByTemplate`, formData, {
+        return axiosInstance.post(`/mail/sendByTemplate`, formData, {
             params: {
                 "pid": projectId
             }
@@ -52,7 +52,7 @@ export class Service {
     }
 
     public getUsedTemplates(scheduled: boolean, projectId: string) {
-        return axiosInstance.get(`/api/template/getUsedTemplates`, {
+        return axiosInstance.get(`/template/getUsedTemplates`, {
             params: {
                 "scheduled": scheduled,
                 "pid": projectId
@@ -64,11 +64,11 @@ export class Service {
      * Adds a new natural contact.
      */
     public addNaturalContact(contactData: any) {
-        return axiosInstance.post(`/api/contacts/add/natural`, contactData);
+        return axiosInstance.post(`/contacts/add/natural`, contactData);
     }
 
     public getUsedTemplate(tid: number, pid: string) {
-        return axiosInstance.get(`/api/template/getUsedTemplate`, {
+        return axiosInstance.get(`/template/getUsedTemplate`, {
             params: {
                 "tid": tid,
                 "pid": pid
@@ -80,28 +80,28 @@ export class Service {
      * Adds a new company contact.
      */
     public addCompanyContact(contactData: any) {
-        return axiosInstance.post(`/api/contacts/add/company`, contactData);
+        return axiosInstance.post(`/contacts/add/company`, contactData);
     }
 
     /**
      * Updates an existing natural contact.
      */
     public updateNaturalContact(contactData: any) {
-        return axiosInstance.post(`/api/contacts/update/natural`, contactData);
+        return axiosInstance.post(`/contacts/update/natural`, contactData);
     }
 
     /**
      * Updates an existing company contact.
      */
     public updateCompanyContact(contactData: any) {
-        return axiosInstance.post(`/api/contacts/update/company`, contactData);
+        return axiosInstance.post(`/contacts/update/company`, contactData);
     }
 
     /**
      * Deletes a contact by ID.
      */
     public deleteContact(id: string) {
-        return axiosInstance.delete(`/api/contacts/delete`, {
+        return axiosInstance.delete(`/contacts/delete`, {
             params: {
                 id: id,
             },
@@ -112,7 +112,7 @@ export class Service {
      * Retrieves a single contact by ID.
      */
     public getContact(id: string) {
-        return axiosInstance.get(`/api/contacts/single`, {
+        return axiosInstance.get(`/contacts/single`, {
             params: {
                 id: id,
             },
@@ -123,7 +123,7 @@ export class Service {
      * Searches for natural contacts.
      */
     public searchNaturalContacts(query: string) {
-        return axiosInstance.get(`/api/contacts/search/natural`, {
+        return axiosInstance.get(`/contacts/search/natural`, {
             params: {
                 query: query,
             },
@@ -134,7 +134,7 @@ export class Service {
      * Searches for company contacts.
      */
     public searchCompanyContacts(query: string) {
-        return axiosInstance.get(`/api/contacts/search/company`, {
+        return axiosInstance.get(`/contacts/search/company`, {
             params: {
                 query: query,
             },
@@ -145,7 +145,7 @@ export class Service {
      * Searches for all contacts.
      */
     public searchAllContacts(query: string) {
-        return axiosInstance.get(`/api/contacts/search/all`, {
+        return axiosInstance.get(`/contacts/search/all`, {
             params: {
                 query: query,
             },
@@ -154,11 +154,11 @@ export class Service {
 
 
     public getPersonalProjects(){
-        return axiosInstance.get(`/api/project/get/personal`);
+        return axiosInstance.get(`/project/get/personal`);
     }
 
     public checkPermission(projectId: string) {
-        return axiosInstance.get(`/api/permission/check`, {
+        return axiosInstance.get(`/permission/check`, {
             params: {
                 "pid": projectId
             }
@@ -166,11 +166,11 @@ export class Service {
     }
 
     public async getPersonalGroups(projectId: string) {
-        return axiosInstance.get(`/api/groups/get/personal?pid=${projectId}`);
+        return axiosInstance.get(`/groups/get/personal?pid=${projectId}`);
     }
 
     public async getGroupDetails(projectId: string, groupId: string) {
-        return axiosInstance.get('/api/groups/get/details', {
+        return axiosInstance.get('/groups/get/details', {
             params: {
                 pid: projectId,
                 gid: groupId
@@ -180,24 +180,24 @@ export class Service {
 
     public async addGroup(projectId: string, groupData: any) {
         const groupType = groupData.groupType || "NATURAL"; // Adjust as needed
-        return axiosInstance.post(`/api/groups/add?pid=${projectId}&groupType=${groupType}`, groupData);
+        return axiosInstance.post(`/groups/add?pid=${projectId}&groupType=${groupType}`, groupData);
     }
 
     public async updateGroup(projectId: string, groupData: any) {
         const groupType = groupData.groupType || "NATURAL"; // Adjust as needed
-        return axiosInstance.post(`/api/groups/update?pid=${projectId}&groupType=${groupType}`, groupData);
+        return axiosInstance.post(`/groups/update?pid=${projectId}&groupType=${groupType}`, groupData);
     }
 
     public async deleteGroup(projectId: string, groupId: string) {
-        return axiosInstance.delete(`/api/groups/delete?pid=${projectId}&gid=${groupId}`);
+        return axiosInstance.delete(`/groups/delete?pid=${projectId}&gid=${groupId}`);
     }
 
     public async searchGroups(projectId: string, query: string) {
-        return axiosInstance.get(`/api/groups/search?pid=${projectId}&query=${query}`);
+        return axiosInstance.get(`/groups/search?pid=${projectId}&query=${query}`);
     }
 
     async getUsersInGroup(groupId: string, projectId: string) {
-        return axiosInstance.get(`/api/groups/getUsers`, {
+        return axiosInstance.get(`/groups/getUsers`, {
             params: {
                 "pid": projectId,
                 "gid": groupId
@@ -206,11 +206,11 @@ export class Service {
     }
 
     async getProfile() {
-        return axiosInstance.get(`/api/auth/profile`);
+        return axiosInstance.get(`/auth/profile`);
     }
 
     async getProjectName(projectId: string) {
-        return axiosInstance.get(`/api/project/get/name`, {
+        return axiosInstance.get(`/project/get/name`, {
             params: {
                 "pid": projectId
             }
@@ -224,7 +224,7 @@ export class Service {
      * @returns A promise resolving to the search results.
      */
     public async searchContacts(query: string, projectId: string) {
-        return axiosInstance.get(`/api/contacts/search/all`, {
+        return axiosInstance.get(`/contacts/search/all`, {
             params: {
                 query: query,
                 projectId: projectId
@@ -233,12 +233,12 @@ export class Service {
     }
 
     async saveOutlookPassword(formData: { email: string; password: string }) {
-        return axiosInstance.post(`/api/auth/save-outlook-password`, formData);
+        return axiosInstance.post(`/auth/save-outlook-password`, formData);
     }
 
     async checkOutlookAuthorization(): Promise<boolean> {
         try {
-            const response = await axiosInstance.get('/api/auth/check-outlook-authorization');
+            const response = await axiosInstance.get('/auth/check-outlook-authorization');
             return response.data; // Expected response: { isAuthorized: true/false }
         } catch (error) {
             console.error('Outlook-Autorisierungsprüfung fehlgeschlagen:', error);
@@ -249,7 +249,7 @@ export class Service {
     async checkOutlookPassword(email: string, password: string): Promise<boolean> {
         try {
             console.log(email, password);
-            const response = await axiosInstance.post('/api/auth/validate-outlook-password', {
+            const response = await axiosInstance.post('/auth/validate-outlook-password', {
                 email: email,
                 password: password,
             });
