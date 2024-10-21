@@ -12,6 +12,7 @@ export interface User {
   firstName: string;
   lastName: string;
   mailAddress: string;
+  type: string
 }
 
 const selectedUsers = ref<User[]>([]);
@@ -49,6 +50,13 @@ const filteredUsers = computed(() => users.value);
 // Benutzer auswählen
 const selectUser = (user: User) => {
   if (!selectedUsers.value.find(u => u.id === user.id)) {
+    user = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      mailAddress: user.mailAddress,
+      type: 'natural'
+    }
     selectedUsers.value.push(user);
   }
   searchTerm.value = '';
@@ -66,7 +74,7 @@ const formState = ref({
   description: '',
   mailAddress: '',
   password: '',
-  members: selectedUsers.value
+  members: computed(() => selectedUsers.value)
 });
 
 // Fehlerobjekt zur Validierung
@@ -120,12 +128,7 @@ const validateForm = () => {
     errors.value.password = '';
   }
 
-  if (selectedUsers.value.length === 0) {
-    errors.value.selectedUsers = 'Mindestens ein Benutzer muss ausgewählt sein';
-    valid = false;
-  } else {
-    errors.value.selectedUsers = '';
-  }
+  errors.value.selectedUsers = ''; // Fehlertext zurücksetzen, falls vorhanden
 
   if (!isEmailVerified.value) {
     errors.value.email = 'E-Mail muss verifiziert sein, um fortzufahren';
@@ -180,14 +183,47 @@ const checkAccount = async () => {
 
     if (isOutlookValid) {
       alert("Account und Outlook-Passwort sind gültig!");
+      isEmailVerified.value = true;  // Setzt die Verifizierung auf true
     } else {
       alert("E-Mail oder Passwort sind ungültig.");
+      isEmailVerified.value = false; // Setzt die Verifizierung auf false
     }
   } catch (error) {
     console.error("Fehler bei der Überprüfung:", error);
     alert("Es gab ein Problem bei der Überprüfung des Accounts.");
+    isEmailVerified.value = false;  // Setzt die Verifizierung auf false bei Fehler
   } finally {
     isChecking.value = false;  // Laden beendet
+  }
+};
+
+const handleSubmit = () => {
+  if (validateForm()) {
+    if (!isEmailVerified.value) {
+      alert("Die E-Mail muss verifiziert werden, bevor das Projekt erstellt werden kann.");
+      return;
+    }
+
+    console.log('Form submitted:', formState.value, selectedUsers.value);
+    axios.post("/api/project/add", {
+      name: formState.value.name,
+      description: formState.value.description,
+      mailInformation: {
+        mailAddress: formState.value.mailAddress,
+        password: formState.value.password
+      },
+      members: selectedUsers.value,
+    }).then(() => {
+      router.push({ name: 'projects' });
+    }).catch((error) => {
+      console.error('Error creating project:', error);
+    });
+
+    formState.value.name = '';
+    formState.value.description = '';
+    formState.value.mailAddress = '';
+    formState.value.password = '';
+    selectedUsers.value = [];
   }
 };
 
@@ -218,18 +254,6 @@ const checkAccount = async () => {
             <span class="error">{{ errors.name }}</span>
           </div>
 
-          <div class="form-flex-item" style="margin-left: 7%">
-            <div class="boxLabel">
-              <label for="displayName" class="project-label">Anzeigename</label><br>
-            </div>
-            <input
-                type="text"
-                id="displayName"
-                class="projectForm"
-                placeholder="z.Bsp. Maturaball-Team HTL Leonding"
-            >
-            <span class="error">{{ errors.name }}</span>
-          </div>
         </div>
 
         <!-- Kurzbeschreibung -->

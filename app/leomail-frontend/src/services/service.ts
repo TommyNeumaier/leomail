@@ -260,4 +260,25 @@ export class Service {
         }
     }
 
+
+    // Holt ein einzelnes Projekt basierend auf der Projekt-ID
+    public getProject(projectId: string) {
+        return axios.get(`/api/project/get/single`, {
+            params: {
+                "pid": projectId
+            }
+        });
+    }
+
+    // Löscht ein Projekt basierend auf der Projekt-ID
+    public deleteProject(projectId: string) {
+        return axios.delete(`/api/project/delete`, {
+            data: projectId
+        });
+    }
+
+    // Aktualisiert ein Projekt basierend auf den übergebenen Projektdaten
+    public updateProject(projectData: any) {
+        return axios.put(`/api/project/update`, projectData);
+    }
 }

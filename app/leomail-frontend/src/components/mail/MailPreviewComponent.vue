@@ -60,8 +60,10 @@ const confirmed = ref(false);
 const allRecipients = ref<User[]>([]);
 
 const formattedSendTime = computed(() => {
+  console.log(props.scheduledAt)
   if (props.scheduledAt) {
-    return new Date(props.scheduledAt).toLocaleString();
+    return props.scheduledAt;
+   // return new Date(props.scheduledAt).toLocaleString();
   }
   return 'Jetzt';
 });
@@ -224,7 +226,7 @@ h3 {
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #f9f9f9;
-  height: 45%; /* Festgelegte Höhe für die Box */
+  height: 65%; /* Festgelegte Höhe für die Box */
   overflow-y: auto; /* Scrollen aktivieren, wenn der Inhalt zu groß ist */
   color: #333;
 }

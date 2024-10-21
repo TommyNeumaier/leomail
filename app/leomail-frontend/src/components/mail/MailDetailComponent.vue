@@ -71,6 +71,7 @@ const fetchMailDetail = async () => {
   const response = await Service.getInstance().getUsedTemplate(mailId.value, projectId.value);
   mailDetail.value = response.data;
 
+  console.log(mailDetail.value.keyDates.sentOn);
   if (mailDetail.value && mailDetail.value.keyDates && mailDetail.value.keyDates.sentOn) {
     const sentOnDate = parseISO(mailDetail.value.keyDates.sentOn);
     mailDetail.value.keyDates.sentOn = format(sentOnDate, 'dd.MM.yyyy, HH:mm');

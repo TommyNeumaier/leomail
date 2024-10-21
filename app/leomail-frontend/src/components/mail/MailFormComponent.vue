@@ -80,10 +80,10 @@
                              class="datepicker"
                              id="datepicker"
                              now-button-label="Current"
-                             format="dd-MM-yyyy"
+                             format="dd.MM.yyyy"
                              :enable-time-picker="false"
                              placeholder='Datum auswählen'
-                             :min-date="format(new Date(), 'yyyy-MM-dd')">
+                             :min-date="new Date()">
               </VueDatePicker>
               <VueDatePicker
                   v-model="time"
@@ -136,7 +136,7 @@
           :selectedUsers="previewRecipients"
           :personalized="personalized"
           :visible="showPreview"
-          :scheduledAt="parseDate()"
+          :scheduledAt="isScheduled()"
           @close="closePreview"
           @send-mail="sendMail"
       />
@@ -269,18 +269,29 @@ const closePreview = () => {
 
 /* date picker */
 const date = ref({
-  day: new Date().getDate().toString().padStart(2, "0"),
-  month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
-  year: new Date().getFullYear()
 });
 
 const time = ref({
-  hours: '00',
-  minutes: '00'
+  hours: new Date().getHours().toString().padStart(2, "0"),
+  minutes: new Date().getMinutes().toString().padStart(2, "0")
 });
 
 const parseDate = () => {
-  return `${date.value.day}-${date.value.month}-${date.value.year} ${time.value.hours}:${time.value.minutes}`;
+  const d = date.value;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0'); // getMonth() gibt 0-basiert (Januar = 0)
+  const year = d.getFullYear();
+
+  return `${year}-${month}-${day}T${time.value.hours}:${time.value.minutes}:00.000Z`;
+};
+
+const isScheduled = () => {
+  if(checked.value == true) {
+    return parseDate()
+  } else{
+    console.log('checkedValue' + checked.value)
+    return null;
+  }
 };
 
 /**/
@@ -324,6 +335,11 @@ const filterFunction = () => {
 const showDropdown = () => {
   dropdownVisible.value = filter.value.length > 0;
 };
+
+const closeDropdown = () => {
+  dropdownVisible.value = false;
+};
+
 
 const selectTemplate = (template: Template) => {
   selectedTemplate.value = template;
