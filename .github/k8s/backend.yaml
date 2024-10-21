@@ -33,13 +33,13 @@ spec:
         - name: QUARKUS_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
-              name: postgres-secret  # Reference Kubernetes Secret
-              key: POSTGRES_USER      # Key inside the secret
+              name: postgres-secret 
+              key: POSTGRES_USER      
         - name: QUARKUS_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: postgres-secret  # Reference Kubernetes Secret
-              key: POSTGRES_PASSWORD # Key inside the secret
+              name: postgres-secret  
+              key: POSTGRES_PASSWORD 
         - name: QUARKUS_DATASOURCE_URL
           value: jdbc:postgresql://postgres-service:5432/leomail-database
         volumeMounts:
