@@ -15,11 +15,11 @@ import java.util.Base64;
 public class EncryptionService {
 
     private static final String ALGORITHM = "AES";
-    private static final int IV_SIZE = 12; // GCM recommended IV size
-    private static final int TAG_LENGTH_BIT = 128; // GCM tag length
+    private static final int IV_SIZE = 12;
+    private static final int TAG_LENGTH_BIT = 128; // 
 
-    @ConfigProperty(name = "encryption.key")
-    public String encryptionKeyBase64; // Store the key in Base64 format
+    @ConfigProperty(name = "quarkus.application.encryption.key")
+    public String encryptionKeyBase64;
 
     /**
      * Encrypts the given value using AES-GCM with a random IV.
