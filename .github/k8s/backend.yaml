@@ -26,6 +26,7 @@ spec:
       containers:
         - name: quarkus
           image: ghcr.io/tommyneumaier/leomail/leomail-quarkus:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
