@@ -138,33 +138,6 @@ const validateForm = () => {
   return valid;
 };
 
-
-// Formular abschicken
-const handleSubmit = () => {
-  if (validateForm()) {
-    console.log('Form submitted:', formState.value, selectedUsers.value);
-    axiosInstance.post("/api/project/add", {
-      name: formState.value.name,
-      description: formState.value.description,
-      mailInformation: {
-        mailAddress: formState.value.mailAddress,
-        password: formState.value.password
-      },
-      members: selectedUsers.value,
-    }).then(() => {
-      router.push({ name: 'projects' });
-    }).catch((error) => {
-      console.error('Error creating project:', error);
-    });
-
-    formState.value.name = '';
-    formState.value.description = '';
-    formState.value.mailAddress = '';
-    formState.value.password = '';
-    selectedUsers.value = [];
-  }
-};
-
 // Zurück navigieren
 const handleBack = () => {
   router.push({ name: 'projects' });
