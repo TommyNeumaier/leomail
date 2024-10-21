@@ -27,7 +27,7 @@ public class MailService {
 
         try {
             Transport transport = session.getTransport("smtp");
-            transport.connect("smtp-mail.outlook.com", email, password);
+            transport.connect("smtp-mail.outlook.com", email.replace("students.htl-leonding.ac.at", "htblaleonding.onmicrosoft.com"), password);
             transport.close();
 
             return true;
