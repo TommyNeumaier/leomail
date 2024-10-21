@@ -134,7 +134,7 @@ jobs:
 
       # Apply Postgres and Ingress resources
       - name: Apply Postgres and Ingress Resources
-        if: matrix.service == 'backend' || matrix.service == 'frontend'
+        if: matrix.service == 'backend'
         run: |
           kubectl apply -f .github/k8s/postgres.yaml
           kubectl apply -f .github/k8s/ingress.yaml
