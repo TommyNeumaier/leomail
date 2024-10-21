@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { Service } from "@/services/service";
+import axiosInstance from "@/axiosInstance";
 
 const router = useRouter();
 
@@ -139,7 +140,7 @@ const validateForm = () => {
 const handleSubmit = () => {
   if (validateForm()) {
     console.log('Form submitted:', formState.value, selectedUsers.value);
-    axios.post("/api/project/add", {
+    axiosInstance.post("/api/project/add", {
       name: formState.value.name,
       description: formState.value.description,
       mailInformation: {

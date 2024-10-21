@@ -17,7 +17,7 @@ onMounted(() => {
 
   const pid = route.query.pid;
   if (pid) {
-    getProjectName(pid);
+    getProjectName();
   }
 });
 
