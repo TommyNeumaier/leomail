@@ -65,7 +65,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     try {
-      const isValid = await validateToken(accessToken);
+      const isValid = await validateToken();
       if (isValid) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         // Proceed to the intended route
@@ -74,7 +74,7 @@ router.beforeEach(async (to, from, next) => {
         console.log('Zugriffstoken ist ungültig, versuche zu aktualisieren');
         try {
           const { access_token } = await refreshToken();
-          authStore.setAccessToken(access_token);
+          authStore.setTokens(access_token, authStore.$state._refreshToken);
           axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
           // Proceed to the intended route
           return next();

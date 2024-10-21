@@ -16,7 +16,7 @@ export const useAuthStore = defineStore('auth', {
             this.accessToken = accessToken;
             this._refreshToken = refreshToken;
 
-            setupAxiosInterceptors(this.$store);
+            setupAxiosInterceptors(this);
         },
         logout() {
             this.accessToken = '';
