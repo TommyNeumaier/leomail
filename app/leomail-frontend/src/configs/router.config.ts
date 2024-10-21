@@ -68,7 +68,6 @@ router.beforeEach(async (to, from, next) => {
       const isValid = await validateToken();
       if (isValid) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-        // Proceed to the intended route
         return next();
       } else {
         console.log('Zugriffstoken ist ungültig, versuche zu aktualisieren');

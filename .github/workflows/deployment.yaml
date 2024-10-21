@@ -146,3 +146,16 @@ jobs:
       - name: Verify Frontend Deployment
         if: matrix.service == 'frontend' && success()
         run: kubectl get pods -l app=vue
+
+  restart_pods:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Restart Pods
+        run: |
+          echo "Restarting pods..."
+          kubectl rollout restart deployment

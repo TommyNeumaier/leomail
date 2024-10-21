@@ -21,13 +21,13 @@ export const login = async (username: string, password: string) => {
 
         return true;
     } catch (error) {
-        throw new Error('Invalid username or password.');
+        return false;
     }
 };
 
 export const refreshToken = async () => {
-    const authStore = useAuthStore();
-    const refresh_Token = authStore.$state._refreshToken;
+    const authStore = useAuthStore(pinia); // Use the Pinia instance
+    const refresh_Token = authStore._refreshToken;
 
     if (refresh_Token) {
         try {
@@ -44,22 +44,17 @@ export const refreshToken = async () => {
 
             return { access_token: newAccessToken, refresh_token: newRefreshToken };
         } catch (error) {
-            console.error('Error refreshing token:', error);
             authStore.logout();
             throw error;
         }
     } else {
         authStore.logout();
-        throw new Error('No refresh token available');
     }
 };
 
-// Other methods remain unchanged, but use axiosInstance instead of axios
-
-
 export const validateToken = async () => {
     try {
-        const response = await axiosInstance.get('/api/auth/validate');
+        const response = await axiosInstance.get('/auth/validate');
         return response.data;
     } catch (error) {
         return false;
@@ -68,7 +63,7 @@ export const validateToken = async () => {
 
 export const getRoles = async () => {
     try {
-        const response = await axiosInstance.get('/api/auth/roles');
+        const response = await axiosInstance.get('/auth/roles');
         return response.data;
     } catch (error) {
         return [];

@@ -22,7 +22,7 @@ app.component('VueDatePicker', VueDatePicker);
 app.directive('tooltip', Tooltip);
 
 
-const pinia = createPinia();
+export const pinia = createPinia();
 app.use(pinia);
 app.use(routerConfig);
 app.use(PrimeVue, {
@@ -32,7 +32,5 @@ app.use(PrimeVue, {
 })
 
 pinia.use(piniaPersist);
-
-setupAxiosInterceptors(pinia);
 
 app.mount('#app');
