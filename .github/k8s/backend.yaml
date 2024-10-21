@@ -30,6 +30,10 @@ spec:
         env:
         - name: QUARKUS_PROFILE
           value: prod
+        - name: QUARKUS_DATASOURCE_USERNAME
+          value: "${POSTGRES_USER}"
+        - name: QUARKUS_DATASOURCE_PASSWORD
+          value: "${POSTGRES_PASSWORD}"
         volumeMounts:
         - name: encryption-volume
           mountPath: /etc/encryption
