@@ -20,7 +20,7 @@ spec:
         volumeMounts:
         - name: encryption-volume
           mountPath: /etc/encryption
-          
+
       containers:
       - name: quarkus
         imagePullPolicy: Always
@@ -31,9 +31,17 @@ spec:
         - name: QUARKUS_PROFILE
           value: prod
         - name: QUARKUS_DATASOURCE_USERNAME
-          value: "${POSTGRES_USER}"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # Reference Kubernetes Secret
+              key: POSTGRES_USER      # Key inside the secret
         - name: QUARKUS_DATASOURCE_PASSWORD
-          value: "${POSTGRES_PASSWORD}"
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # Reference Kubernetes Secret
+              key: POSTGRES_PASSWORD # Key inside the secret
+        - name: QUARKUS_DATASOURCE_URL
+          value: jdbc:postgresql://postgres-service:5432/leomail-database
         volumeMounts:
         - name: encryption-volume
           mountPath: /etc/encryption
