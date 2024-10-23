@@ -285,12 +285,15 @@ const time = ref({
 });
 
 const parseDate = () => {
+  let d;
+
+  // Wenn kein Datum ausgewählt wurde, aktuelles Datum verwenden
   if (!date.value) {
-    return null;
+    d = new Date(); // Heutiges Datum
+  } else {
+    d = date.value;
   }
 
-  const d = date.value;
-  console.log("d" + d)
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
