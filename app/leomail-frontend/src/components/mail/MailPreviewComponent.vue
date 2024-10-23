@@ -61,11 +61,15 @@ const allRecipients = ref<User[]>([]);
 
 const formattedSendTime = computed(() => {
   if (props.scheduledAt) {
-    return props.scheduledAt;
-   // return new Date(props.scheduledAt).toLocaleString();
+    const date = new Date(props.scheduledAt);
+    const formattedDate = date.toLocaleDateString('de-DE'); // Format: "10.11.2024"
+    const formattedTime = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); // Format: "10:30"
+    return `${formattedDate} ${formattedTime}`;
+    //return props.scheduledAt;
   }
   return 'Jetzt';
 });
+
 
 const fillTemplate = (template: Template, user: User) => {
   if (!template || !user) {
@@ -131,6 +135,7 @@ const close = () => {
 };
 
 const emitSendMail = () => {
+  console.log('emitSendMail');
   if (confirmed.value) {
     emit('send-mail');
   }

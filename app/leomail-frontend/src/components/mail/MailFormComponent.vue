@@ -277,7 +277,7 @@ const closePreview = () => {
 };
 
 /* date picker */
-const date = ref({} as Date | null);
+const date = ref<Date | null>(null);
 
 const time = ref({
   hours: new Date().getHours().toString().padStart(2, "0"),
@@ -290,6 +290,7 @@ const parseDate = () => {
   }
 
   const d = date.value;
+  console.log("d" + d)
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
@@ -297,6 +298,7 @@ const parseDate = () => {
   const hours = String(time.value.hours).padStart(2, '0');
   const minutes = String(time.value.minutes).padStart(2, '0');
 
+  console.log(`${year}-${month}-${day}T${hours}:${minutes}:00.000Z`);
   return `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;
 };
 
@@ -304,6 +306,14 @@ const isScheduled = () => {
   if(checked.value == true) {
     return parseDate()
   } else{
+    /*const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;*/
     return null;
   }
 };
@@ -396,6 +406,7 @@ const sendMail = async () => {
       }
     };
 
+    console.log(mailForm);
     const response = await Service.getInstance().sendEmails(mailForm, appStore.$state.project);
 
     selectedUsers.value = [];
