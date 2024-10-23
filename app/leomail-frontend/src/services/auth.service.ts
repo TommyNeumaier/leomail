@@ -54,6 +54,7 @@ export const refreshToken = async () => {
 
 export const validateToken = async () => {
     try {
+        axiosInstance.defaults.headers.common['Authorization'] = useAuthStore(pinia).$state.accessToken
         const response = await axiosInstance.get('/auth/validate');
         return response.data;
     } catch (error) {

@@ -142,7 +142,7 @@ public class TemplateResource {
     public Response deleteById(@QueryParam("tid") String tid, @QueryParam("pid") String pid) {
         try {
             String userId = jwt.getClaim("sub");
-            if (permissionService.hasPermission(pid, userId, tid)) {
+            if (permissionService.hasPermission(pid, userId)) {
                 templateRepository.deleteById(tid);
                 return Response.noContent().build();
             } else {
