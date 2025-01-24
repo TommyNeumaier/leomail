@@ -45,9 +45,12 @@ VALUES
     ('1d1d1d1d-1111-1111-1111-111111111111', 'Lana', 'Sekerija (TEST)', 'sekerija.lana@gmail.com', 'W'),
     ('2d2d2d2d-2222-2222-2222-222222222222', 'Tommy', 'Neumaier (TEST)', 'neumaier.tommy@gmail.com', 'M'),
     ('3d3d3d3d-3333-3333-3333-333333333333', 'Thomas', 'Müller (TEST)', 't.m@esn.com', 'M'),
-    ('3e1d204f-fde9-4f3a-9fc6-b8b0d1a05600', 'Tommy', 'Neumaier', 't.neumaier@students.htl-leonding.ac.at', 'M'),
     ('b06fe6df-f4b3-4bbc-a119-51ce6eacfd6d', 'Tommy', 'Neumaier', 'tn@tommyneumaier.at', 'M'),
     ('3e2fe810-93c7-4276-b810-0a2edff476b4', 'Lana', 'Sekerija', 'l.sekerija@students.htl-leonding.ac.at', 'W');
+
+INSERT INTO naturalcontact(id, firstname, lastname, mailaddress, gender, outlook_encrypted_password)
+VALUES
+    ('3e1d204f-fde9-4f3a-9fc6-b8b0d1a05600', 'Tommy', 'Neumaier', 't.neumaier@students.htl-leonding.ac.at', 'M', 'wwKujbiLnUWkHaueCLb9SCT/H3VmT6UmrHGFOkODYvFLvla5dFoVZ4mSDIoB2TIwf5pfwGolzwTBTDpF');
 
 -- 4. If you have any company contacts, insert them into companycontact table similarly.
 

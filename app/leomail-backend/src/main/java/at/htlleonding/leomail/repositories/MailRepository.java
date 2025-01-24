@@ -5,18 +5,21 @@ import at.htlleonding.leomail.model.FromMailDTO;
 import at.htlleonding.leomail.model.MailType;
 import at.htlleonding.leomail.model.SMTPInformation;
 import at.htlleonding.leomail.model.SenderCredentials;
-import at.htlleonding.leomail.services.EncryptionService;
-import at.htlleonding.leomail.services.GroupSplitter;
-import at.htlleonding.leomail.services.MailService;
-import at.htlleonding.leomail.services.TemplateBuilder;
+import at.htlleonding.leomail.services.*;
+import jakarta.activation.DataHandler;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
 import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
+import javax.sql.DataSource;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -39,85 +42,11 @@ public class MailRepository {
     @Inject
     MailService mailService;
 
-    /**
-     * Sendet E-Mails basierend auf einer Vorlage und SMTP-Informationen.
-     *
-     * @param projectId        Die Projekt-ID.
-     * @param accountId        Die Benutzer-ID (E-Mail).
-     * @param smtpInformation  Die SMTP-Informationen.
-     */
-    @Transactional
-    public void sendMailsByTemplate(String projectId, String accountId, SMTPInformation smtpInformation) {
-        LOGGER.infof("Starting to send mails by template. Project ID: %s, Account ID: %s, Scheduled At: %s",
-                projectId, accountId, smtpInformation.scheduledAt());
+    @Inject
+    AttachmentRepository attachmentRepository;
 
-        if (smtpInformation.scheduledAt() != null && smtpInformation.scheduledAt().isBefore(LocalDateTime.now())) {
-            LOGGER.error("Scheduled time is in the past.");
-            throw new IllegalArgumentException("Scheduled time is in the past");
-        }
-
-        if (projectId == null || projectId.trim().isEmpty()) {
-            LOGGER.error("Project ID is null or empty.");
-            throw new IllegalArgumentException("Project ID is required");
-        }
-
-        if (accountId == null || accountId.trim().isEmpty()) {
-            LOGGER.error("Account ID is null or empty.");
-            throw new IllegalArgumentException("Account ID is required");
-        }
-
-        Template template = Template.findById(smtpInformation.templateId());
-        if (template == null) {
-            LOGGER.errorf("Template with ID %s not found.", smtpInformation.templateId());
-            throw new IllegalArgumentException("Template not found");
-        }
-
-        List<Contact> receivers = groupSplitter.getAllContacts(
-                smtpInformation.receiver().groups().orElse(List.of()),
-                smtpInformation.receiver().contacts().orElse(List.of())
-        );
-
-        LOGGER.infof("Total Receivers: %d", receivers.size());
-
-        if (receivers.isEmpty()) {
-            LOGGER.error("No valid receivers with email addresses found.");
-            throw new IllegalArgumentException("No valid receivers with email addresses found");
-        }
-
-        List<String> renderedTemplates = templateBuilder.renderTemplates(template.id, receivers, smtpInformation.personalized());
-
-        // Get sender's email and password based on 'from' in smtpInformation
-        SenderCredentials senderCredentials = getSenderCredentials(smtpInformation.from(), accountId);
-
-        // Verify the credentials
-        boolean credentialsValid = mailService.verifyOutlookCredentials(senderCredentials.email, senderCredentials.password);
-        if (!credentialsValid) {
-            LOGGER.error("Invalid email credentials.");
-            throw new IllegalArgumentException("Invalid email credentials.");
-        }
-
-        SentTemplate usedTemplate = new SentTemplate(
-                template,
-                smtpInformation.scheduledAt(),
-                Project.findById(projectId),
-                smtpInformation.from().mailType(),
-                smtpInformation.from().id()
-        );
-
-        for (int i = 0; i < renderedTemplates.size(); i++) {
-            SentMail sentMail = new SentMail(receivers.get(i), usedTemplate, renderedTemplates.get(i));
-            usedTemplate.mails.add(sentMail);
-            LOGGER.debugf("Created SentMail for Contact ID %s: %s", sentMail.contact.id, sentMail.actualContent);
-        }
-
-        usedTemplate.persist();
-
-        if (smtpInformation.scheduledAt() == null) {
-            sendMail(usedTemplate.id, senderCredentials);
-        }
-
-        LOGGER.info("MailsByTemplate process completed successfully.");
-    }
+    @Inject
+    StorageService storageService;
 
     /**
      * Sendet die Mails, die mit einem SentTemplate verbunden sind, anhand der Benutzer-SMTP-Daten.
@@ -125,7 +54,7 @@ public class MailRepository {
      * @param id Die ID des SentTemplate.
      */
     @Transactional
-    public void sendMail(Long id, SenderCredentials senderCredentials) {
+    public void sendMail(Long id, SenderCredentials senderCredentials, List<Attachment> attachments) {
         LOGGER.infof("Sending mails for SentTemplate ID: %d", id);
         SentTemplate usedTemplate = SentTemplate.findById(id);
 
@@ -145,12 +74,12 @@ public class MailRepository {
         }
 
         usedTemplate.sentOn = LocalDateTime.now();
-        sendMail(usedTemplate.mails, senderCredentials);
+        sendMail(usedTemplate.mails, senderCredentials, attachments);
         LOGGER.infof("Mails for SentTemplate ID %d sent successfully.", id);
     }
 
     @Transactional
-    public void sendMail(List<SentMail> sentMails, SenderCredentials senderCredentials) {
+    public void sendMail(List<SentMail> sentMails, SenderCredentials senderCredentials, List<Attachment> attachments) {
         LOGGER.infof("Initiating sending of %d mails.", sentMails.size());
 
         for (SentMail sentMail : sentMails) {
@@ -162,7 +91,8 @@ public class MailRepository {
                     continue;
                 }
 
-                sendEmail(senderCredentials.email, senderCredentials.password, recipientEmail, sentMail.usedTemplate.template.headline, sentMail.actualContent);
+                sendEmail(senderCredentials.email, senderCredentials.password, recipientEmail,
+                        sentMail.usedTemplate.template.headline, sentMail.actualContent, attachments);
                 sentMail.sent = true;
 
             } catch (Exception e) {
@@ -205,23 +135,24 @@ public class MailRepository {
         }
 
         usedTemplate.sentOn = LocalDateTime.now();
-        sendMail(usedTemplate.mails, senderCredentials);
+        sendMail(usedTemplate.mails, senderCredentials, usedTemplate.attachments);
         LOGGER.infof("Mails for SentTemplate ID %d sent successfully.", id);
     }
 
 
 
     /**
-     * Hilfsmethode zum Senden einer einzelnen E-Mail über Outlook SMTP.
+     * Hilfsmethode zum Senden einer einzelnen E-Mail über Outlook SMTP mit Anhängen.
      *
-     * @param fromEmail Der Absender.
-     * @param password  Das Passwort des Absenders.
-     * @param toEmail   Der Empfänger.
-     * @param subject   Der Betreff der E-Mail.
-     * @param content   Der Inhalt der E-Mail.
+     * @param fromEmail   Der Absender.
+     * @param password    Das Passwort des Absenders.
+     * @param toEmail     Der Empfänger.
+     * @param subject     Der Betreff der E-Mail.
+     * @param content     Der Inhalt der E-Mail (HTML).
+     * @param attachments Liste der Anhänge als Attachment Objekte.
      * @throws Exception Wenn beim Senden ein Fehler auftritt.
      */
-    private void sendEmail(String fromEmail, String password, String toEmail, String subject, String content) throws Exception {
+    private void sendEmail(String fromEmail, String password, String toEmail, String subject, String content, List<Attachment> attachments) throws Exception {
         Properties properties = new Properties();
         properties.put("mail.smtp.host", "smtp-mail.outlook.com");
         properties.put("mail.smtp.port", "587");
@@ -238,11 +169,32 @@ public class MailRepository {
         message.setFrom(new InternetAddress(fromEmail));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
         message.setSubject(subject);
-        message.setText(content);
         message.setHeader("Content-Type", "text/html");
+
+        // Erstellen des Multipart Objekts
+        Multipart multipart = new MimeMultipart();
+
+        // Hinzufügen des Textteils (HTML-Inhalt)
+        MimeBodyPart textBodyPart = new MimeBodyPart();
+        textBodyPart.setContent(content, "text/html; charset=utf-8");
+        multipart.addBodyPart(textBodyPart);
+
+        // Hinzufügen der Anhänge
+        for (Attachment attachment : attachments) {
+            MimeBodyPart attachmentBodyPart = new MimeBodyPart();
+            InputStream is = storageService.downloadFile(attachment.filePath);
+            ByteArrayDataSource source = new ByteArrayDataSource(is, attachment.contentType);
+            attachmentBodyPart.setDataHandler(new DataHandler(source));
+            attachmentBodyPart.setFileName(attachment.fileName);
+            multipart.addBodyPart(attachmentBodyPart);
+        }
+
+        // Setzen des Multipart Inhalts in die Nachricht
+        message.setContent(multipart);
 
         Transport.send(message);
     }
+
 
     /**
      * Holt die E-Mail-Adresse aus einem Kontakt.
@@ -258,15 +210,6 @@ public class MailRepository {
         } else {
             return null;
         }
-    }
-
-    /**
-     * Holt alle ungesendeten Mails.
-     *
-     * @return Eine Liste von ungesendeten Mails.
-     */
-    public List<SentMail> getAllUnsentMails() {
-        return SentMail.list("sent = false");
     }
 
     private SenderCredentials getSenderCredentials(FromMailDTO fromMailDTO, String uid) {
@@ -319,4 +262,98 @@ public class MailRepository {
         return new SenderCredentials(senderEmail, senderPassword);
     }
 
+    /**
+     * Holt alle ungesendeten Mails.
+     *
+     * @return Eine Liste von ungesendeten Mails.
+     */
+    public List<SentMail> getAllUnsentMails() {
+        return SentMail.list("sent = false");
+    }
+
+    /**
+     * Sendet E-Mails basierend auf einer Vorlage, SMTP-Informationen und Anhängen.
+     *
+     * @param projectId    Die Projekt-ID.
+     * @param accountId    Die Benutzer-ID (E-Mail).
+     * @param smtpInformation Die SMTP-Informationen.
+     * @param attachments  Liste der Anhänge.
+     */
+    @Transactional
+    public void sendMailsByTemplate(String projectId, String accountId, SMTPInformation smtpInformation, List<Attachment> attachments) {
+        LOGGER.infof("Starting to send mails by template. Project ID: %s, Account ID: %s, Scheduled At: %s",
+                projectId, accountId, smtpInformation.scheduledAt());
+
+        if (smtpInformation.scheduledAt() != null && smtpInformation.scheduledAt().isBefore(LocalDateTime.now())) {
+            LOGGER.error("Scheduled time is in the past.");
+            throw new IllegalArgumentException("Scheduled time is in the past");
+        }
+
+        if (projectId == null || projectId.trim().isEmpty()) {
+            LOGGER.error("Project ID is null or empty.");
+            throw new IllegalArgumentException("Project ID is required");
+        }
+
+        if (accountId == null || accountId.trim().isEmpty()) {
+            LOGGER.error("Account ID is null or empty.");
+            throw new IllegalArgumentException("Account ID is required");
+        }
+
+        Template template = Template.findById(smtpInformation.templateId());
+        if (template == null) {
+            LOGGER.errorf("Template with ID %s not found.", smtpInformation.templateId());
+            throw new IllegalArgumentException("Template not found");
+        }
+
+        List<Contact> receivers = groupSplitter.getAllContacts(
+                smtpInformation.receiver().groups(),
+                smtpInformation.receiver().contacts()
+        );
+
+        LOGGER.infof("Total Receivers: %d", receivers.size());
+
+        if (receivers.isEmpty()) {
+            LOGGER.error("No valid receivers with email addresses found.");
+            throw new IllegalArgumentException("No valid receivers with email addresses found");
+        }
+
+        List<String> renderedTemplates = templateBuilder.renderTemplates(template.id, receivers, smtpInformation.personalized());
+
+        SenderCredentials senderCredentials = getSenderCredentials(smtpInformation.from(), accountId);
+
+        boolean credentialsValid = mailService.verifyOutlookCredentials(senderCredentials.email, senderCredentials.password);
+        if (!credentialsValid) {
+            LOGGER.error("Invalid email credentials.");
+            throw new IllegalArgumentException("Invalid email credentials.");
+        }
+
+        SentTemplate usedTemplate = new SentTemplate(
+                template,
+                smtpInformation.scheduledAt(),
+                Project.findById(projectId),
+                smtpInformation.from().mailType(),
+                smtpInformation.from().id()
+        );
+
+        for (Attachment attachment : attachments) {
+            attachment.sentTemplate = usedTemplate;
+            usedTemplate.attachments.add(attachment);
+            attachmentRepository.persist(attachment);
+            LOGGER.debugf("Attachment '%s' hinzugefügt zu SentTemplate ID %d.", attachment.fileName, usedTemplate.id);
+        }
+
+        for (int i = 0; i < renderedTemplates.size(); i++) {
+            SentMail sentMail = new SentMail(receivers.get(i), usedTemplate, renderedTemplates.get(i));
+            usedTemplate.mails.add(sentMail);
+            LOGGER.debugf("Created SentMail for Contact ID %s: %s", sentMail.contact.id, sentMail.actualContent);
+        }
+
+        usedTemplate.persist();
+
+        if (smtpInformation.scheduledAt() == null) {
+            sendMail(usedTemplate.id, senderCredentials, usedTemplate.attachments);
+        }
+
+        LOGGER.info("MailsByTemplate process completed successfully.");
+    }
 }

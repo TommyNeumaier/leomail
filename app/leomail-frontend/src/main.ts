@@ -13,8 +13,8 @@ import '@vuepic/vue-datepicker/dist/main.css';
 import PrimeVue from 'primevue/config';
 import Aura from '@primevue/themes/aura';
 import Tooltip from 'primevue/tooltip';
-
-
+import '@fortawesome/fontawesome-free/css/all.css';
+import '@fortawesome/fontawesome-free/js/all.js';
 
 const app = createApp(App);
 app.component('QuillEditor', QuillEditor)

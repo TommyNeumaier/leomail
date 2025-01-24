@@ -1,59 +1,54 @@
 package at.htlleonding.leomail.services;
 
-import at.htlleonding.leomail.entities.Group;
+import at.htlleonding.leomail.entities.Attachment;
 import at.htlleonding.leomail.entities.Project;
-import at.htlleonding.leomail.model.exceptions.projects.ProjectNotExistsException;
+import at.htlleonding.leomail.entities.Template;
+import at.htlleonding.leomail.repositories.ProjectRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class PermissionService {
 
-    /**
-     * Checks if the project exists.
-     * @param projectId ID of the project.
-     * @return Project if it exists, otherwise throws an exception.
-     */
-    private Project getProjectOrThrow(String projectId) {
-        Project project = Project.findById(projectId);
-        if (project == null) {
-            throw new ProjectNotExistsException();
-        }
-        return project;
-    }
+    private static final Logger LOGGER = Logger.getLogger(PermissionService.class);
+
+    @Inject
+    ProjectRepository projectRepository;
 
     /**
-     * Checks if the user is a member of the given project.
-     * @param project Entity of the project.
-     * @param userId ID of the user.
-     * @return true if the user is a member, false otherwise.
-     */
-    private boolean isProjectMember(Project project, String userId) {
-        return project.members.stream().anyMatch(contact -> contact.id.equals(userId));
-    }
-
-    /**
-     * Checks if the user has permission to access the project.
-     * @param projectId ID of the project.
-     * @param userId ID of the user.
-     * @return true if the user is a member of the project, false otherwise.
+     * Überprüft, ob ein Nutzer Berechtigung für ein Projekt hat.
+     *
+     * @param projectId ID des Projekts.
+     * @param userId    ID des Nutzers.
+     * @return true, wenn der Nutzer Berechtigung hat, sonst false.
      */
     public boolean hasPermission(String projectId, String userId) {
-        Project project = getProjectOrThrow(projectId);
-        return isProjectMember(project, userId);
+        // Implementieren Sie die Logik zur Überprüfung der Berechtigungen.
+        // Dies könnte die Überprüfung von Rollen, Mitgliedschaften usw. umfassen.
+        // Beispiel:
+        Project project = Project.findById(projectId);
+        if (project == null) {
+            return false;
+        }
+        return project.members.stream().anyMatch(member -> member.id.equals(userId));
     }
 
     /**
-     * Checks if the user has permission to access the group.
-     * @param projectId ID of the project.
-     * @param userId ID of the user.
-     * @param groupId ID of the group.
-     * @return true if the user has permission to the project AND the group belongs to the project.
+     * Überprüft, ob ein Nutzer Berechtigung für einen Anhang hat.
+     *
+     * @param userId    ID des Nutzers.
+     * @param attachment Der Anhang.
+     * @return true, wenn der Nutzer Berechtigung hat, sonst false.
      */
-    public boolean hasPermission(String projectId, String userId, String groupId) {
-        Group group = Group.findById(groupId);
-        if (group == null || !group.project.id.equals(projectId)) {
-            return false;
+    public boolean hasPermissionForAttachment(String userId, Attachment attachment) {
+        return attachment.ownerId.equals(userId) || hasPermission(getProjectIdFromAttachment(attachment), userId);
+    }
+
+    private String getProjectIdFromAttachment(Attachment attachment) {
+        if (attachment.sentTemplate != null && attachment.sentTemplate.project != null) {
+            return attachment.sentTemplate.project.id;
         }
-        return hasPermission(projectId, userId) && group.members.stream().anyMatch(contact -> contact.id.equals(userId));
+        return null;
     }
 }

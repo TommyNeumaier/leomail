@@ -1,3 +1,5 @@
+<!-- src/components/mail/MailForm.vue -->
+
 <template>
   <div id="mailFormContainer">
     <div id="formHeader">
@@ -25,7 +27,7 @@
                 type="text"
                 v-model="searchTerm"
                 class="form-input search-input"
-                placeholder="Geben Sie hier den Namen oder Gruppen ein..."
+                placeholder="Geben Sie den Namen oder Gruppen ein..."
                 @focus="fetchUsersAndGroups(searchTerm)"
                 @input="onSearchInput"
             />
@@ -57,6 +59,18 @@
               <span class="tag-remove" @click="removeGroup(group)">✕</span>
             </div>
           </div>
+        </div>
+
+        <!-- Dateien anhängen -->
+        <div class="form-group">
+          <label for="attachments" class="form-label">Dateien anhängen:</label>
+          <input type="file" id="attachments" multiple @change="handleFileUpload"/>
+          <ul>
+            <li v-for="(file, index) in selectedFiles" :key="index">
+              {{ file.name }} ({{ formatFileSize(file.size) }})
+              <button type="button" @click="removeFile(index)">✕</button>
+            </li>
+          </ul>
         </div>
 
         <!-- Sendezeit auswählen -->
@@ -136,6 +150,7 @@
           :personalized="personalized"
           :visible="showPreview"
           :scheduledAt="isScheduled()"
+          :attachments="selectedFiles"
           @close="closePreview"
           @send-mail="sendMail"
       />
@@ -144,12 +159,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { Service } from '@/services/service';
-import { useAppStore } from '@/stores/app.store';
-import { useRouter } from 'vue-router';
+import {computed, onMounted, ref} from 'vue';
+import {Service} from '@/services/service';
+import {useAppStore} from '@/stores/app.store';
+import {useRouter} from 'vue-router';
 import MailPreviewComponent from '@/components/mail/MailPreviewComponent.vue';
-import { format } from 'date-fns';
 
 interface Template {
   id: number;
@@ -202,25 +216,43 @@ const profileData = ref({
   schoolClass: '',
   departement: ''
 });
-const personalMail = ref();
-const projectMail = ref({ id: '', mailAddress: '', displayName: ''});
-const selectedSender = ref();
+const personalMail = ref<string>('');
+const projectMail = ref<{ id: string; mailAddress: string; displayName: string }>({
+  id: '',
+  mailAddress: '',
+  displayName: ''
+});
+const selectedSender = ref<string>('');
 
+// Neue Referenz für ausgewählte Dateien
+const selectedFiles = ref<File[]>([]);
+
+// Fetch Profile Data
 const getProfile = async () => {
-  const response = await Service.getInstance().getProfile().then(response => {
+  try {
+    const response = await Service.getInstance().getProfile();
     profileData.value = response.data;
     personalMail.value = profileData.value.mailAddress;
     selectedSender.value = profileData.value.mailAddress;
-  });
+  } catch (error) {
+    console.error('Fehler beim Abrufen des Profils:', error);
+  }
 };
 
+// Fetch Project Mail Data
 const fetchProjectMail = async () => {
-  const response = await Service.getInstance().fetchProjectMailData(appStore.$state.project);
-  projectMail.value = response.data;
+  try {
+    const response = await Service.getInstance().fetchProjectMailData(appStore.$state.project);
+    projectMail.value = response.data;
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Projekt-Mail-Daten:', error);
+  }
 };
 
+// Computed Property for Preview Button
 const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value);
 
+// Handle Preview
 const handlePreview = async () => {
   // Überprüfe, ob eine Vorlage ausgewählt wurde und mindestens ein Empfänger vorhanden ist
   if (selectedUsers.value.length === 0 && selectedGroups.value.length === 0) {
@@ -260,7 +292,6 @@ const handlePreview = async () => {
     // Setze die Vorschau-Empfänger
     previewRecipients.value = combinedUsers;
 
-
     if (previewRecipients.value.length > 0 && selectedTemplate.value) {
       showPreview.value = true;
     } else {
@@ -272,11 +303,12 @@ const handlePreview = async () => {
   }
 };
 
+// Close Preview
 const closePreview = () => {
   showPreview.value = false;
 };
 
-/* date picker */
+/* Date Picker */
 const date = ref<Date | null>(null);
 
 const time = ref({
@@ -306,23 +338,14 @@ const parseDate = () => {
 };
 
 const isScheduled = () => {
-  if(checked.value == true) {
-    return parseDate()
-  } else{
-    /*const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-
-    return `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;*/
+  if (checked.value == true) {
+    return parseDate();
+  } else {
     return null;
   }
 };
 
-/**/
-
+/* Lifecycle Hooks */
 onMounted(() => {
   getProfile();
   getTemplates();
@@ -331,6 +354,7 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside);
 });
 
+/* Click Outside Handler */
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement;
   const mailTemplateInput = document.getElementById('mailTemplateInput');
@@ -339,6 +363,7 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
+/* Search Input Handler */
 const onSearchInput = () => {
   if (searchTerm.value.length > 0) {
     fetchUsersAndGroups(searchTerm.value);
@@ -348,11 +373,13 @@ const onSearchInput = () => {
   }
 };
 
+/* Template Search Handler */
 const onTemplateSearch = () => {
   filterFunction();
   dropdownVisible.value = filter.value.length > 0;
 };
 
+/* Filter Function for Templates */
 const filterFunction = () => {
   const filterValue = filter.value.trim().toLowerCase();
   fetchedTemplates.value.forEach(item => {
@@ -360,6 +387,7 @@ const filterFunction = () => {
   });
 };
 
+/* Dropdown Visibility Handlers */
 const showDropdown = () => {
   dropdownVisible.value = filter.value.length > 0;
 };
@@ -368,7 +396,7 @@ const closeDropdown = () => {
   dropdownVisible.value = false;
 };
 
-
+/* Template Selection */
 const selectTemplate = (template: Template) => {
   selectedTemplate.value = template;
   filter.value = template.name;
@@ -377,6 +405,7 @@ const selectTemplate = (template: Template) => {
   }, 0);
 };
 
+/* Fetch Templates */
 const getTemplates = async () => {
   try {
     const response = await Service.getInstance().getTemplates(appStore.$state.project);
@@ -389,16 +418,57 @@ const getTemplates = async () => {
   }
 };
 
+/* Sort Selected Users */
 const sortSelectedUsers = (selectedUsers: User[]): string[] => {
   return selectedUsers.map(user => user.id).sort();
 };
 
+/* Methoden für Datei-Handling */
+
+/**
+ * Handle File Upload
+ * @param event Input Event
+ */
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files) {
+    for (let i = 0; i < target.files.length; i++) {
+      selectedFiles.value.push(target.files[i]);
+    }
+  }
+};
+
+/**
+ * Remove Selected File
+ * @param index Index des zu entfernenden Files
+ */
+const removeFile = (index: number) => {
+  selectedFiles.value.splice(index, 1);
+};
+
+/**
+ * Format File Size
+ * @param size Dateigröße in Bytes
+ * @returns Formatierte Dateigröße
+ */
+const formatFileSize = (size: number): string => {
+  if (size < 1024) return `${size} B`;
+  else if (size < 1048576) return `${(size / 1024).toFixed(2)} KB`;
+  else if (size < 1073741824) return `${(size / 1048576).toFixed(2)} MB`;
+  else return `${(size / 1073741824).toFixed(2)} GB`;
+};
+
+/**
+ * Send Mail with Attachments
+ */
 const sendMail = async () => {
   try {
-    const mailForm = {
+    const formData = new FormData();
+    formData.append('projectId', appStore.$state.project);
+    formData.append('smtpInformation', JSON.stringify({
       receiver: {
-        contacts: sortSelectedUsers(selectedUsers.value),
-        groups: selectedGroups.value.map(group => parseInt(group.id))
+        groups: selectedGroups.value.map(g => g.id),
+        contacts: selectedUsers.value.map(u => u.id)
       },
       templateId: selectedTemplate.value?.id,
       personalized: personalized.value,
@@ -407,21 +477,34 @@ const sendMail = async () => {
         mailType: selectedSender.value === personalMail.value ? 'PERSONAL' : 'PROJECT',
         id: selectedSender.value === personalMail.value ? '' : appStore.$state.project
       }
-    };
+    }));
 
-    console.log(mailForm);
-    const response = await Service.getInstance().sendEmails(mailForm, appStore.$state.project);
+    selectedFiles.value.forEach((file, index) => {
+      formData.append('attachments', file); // Schlüsselname muss 'attachments' sein
+      formData.append('fileName', file.name);
+      formData.append('contentType', file.type);
+      formData.append('size', file.size.toString());
+    });
+
+    // Debugging: FormData-Inhalte anzeigen
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
+
+    const response = await Service.getInstance().sendMailWithAttachments(formData, appStore.$state.project);
 
     selectedUsers.value = [];
     selectedGroups.value = [];
+    selectedFiles.value = [];
 
     router.push({ name: 'mail', query: { mailsend: 'true' } });
   } catch (error) {
-    console.error('Fehler beim Senden der E-Mail:', error);
-    alert('Fehler beim Senden der E-Mail.');
+    console.error('Fehler beim Senden der E-Mail:', error.response?.data || error.message);
+    alert('Fehler beim Senden der E-Mail: ' + (error.response?.data || error.message));
   }
-  }
+};
 
+/* Fetch Users and Groups based on Search Term */
 const fetchUsersAndGroups = async (query: string) => {
   loading.value = true;
   try {
@@ -441,6 +524,7 @@ const fetchUsersAndGroups = async (query: string) => {
 const filteredUsers = computed(() => users.value);
 const filteredGroups = computed(() => groups.value);
 
+/* Select Group */
 const selectGroup = (group: Group) => {
   if (!selectedGroups.value.find(g => g.id === group.id)) {
     selectedGroups.value.push(group);
@@ -451,19 +535,7 @@ const selectGroup = (group: Group) => {
   groups.value = [];
 };
 
-const handleSubmit = () => {
-  sendMail();
-};
-
-watch(searchTerm, (newTerm) => {
-  if (newTerm.length > 0) {
-    fetchUsersAndGroups(newTerm);
-  } else {
-    users.value = [];
-    groups.value = [];
-  }
-});
-
+/* Select User */
 const selectUser = (user: User) => {
   if (!selectedUsers.value.find(u => u.id === user.id)) {
     selectedUsers.value.push(user);
@@ -473,15 +545,17 @@ const selectUser = (user: User) => {
   groups.value = [];
 };
 
+/* Remove User */
 const removeUser = (user: User) => {
   selectedUsers.value = selectedUsers.value.filter(u => u.id !== user.id);
 };
 
+/* Remove Group */
 const removeGroup = (group: Group) => {
   selectedGroups.value = selectedGroups.value.filter(g => g.id !== group.id);
 };
-</script>
-
+</script
+>
 <style scoped>
 .input-with-icon {
   position: relative;
@@ -697,5 +771,37 @@ const removeGroup = (group: Group) => {
 .btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+/* Tags für ausgewählte Dateien */
+.form-group ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.form-group li {
+  display: flex;
+  align-items: center;
+  margin-top: 0.5em;
+}
+
+.form-group li button {
+  margin-left: 1em;
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+}
+
+/* Weitere bestehende Stile */
+.editor-wrapper {
+  max-width: 80vw;
+  max-height: 35vh;
+  overflow-y: auto;
+}
+
+#editor {
+  width: auto;
+  height: 25vh;
 }
 </style>

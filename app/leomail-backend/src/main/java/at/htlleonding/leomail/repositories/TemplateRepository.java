@@ -1,6 +1,7 @@
 package at.htlleonding.leomail.repositories;
 
 import at.htlleonding.leomail.entities.*;
+import at.htlleonding.leomail.model.dto.AttachmentResponseDTO;
 import at.htlleonding.leomail.model.dto.TemplateDTO;
 import at.htlleonding.leomail.model.dto.UsedTemplateDTO;
 import at.htlleonding.leomail.model.dto.template.SentMailDTO;
@@ -18,10 +19,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
 import org.jboss.logging.Logger;
@@ -189,7 +188,7 @@ public class TemplateRepository {
             }
             SentMailDTO[] mails = mailList.toArray(new SentMailDTO[0]);
 
-            dtoList.add(new UsedTemplateDTO(template.id.toString(), metaInformation, dateInformation, accountInformation, mails));
+            dtoList.add(new UsedTemplateDTO(template.id.toString(), metaInformation, dateInformation, accountInformation, Arrays.stream(mails).toList(), null));
         }
 
         if (scheduled) {
@@ -231,16 +230,32 @@ public class TemplateRepository {
                 template.template.greeting.id,
                 template.template.greeting.content.trim());
 
-        List<SentMailDTO> mailList = new ArrayList<>();
-        for (SentMail mail : template.mails) {
-            TemplateMailContactInformationDTO contactInfo = createMailContactInfo(mail.contact);
-            mailList.add(new SentMailDTO(contactInfo, mail.actualContent.trim()));
-        }
-        SentMailDTO[] mails = mailList.toArray(new SentMailDTO[0]);
+        List<SentMailDTO> mailList = template.mails.stream()
+                .map(mail -> {
+                    TemplateMailContactInformationDTO contactInfo = createMailContactInfo(mail.contact);
+                    return new SentMailDTO(contactInfo, mail.actualContent.trim());
+                })
+                .collect(Collectors.toList());
 
-        UsedTemplateDTO usedTemplateDTO = new UsedTemplateDTO(templateId, metaInformation, dateInformation, accountInformation, mails);
-        LOG.debug("UsedTemplateDTO: " + usedTemplateDTO);
-        return usedTemplateDTO;
+        List<AttachmentResponseDTO> attachmentDTOs = template.attachments.stream()
+                .map(att -> new AttachmentResponseDTO(
+                        att.id,
+                        att.fileName,
+                        att.contentType,
+                        "/api/mail/attachments/" + att.id, // Pfad zum Download-Endpunkt
+                        att.size
+                ))
+                .collect(Collectors.toList());
+
+
+        return new UsedTemplateDTO(
+                templateId,
+                metaInformation,
+                dateInformation,
+                accountInformation,
+                mailList,
+                attachmentDTOs // Anhänge hinzufügen
+        );
     }
 
     /**
@@ -265,7 +280,7 @@ public class TemplateRepository {
             return new TemplateMailContactInformationDTO(
                     companyContact.id,
                     companyContact.companyName != null ? companyContact.companyName.trim() : "",
-                    null, // CompanyContact may not have first and last names
+                    null,
                     companyContact.mailAddress != null ? companyContact.mailAddress.trim() : "",
                     ContactType.COMPANY
             );

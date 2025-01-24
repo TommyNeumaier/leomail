@@ -1,48 +1,62 @@
 <template>
-  <div id="mailDetailContainer" v-if="mailDetail">
-    <div id="mailDetailHeader">
-      <h1 id="heading">{{ mailDetail.meta.templateName }} - {{ mailDetail.meta.mailHeadline }}</h1>
-    </div>
-
-    <div id="content">
-      <div class="info-row">
-        <label>Gesendet von:</label>
-        <input type="text" :value="senderName" disabled />
+  <div id="mailDetailContainer">
+    <div v-if="mailDetail">
+      <div id="mailDetailHeader">
+        <h1 id="heading">{{ mailDetail.meta.templateName }} - {{ mailDetail.meta.mailHeadline }}</h1>
       </div>
 
-      <div class="info-row">
-        <label>Gesendet am:</label>
-        <input type="text" :value="mailDetail.keyDates.sentOn" disabled />
-      </div>
-
-      <div v-if="recipients.length > 0" class="recipients-preview">
+      <div id="content">
         <div class="info-row">
-          <label>Betreff:</label>
-          <input type="text" :value="mailDetail.meta.mailHeadline" disabled />
+          <label>Gesendet von:</label>
+          <input type="text" :value="senderName" disabled />
         </div>
 
         <div class="info-row">
-          <label>An:</label>
-          <input type="text" :value="recipientDisplay" disabled />
+          <label>Gesendet am:</label>
+          <input type="text" :value="mailDetail.keyDates.sentOn" disabled />
         </div>
 
-        <div class="email-preview" v-html="filledTemplate"></div>
+        <div class="attachments-section" v-if="attachments.length > 0">
+          <h3>Angehängte Dateien:</h3>
+          <ul class="attachments-list">
+            <li v-for="(attachment, index) in attachments" :key="index" class="attachment-item">
+              <i :class="getIconClass(attachment.contentType)" class="file-icon"></i>
+              <a href="#" @click.prevent="downloadAttachment(attachment.id)" class="file-link">
+                {{ attachment.fileName }}
+              </a>
+              <span class="file-size">({{ formatFileSize(attachment.size) }})</span>
+            </li>
+          </ul>
+        </div>
 
-        <div class="navigation-buttons">
-          <span class="arrow prev-arrow" @click="prevRecipient" :class="{ 'disabled': currentRecipientIndex === 0 }"></span>
-          <p class="indexing">{{ currentRecipientIndex + 1 }} / {{ recipients.length }}</p>
-          <span class="arrow next-arrow" @click="nextRecipient"
-                :class="{ 'disabled': currentRecipientIndex === recipients.length - 1 }"></span>
+        <div v-if="recipients.length > 0" class="recipients-preview">
+          <div class="info-row">
+            <label>Betreff:</label>
+            <input type="text" :value="mailDetail.meta.mailHeadline" disabled />
+          </div>
+
+          <div class="info-row">
+            <label>An:</label>
+            <input type="text" :value="recipientDisplay" disabled />
+          </div>
+
+          <div class="email-preview" v-html="filledTemplate"></div>
+
+          <div class="navigation-buttons">
+            <span class="arrow prev-arrow" @click="prevRecipient" :class="{ 'disabled': currentRecipientIndex === 0 }"></span>
+            <p class="indexing">{{ currentRecipientIndex + 1 }} / {{ recipients.length }}</p>
+            <span class="arrow next-arrow" @click="nextRecipient"
+                  :class="{ 'disabled': currentRecipientIndex === recipients.length - 1 }"></span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div v-else>
-    <p>Lade E-Mail...</p>
+    <div v-else>
+      <p>Lade E-Mail...</p>
+    </div>
   </div>
 </template>
-
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
@@ -50,39 +64,91 @@ import { useRoute } from 'vue-router';
 import { Service } from '@/services/service';
 import { format, parseISO } from 'date-fns';
 
+interface Attachment {
+  id: string; 
+  fileName: string;
+  contentType: string;
+  downloadUrl: string;
+  size: number;
+}
+
+interface Contact {
+  firstName: string;
+  lastName: string;
+  mailAddress: string;
+}
+
+interface MailItem {
+  contact: Contact;
+  content: string;
+}
+
+interface MailDetail {
+  meta: {
+    templateName: string;
+    mailHeadline: string;
+  };
+  keyDates: {
+    sentOn: string;
+    scheduledAt?: string;
+  };
+  attachments: Attachment[];
+  mails: MailItem[];
+}
+
+// Deklarieren der Props
+const props = defineProps({
+  id: {
+    type: String,
+    required: true
+  },
+  projectId: {
+    type: String,
+    required: true
+  }
+});
+
 const route = useRoute();
-const mailDetail = ref(null);
+const mailDetail = ref<MailDetail | null>(null);
 const senderName = ref('');
-const recipients = ref([]);
+const recipients = ref<Contact[]>([]);
 const currentRecipientIndex = ref(0);
 const filledTemplate = ref('');
 
-// Initialize profile and email data
-const mailId = ref(route.params.id);
-const projectId = ref(route.params.projectId);
+const mailId = ref(route.params.id as string);
+const projectIdProp = ref(route.params.projectId as string);
 
+// Methode zum Abrufen des Profils
 const getProfile = async () => {
-  const response = await Service.getInstance().getProfile();
-  senderName.value = `${response.data.firstName} ${response.data.lastName} <${response.data.mailAddress}>`;
+  try {
+    const response = await Service.getInstance().getProfile();
+    senderName.value = `${response.data.firstName} ${response.data.lastName} <${response.data.mailAddress}>`;
+  } catch (error) {
+    console.error('Fehler beim Abrufen des Profils:', error);
+  }
 };
 
-// Fetch email details
+// Methode zum Abrufen der Mail-Details
 const fetchMailDetail = async () => {
-  const response = await Service.getInstance().getUsedTemplate(mailId.value, projectId.value);
-  mailDetail.value = response.data;
+  try {
+    const response = await Service.getInstance().getUsedTemplate(mailId.value, props.projectId);
+    mailDetail.value = response.data;
 
-  if (mailDetail.value && mailDetail.value.keyDates && mailDetail.value.keyDates.sentOn) {
-    const sentOnDate = parseISO(mailDetail.value.keyDates.sentOn);
-    mailDetail.value.keyDates.sentOn = format(sentOnDate, 'dd.MM.yyyy, HH:mm');
-  }
+    if (mailDetail.value && mailDetail.value.keyDates && mailDetail.value.keyDates.sentOn) {
+      const sentOnDate = parseISO(mailDetail.value.keyDates.sentOn);
+      mailDetail.value.keyDates.sentOn = format(sentOnDate, 'dd.MM.yyyy, HH:mm');
+    }
 
-  if (mailDetail.value && mailDetail.value.mails && mailDetail.value.mails.length > 0) {
-    recipients.value = mailDetail.value.mails.map(mailItem => mailItem.contact);
-    updateFilledTemplate();
+    if (mailDetail.value && mailDetail.value.mails && mailDetail.value.mails.length > 0) {
+      recipients.value = mailDetail.value.mails.map(mailItem => mailItem.contact);
+      updateFilledTemplate();
+    }
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Mail-Details:', error);
   }
 };
 
-// Recipient navigation
+// Navigation zwischen Empfängern
 const nextRecipient = () => {
   if (currentRecipientIndex.value < recipients.value.length - 1) {
     currentRecipientIndex.value++;
@@ -97,27 +163,9 @@ const prevRecipient = () => {
   }
 };
 
-// Fill template with greeting
-const fillTemplate = (templateContent: string, greetingContent: string, recipient: any) => {
-  // Replace placeholders in greeting
-  let filledGreeting = greetingContent
-      .replace(/{firstname}/g, recipient.firstName || '')
-      .replace(/{lastname}/g, recipient.lastName || '')
-      .replace(/{mailAddress}/g, recipient.mailAddress || '');
-
-  // Replace placeholders in template content
-  let filledContent = templateContent
-      .replace(/{firstname}/g, recipient.firstName || '')
-      .replace(/{lastname}/g, recipient.lastName || '')
-      .replace(/{mailAddress}/g, recipient.mailAddress || '');
-
-  // Combine greeting and content
-  return `${filledGreeting}\n\n${filledContent}`;
-};
-
-// Update the preview
+// Aktualisierung der E-Mail-Vorschau
 const updateFilledTemplate = () => {
-  const currentMail = mailDetail.value.mails[currentRecipientIndex.value];
+  const currentMail = mailDetail.value?.mails[currentRecipientIndex.value];
 
   if (currentMail && currentMail.content) {
     filledTemplate.value = currentMail.content;
@@ -126,11 +174,88 @@ const updateFilledTemplate = () => {
   }
 };
 
-// Computed property for displayed recipient
+// Computed Property für den angezeigten Empfänger
 const recipientDisplay = computed(() => {
   const recipient = recipients.value[currentRecipientIndex.value];
   return `${recipient.firstName} ${recipient.lastName} <${recipient.mailAddress}>`;
 });
+
+// Computed Property für die Anhänge
+const attachments = computed(() => {
+  return mailDetail.value?.attachments || [];
+});
+
+// Methode zur Auswahl des passenden Icons basierend auf dem Content-Type
+const getIconClass = (contentType: string): string => {
+  const type = contentType.split('/')[1]?.split(';')[0] || 'file';
+  switch (type) {
+    case 'pdf':
+      return 'fas fa-file-pdf';
+    case 'vnd.openxmlformats-officedocument.wordprocessingml.document':
+    case 'wordprocessingml.document':
+      return 'fas fa-file-word';
+    case 'vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+    case 'spreadsheetml.sheet':
+      return 'fas fa-file-excel';
+    case 'vnd.openxmlformats-officedocument.presentationml.presentation':
+    case 'presentationml.presentation':
+      return 'fas fa-file-powerpoint';
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+      return 'fas fa-file-image';
+    default:
+      return 'fas fa-file';
+  }
+};
+
+// Methode zur Formatierung der Dateigröße
+const formatFileSize = (size: number): string => {
+  if (size < 1024) return `${size} B`;
+  else if (size < 1048576) return `${(size / 1024).toFixed(2)} KB`;
+  else if (size < 1073741824) return `${(size / 1048576).toFixed(2)} MB`;
+  else return `${(size / 1073741824).toFixed(2)} GB`;
+};
+
+// Implementierung der Download-Methode
+const downloadAttachment = async (attachmentId: string) => {
+  try {
+    const response = await Service.getInstance().downloadAttachment(attachmentId);
+
+    // Extrahieren des Dateinamens aus dem Content-Disposition Header
+    const disposition = response.headers['content-disposition'];
+    let fileName = 'downloaded_file';
+    if (disposition && disposition.includes('filename=')) {
+      const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+      const matches = filenameRegex.exec(disposition);
+      if (matches != null && matches[1]) {
+        fileName = matches[1].replace(/['"]/g, '');
+      }
+    }
+
+    // Erstellen eines Blob-Objekts aus der Antwort
+    const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+    // Erstellen einer temporären URL für den Blob
+    const url = window.URL.createObjectURL(blob);
+
+    // Erstellen eines temporären <a> Elements zum Initiieren des Downloads
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName); // Setzt den Dateinamen
+
+    // Anhängen des Links zum DOM und Klicken, um den Download zu starten
+    document.body.appendChild(link);
+    link.click();
+
+    // Entfernen des Links und Freigeben der temporären URL
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Download-Fehler:', error);
+    alert('Der Download ist fehlgeschlagen.');
+  }
+};
 
 onMounted(() => {
   fetchMailDetail();
@@ -139,6 +264,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Ihre Stile hier */
 #mailDetailContainer {
   width: 86.5%;
   margin-top: 2%;
@@ -170,17 +296,6 @@ onMounted(() => {
   height: 90%;
 }
 
-.recipients-preview {
-  margin-top: 20px;
-}
-
-.indexing {
-  text-align: center;
-  font-size: 0.9em;
-  margin-bottom: 10px;
-  color: #555;
-}
-
 .info-row {
   display: flex;
   align-items: center;
@@ -201,6 +316,47 @@ onMounted(() => {
   background-color: #f9f9f9;
   color: #333;
   font-size: 1em;
+}
+
+.attachments-section {
+  margin-top: 20px;
+}
+
+.attachments-list {
+  list-style: none;
+  padding: 0;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.file-icon {
+  font-size: 24px;
+  margin-right: 10px;
+  color: #78A6FF; /* Anpassen der Farbe nach Bedarf */
+}
+
+.file-link {
+  color: #78A6FF;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.file-link:hover {
+  text-decoration: underline;
+}
+
+.file-size {
+  margin-left: 10px;
+  color: #555;
+  font-size: 0.9em;
+}
+
+.recipients-preview {
+  margin-top: 20px;
 }
 
 .email-preview {
@@ -245,5 +401,3 @@ onMounted(() => {
   cursor: not-allowed;
 }
 </style>
-
-

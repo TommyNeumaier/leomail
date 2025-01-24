@@ -27,6 +27,9 @@ public class SentTemplate extends PanacheEntityBase {
     @OneToMany(mappedBy = "usedTemplate", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<SentMail> mails = new ArrayList<>();
 
+    @OneToMany(mappedBy = "sentTemplate", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Attachment> attachments = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     public MailType mailType;

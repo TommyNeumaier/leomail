@@ -2,7 +2,15 @@ package at.htlleonding.leomail.model;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Optional;
 
-public record Receiver(Optional<List<String>> contacts, Optional<List<String>> groups) implements Serializable {
+public record Receiver(List<String> contacts,
+                       List<String> groups) implements Serializable {
+    public Receiver {
+        if (contacts == null) {
+            contacts = List.of();
+        }
+        if (groups == null) {
+            groups = List.of();
+        }
+    }
 }

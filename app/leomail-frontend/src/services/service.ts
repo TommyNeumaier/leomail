@@ -267,6 +267,27 @@ export class Service {
         });
     }
 
+    /**
+     * Sendet E-Mails mit Anhängen.
+     * @param formData FormData Objekt mit den notwendigen Daten und Dateien.
+     * @param projectId ID des Projekts.
+     */
+    public sendMailWithAttachments(formData: FormData, projectId: string): Promise<any> {
+        return axiosInstance.post(`/mail/sendByTemplateWithAttachments?pid=${projectId}`, formData,{
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+    }
+
+    public downloadAttachment(attachmentId: string) {
+        return  axiosInstance.get(`/mail/attachments/${attachmentId}`, {
+            responseType: 'blob',
+            headers: {
+            }
+        });
+    }
+
     public deleteProject(projectId: string) {
         return axiosInstance.delete(`/project/delete`, {
             data: projectId
