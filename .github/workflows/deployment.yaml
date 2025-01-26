@@ -147,7 +147,7 @@ jobs:
 
       # Apply Minio resource
       - name: Apply Minio resource
-        if: matrix.service == 'backend' || matrix.se<yrvice == 'frontend'
+        if: matrix.service == 'backend' || matrix.service == 'frontend'
         run: |
           kubectl apply -f .github/k8s/minio-filestorage.yaml
 
