@@ -18,7 +18,13 @@ spec:
           command:
             - sh
             - -c
-            - apk add --no-cache openssl && openssl rand -base64 32 > /etc/encryption/encryption-key
+            - |
+              set -e
+              apk add --no-cache openssl
+              echo "Generating encryption key..."
+              openssl rand -base64 32 > /etc/encryption/encryption-key
+              echo "Encryption key generated successfully."
+              sleep 3600  # Keeps the container running for manual inspection
           volumeMounts:
             - name: encryption-volume
               mountPath: /etc/encryption
