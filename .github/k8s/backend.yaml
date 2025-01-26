@@ -29,8 +29,6 @@ spec:
             - containerPort: 8080
           envFrom:
             - secretRef:
-                name: postgres-secrets
-            - secretRef:
                 name: minio-secrets
             - secretRef:
                 name: quarkus-secrets
