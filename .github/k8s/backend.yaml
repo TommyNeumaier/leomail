@@ -26,7 +26,6 @@ spec:
               echo "Generating encryption key..."
               openssl rand -base64 32 > /etc/encryption/encryption-key
               echo "Encryption key generated successfully."
-              sleep 3600  # Keeps the container running for manual inspection
           volumeMounts:
             - name: encryption-volume
               mountPath: /etc/encryption
