@@ -13,15 +13,18 @@ spec:
         app: quarkus
     spec:
       initContainers:
-        - name: init-generate-encryption-key
-          image: alpine
-          command:
-            - sh
-            - -c
-            - apk add --no-cache openssl && openssl rand -base64 32 > /etc/encryption/encryption-key
-          volumeMounts:
-            - name: encryption-volume
-              mountPath: /etc/encryption
+      - name: init-generate-encryption-key
+        image: alpine
+        command:
+          - sh
+          - -c
+          - |
+            apk add --no-cache openssl
+            openssl rand -base64 32 > /etc/encryption/encryption-key
+            echo "Encryption key generated successfully."
+        volumeMounts:
+          - name: encryption-volume
+            mountPath: /etc/encryption
       containers:
         - name: quarkus
           image: ghcr.io/tommyneumaier/leomail/leomail-quarkus:latest
