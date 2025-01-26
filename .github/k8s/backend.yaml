@@ -37,6 +37,12 @@ spec:
               value: "${POSTGRES_USER}"
             - name: QUARKUS_DATASOURCE_PASSWORD
               value: "${POSTGRES_PASSWORD}"
+            - name: MINIO_URL
+              value: "${MINIO_URL}"
+            - name: MINIO_ACCESS_KEY
+              value: "${MINIO_ROOT_USER}"
+            - name: MINIO_SECRET_KEY
+              value: "${MINIO_ROOT_PASSWORD}"
           volumeMounts:
             - name: encryption-volume
               mountPath: /etc/encryption
