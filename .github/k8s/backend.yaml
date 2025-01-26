@@ -35,6 +35,8 @@ spec:
                 name: minio-secrets
             - secretRef:
                 name: quarkus-secrets
+            - secretRef:
+                name: postgres-secrets
           livenessProbe:
             httpGet:
               path: /q/health/live
