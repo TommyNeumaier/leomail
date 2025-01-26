@@ -103,24 +103,32 @@ jobs:
         with:
           version: 'latest'
 
+      # Set up kubeconfig
       - name: Set up kubeconfig
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
-      - name: Replace env vars in postgres.yaml and backend.yaml
+      # Create Kubernetes secrets
+      - name: Create Kubernetes secrets
         run: |
-          sed -i 's#\${POSTGRES_DB}#${{ secrets.POSTGRES_DB }}#g' .github/k8s/postgres.yaml
-          sed -i 's#\${POSTGRES_USER}#${{ secrets.POSTGRES_USER }}#g' .github/k8s/postgres.yaml
-          sed -i 's#\${POSTGRES_PASSWORD}#${{ secrets.POSTGRES_PASSWORD }}#g' .github/k8s/postgres.yaml
-          sed -i 's#\${POSTGRES_DB}#${{ secrets.POSTGRES_DB }}#g' .github/k8s/backend.yaml
-          sed -i 's#\${POSTGRES_USER}#${{ secrets.POSTGRES_USER }}#g' .github/k8s/backend.yaml
-          sed -i 's#\${MINIO_URL}#${{ secrets.MINIO_URL }}#g' .github/k8s/backend.yaml
-          sed -i 's#\${MINIO_ROOT_USER}#${{ secrets.MINIO_ROOT_USER }}#g' .github/k8s/backend.yaml
-          sed -i 's#\${MINIO_ROOT_PASSWORD}#${{ secrets.MINIO_ROOT_PASSWORD }}#g' .github/k8s/backend.yaml
-          sed -i 's#\${MINIO_ROOT_USER}#${{ secrets.MINIO_ROOT_USER }}#g' .github/k8s/minio-filestorage.yaml
-          sed -i 's#\${MINIO_ROOT_PASSWORD}#${{ secrets.MINIO_ROOT_PASSWORD }}#g' .github/k8s/minio-filestorage.yaml
+          kubectl create secret generic postgres-secrets \
+            --from-literal=POSTGRES_DB="${POSTGRES_DB}" \
+            --from-literal=POSTGRES_USER="${POSTGRES_USER}" \
+            --from-literal=POSTGRES_PASSWORD="${POSTGRES_PASSWORD}"
+
+          kubectl create secret generic minio-secrets \
+            --from-literal=MINIO_URL="${MINIO_URL}" \
+            --from-literal=MINIO_ROOT_USER="${MINIO_ROOT_USER}" \
+            --from-literal=MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD}"
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          MINIO_URL: ${{ secrets.MINIO_URL }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
 
       # Apply Kubernetes Resources for backend
       - name: Deploy Quarkus Backend to Kubernetes

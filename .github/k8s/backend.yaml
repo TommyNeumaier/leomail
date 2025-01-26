@@ -12,40 +12,16 @@ spec:
       labels:
         app: quarkus
     spec:
-      initContainers:
-        - name: init-generate-encryption-key
-          image: alpine
-          command:
-            - sh
-            - -c
-            - apk add --no-cache openssl && openssl rand -base64 32 > /etc/encryption/encryption-key
-          volumeMounts:
-            - name: encryption-volume
-              mountPath: /etc/encryption
       containers:
         - name: quarkus
           image: ghcr.io/tommyneumaier/leomail/leomail-quarkus:latest
-          imagePullPolicy: Always
           ports:
             - containerPort: 8080
-          env:
-            - name: QUARKUS_PROFILE
-              value: prod
-            - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://postgres-service:5432/${POSTGRES_DB}"
-            - name: QUARKUS_DATASOURCE_USERNAME
-              value: "${POSTGRES_USER}"
-            - name: QUARKUS_DATASOURCE_PASSWORD
-              value: "${POSTGRES_PASSWORD}"
-            - name: MINIO_URL
-              value: "${MINIO_URL}"
-            - name: MINIO_ACCESS_KEY
-              value: "${MINIO_ROOT_USER}"
-            - name: MINIO_SECRET_KEY
-              value: "${MINIO_ROOT_PASSWORD}"
-          volumeMounts:
-            - name: encryption-volume
-              mountPath: /etc/encryption
+          envFrom:
+            - secretRef:
+                name: postgres-secrets
+            - secretRef:
+                name: minio-secrets
           livenessProbe:
             httpGet:
               path: /q/health/live
@@ -58,10 +34,6 @@ spec:
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
-      volumes:
-        - name: encryption-volume
-          emptyDir: {}
-
 ---
 apiVersion: v1
 kind: Service
