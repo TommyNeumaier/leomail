@@ -22,6 +22,8 @@ spec:
                 name: postgres-secrets
             - secretRef:
                 name: minio-secrets
+            - secretRef:
+                name: quarkus-secrets
           livenessProbe:
             httpGet:
               path: /q/health/live
@@ -34,6 +36,12 @@ spec:
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
+          volumeMounts:
+            - name: encryption-volume
+              mountPath: /etc/encryption
+      volumes:
+        - name: encryption-volume
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
