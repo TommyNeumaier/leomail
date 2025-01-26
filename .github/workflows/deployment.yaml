@@ -111,16 +111,16 @@ jobs:
 
       - name: Replace env vars in postgres.yaml and backend.yaml
         run: |
-          sed -i 's|\${POSTGRES_DB}|***|g' .github/k8s/postgres.yaml
-          sed -i 's|\${POSTGRES_USER}|***|g' .github/k8s/postgres.yaml
-          sed -i 's|\${POSTGRES_PASSWORD}|***|g' .github/k8s/postgres.yaml
-          sed -i 's|\${POSTGRES_DB}|***|g' .github/k8s/backend.yaml
-          sed -i 's|\${POSTGRES_USER}|***|g' .github/k8s/backend.yaml
-          sed -i 's|\${MINIO_URL}|***|g' .github/k8s/backend.yaml
-          sed -i 's|\${MINIO_ROOT_USER}|***|g' .github/k8s/backend.yaml
-          sed -i 's|\${MINIO_ROOT_PASSWORD}|***|g' .github/k8s/backend.yaml
-          sed -i 's|\${MINIO_ROOT_USER}|***|g' .github/k8s/minio-filestorage.yaml
-          sed -i 's|\${MINIO_ROOT_PASSWORD}|***|g' .github/k8s/minio-filestorage.yaml
+          sed -i 's|\${POSTGRES_DB}|${{ secrets.POSTGRES_DB }}|g' .github/k8s/postgres.yaml
+          sed -i 's|\${POSTGRES_USER}|${{ secrets.POSTGRES_USER }}|g' .github/k8s/postgres.yaml
+          sed -i 's|\${POSTGRES_PASSWORD}|${{ secrets.POSTGRES_PASSWORD }}|g' .github/k8s/postgres.yaml
+          sed -i 's|\${POSTGRES_DB}|${{ secrets.POSTGRES_DB }}|g' .github/k8s/backend.yaml
+          sed -i 's|\${POSTGRES_USER}|${{ secrets.POSTGRES_USER }}|g' .github/k8s/backend.yaml
+          sed -i 's|\${MINIO_URL}|${{ secrets.MINIO_URL }}|g' .github/k8s/backend.yaml
+          sed -i 's|\${MINIO_ROOT_USER}|${{ secrets.MINIO_ROOT_USER }}|g' .github/k8s/backend.yaml
+          sed -i 's|\${MINIO_ROOT_PASSWORD}|${{ secrets.MINIO_ROOT_PASSWORD }}|g' .github/k8s/backend.yaml
+          sed -i 's|\${MINIO_ROOT_USER}|${{ secrets.MINIO_ROOT_USER }}|g' .github/k8s/minio-filestorage.yaml
+          sed -i 's|\${MINIO_ROOT_PASSWORD}|${{ secrets.MINIO_ROOT_PASSWORD }}|g' .github/k8s/minio-filestorage.yaml
 
       # Apply Kubernetes Resources for backend
       - name: Deploy Quarkus Backend to Kubernetes
