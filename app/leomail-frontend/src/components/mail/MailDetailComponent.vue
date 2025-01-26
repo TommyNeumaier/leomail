@@ -65,7 +65,7 @@ import { Service } from '@/services/service';
 import { format, parseISO } from 'date-fns';
 
 interface Attachment {
-  id: string; 
+  id: string;
   fileName: string;
   contentType: string;
   downloadUrl: string;

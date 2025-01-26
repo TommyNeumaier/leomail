@@ -16,6 +16,7 @@ import AuthorisationComponent from "@/views/AuthorisationView.vue";
 import PostLoginView from "@/views/PostLoginView.vue";
 import {pinia} from "@/main";
 import axiosInstance from "@/axiosInstance";
+import {useImportStatusStore} from "@/stores/import-status.store";
 
 const routes = [
   { path: '/login', name: 'login', component: Login },
@@ -52,6 +53,7 @@ function handleInvalidToken(authStore, next) {
 
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore(pinia);
+  const importStatusStore = useImportStatusStore();
 
   if (to.meta.requiresAuth) {
     const accessToken = authStore.accessToken;
@@ -64,12 +66,26 @@ router.beforeEach(async (to, from, next) => {
       const isValid = await validateToken();
       if (isValid) {
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+        await importStatusStore.updateImportStatus();
+
+        if (importStatusStore.importing && to.name !== 'post-login') {
+          return next({ name: 'post-login' });
+        }
+
         return next();
       } else {
         try {
           const { access_token } = await refreshToken();
           authStore.setTokens(access_token, authStore.$state._refreshToken);
           axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
+          await importStatusStore.updateImportStatus();
+
+          if (importStatusStore.importing && to.name !== 'post-login') {
+            return next({ name: 'post-login' });
+          }
+
           return next();
         } catch (refreshError) {
           return handleInvalidToken(authStore, next);

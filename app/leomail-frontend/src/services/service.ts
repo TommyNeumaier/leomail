@@ -325,4 +325,18 @@ export class Service {
             }
         });
     }
+
+    /**
+     * Ruft den aktuellen Importstatus ab.
+     *
+     * @returns Ein Objekt mit dem Importstatus
+     */
+    public async getImportStatus(): Promise<{ importing: boolean }> {
+        try {
+            const response = await axios.get('/status/import');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
 }

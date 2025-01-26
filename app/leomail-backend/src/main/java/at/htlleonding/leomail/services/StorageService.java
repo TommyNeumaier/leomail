@@ -101,4 +101,19 @@ public class StorageService {
 
         return stream;
     }
+
+    public void deleteFile(String objectName) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build()
+            );
+            LOGGER.infof("Datei '%s' aus Bucket '%s' gelöscht.", objectName, bucketName);
+        } catch (Exception e) {
+            LOGGER.errorf("Fehler beim Löschen der Datei '%s' aus Bucket '%s'.", objectName, bucketName, e);
+            throw new RuntimeException(e);
+        }
+    }
 }

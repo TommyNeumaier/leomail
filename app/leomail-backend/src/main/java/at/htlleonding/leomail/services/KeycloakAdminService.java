@@ -1,8 +1,11 @@
+// src/main/java/at/htlleonding/leomail/services/KeycloakAdminService.java
+
 package at.htlleonding.leomail.services;
 
 import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import at.htlleonding.leomail.repositories.ContactRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -11,6 +14,8 @@ import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
 
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,8 +30,17 @@ public class KeycloakAdminService {
     @ConfigProperty(name = "quarkus.keycloak.admin-client.realm")
     String realm;
 
+    @ConfigProperty(name= "quarkus.profile")
+    String profile;
+
     @Inject
     ContactRepository contactRepository;
+
+    @Inject
+    ImportStatusService importStatusService;
+
+    @Inject
+    EncryptionService encryptionService;
 
     /**
      * Searches for users in Keycloak and converts them to NaturalContactSearchDTO.
@@ -84,17 +98,35 @@ public class KeycloakAdminService {
      */
     @PostConstruct
     public void saveAllUsersToAppDB() {
-        int first = 0;
-        int max = 100;
-        List<UserRepresentation> usersBatch;
-        do {
-            usersBatch = keycloakClient.realm(realm).users().list(first, max);
-            for (UserRepresentation user : usersBatch) {
-                saveOrUpdateKeycloakUser(user);
-            }
-            first += max;
-        } while (!usersBatch.isEmpty());
-        LOGGER.info("All Keycloak users have been saved to the application database.");
+        // Überprüfen, ob die Anwendung im Produktionsmodus läuft
+        if (!isProduction()) {
+            LOGGER.info("Nicht im Produktionsmodus. Import der Keycloak-Nutzer wird übersprungen.");
+            return;
+        }
+
+        importStatusService.setImporting(true);
+        try {
+            int first = 0;
+            int max = 100;
+            List<UserRepresentation> usersBatch;
+            do {
+                usersBatch = keycloakClient.realm(realm).users().list(first, max);
+                for (UserRepresentation user : usersBatch) {
+                    saveOrUpdateKeycloakUser(user);
+                }
+                first += max;
+            } while (!usersBatch.isEmpty());
+            LOGGER.info("Alle Keycloak-Nutzer wurden in die Anwendungsdatenbank importiert.");
+        } finally {
+            importStatusService.setImporting(false);
+        }
+    }
+
+    private boolean isProduction() {
+        if(profile == null) {
+            return false;
+        }
+        return profile.equals("prod");
     }
 
     /**
@@ -117,7 +149,7 @@ public class KeycloakAdminService {
             existingContact.lastName = user.getLastName() != null ? user.getLastName() : "";
             existingContact.mailAddress = user.getEmail();
             existingContact.persist();
-            LOGGER.infof("Updated existing Keycloak user '%s' in application database.", existingContact.id);
+            LOGGER.infof("Aktualisierter bestehender Keycloak-Benutzer '%s' in der Anwendungsdatenbank.", existingContact.id);
         } else {
             NaturalContact contact = new NaturalContact();
             contact.id = user.getId();
@@ -130,7 +162,7 @@ public class KeycloakAdminService {
             // contact.project = Project.findById(projectId);
 
             contact.persist();
-            LOGGER.infof("Saved new Keycloak user '%s' to application database.", contact.id);
+            LOGGER.infof("Neuer Keycloak-Benutzer '%s' erfolgreich in der Anwendungsdatenbank gespeichert.", contact.id);
         }
     }
 

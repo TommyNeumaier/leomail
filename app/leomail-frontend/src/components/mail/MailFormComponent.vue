@@ -479,6 +479,7 @@ const sendMail = async () => {
       }
     }));
 
+    // Fügen Sie Anhänge und deren Metadaten hinzu
     selectedFiles.value.forEach((file, index) => {
       formData.append('attachments', file); // Schlüsselname muss 'attachments' sein
       formData.append('fileName', file.name);

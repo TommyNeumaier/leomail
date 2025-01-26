@@ -1,9 +1,11 @@
 package at.htlleonding.leomail.entities;
 
+import at.htlleonding.leomail.listeners.AttachmentEntityListener;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 
 @Entity
+@EntityListeners(AttachmentEntityListener.class)
 public class Attachment extends PanacheEntityBase {
 
     @Id
