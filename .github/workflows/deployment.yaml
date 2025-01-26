@@ -116,13 +116,23 @@ jobs:
           sed -i 's|\${POSTGRES_PASSWORD}|***|g' .github/k8s/postgres.yaml
           sed -i 's|\${POSTGRES_DB}|***|g' .github/k8s/backend.yaml
           sed -i 's|\${POSTGRES_USER}|***|g' .github/k8s/backend.yaml
-          sed -i 's|\${POSTGRES_PASSWORD}|***|g' .github/k8s/backend.yaml
+          sed -i 's|\${MINIO_URL}|***|g' .github/k8s/backend.yaml
+          sed -i 's|\${MINIO_ROOT_USER}|***|g' .github/k8s/backend.yaml
+          sed -i 's|\${MINIO_ROOT_PASSWORD}|***|g' .github/k8s/backend.yaml
+          sed -i 's|\${MINIO_ROOT_USER}|***|g' .github/k8s/minio-filestorage.yaml
+          sed -i 's|\${MINIO_ROOT_PASSWORD}|***|g' .github/k8s/minio-filestorage.yaml
 
       # Apply Kubernetes Resources for backend
       - name: Deploy Quarkus Backend to Kubernetes
         if: matrix.service == 'backend' && success()
         run: |
           kubectl apply -f .github/k8s/backend.yaml
+
+      # Apply Minio resource
+      - name: Apply Minio resource
+        if: matrix.service == 'backend' || matrix.service == 'frontend'
+        run: |
+          kubectl apply -f .github/k8s/minio-filestorage.yaml
 
       # Apply Kubernetes Resources for frontend
       - name: Deploy Vue Frontend to Kubernetes
