@@ -4,6 +4,7 @@ import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -46,6 +47,7 @@ public class KeycloakAdminService {
     /**
      * Führt den Import der Nutzer asynchron aus.
      */
+    @ActivateRequestContext
     public void importUsersAsync() {
         managedExecutor.runAsync(this::saveAllUsersToAppDb).thenRun(() -> {
             LOGGER.info("Asynchroner Import abgeschlossen.");
