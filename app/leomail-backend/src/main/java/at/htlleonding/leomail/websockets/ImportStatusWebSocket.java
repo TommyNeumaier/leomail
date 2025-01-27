@@ -27,7 +27,7 @@ public class ImportStatusWebSocket {
     public void onOpen(Session session) {
         LOGGER.info("WebSocket geöffnet: " + session.getId());
         sessions.add(session);
-        executor.execute(() -> sendStatus(session, ImportStatusService.getInstance().isImporting());
+        executor.execute(() -> sendStatus(session, ImportStatusService.getInstance().isImporting()));
     }
 
     @OnClose
