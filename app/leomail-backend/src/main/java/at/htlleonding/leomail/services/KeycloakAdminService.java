@@ -11,6 +11,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
@@ -49,6 +50,7 @@ public class KeycloakAdminService {
         saveAllUsersToAppDb();
     }
 
+    @Tra
     public void saveAllUsersToAppDb() {
         LOGGER.info("Starte saveAllUsersToAppDb Methode");
         if (!isProduction()) {
@@ -139,6 +141,7 @@ public class KeycloakAdminService {
      *
      * @param user UserRepresentation to be saved or updated
      */
+    @Transactional
     public void saveOrUpdateKeycloakUser(UserRepresentation user) {
         // Validierung der E-Mail-Adresse
         if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
