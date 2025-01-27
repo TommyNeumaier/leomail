@@ -44,7 +44,7 @@ const checkOutlookAuthorization = async () => {
 const connectWebSocket = () => {
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const host = window.location.host;
-  const wsUrl = `${protocol}://${host}/ws/import-status`;
+  const wsUrl = `${protocol}://${host}/api/ws/import-status`;
 
   socket = new WebSocket(wsUrl);
 

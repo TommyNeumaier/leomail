@@ -23,12 +23,37 @@ spec:
             - |
               set -e
               apk add --no-cache openssl
+              mkdir -p /etc/encryption
               echo "Generating encryption key..."
               openssl rand -base64 32 > /etc/encryption/encryption-key
               echo "Encryption key generated successfully."
           volumeMounts:
             - name: encryption-volume
               mountPath: /etc/encryption
+        - name: wait-for-dependencies
+          image: alpine
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              apk add --no-cache netcat-openbsd
+              
+              echo "Warte auf PostgreSQL..."
+              while ! nc -z postgres-service 5432; do
+                echo "PostgreSQL ist noch nicht verfügbar. Warte 5 Sekunden..."
+                sleep 5
+              done
+              echo "PostgreSQL ist verfügbar."
+
+              echo "Warte auf MinIO..."
+              while ! nc -z minio-service 9000; do
+                echo "MinIO ist noch nicht verfügbar. Warte 5 Sekunden..."
+                sleep 5
+              done
+              echo "MinIO ist verfügbar."          
       containers:
         - name: quarkus
           image: ghcr.io/tommyneumaier/leomail/leomail-quarkus:latest
@@ -43,7 +68,7 @@ spec:
             - secretRef:
                 name: quarkus-secrets
             - secretRef:
-                name: postgres-secrets  # Ensure this is included
+                name: postgres-secrets
           livenessProbe:
             httpGet:
               path: /api/q/health/live
