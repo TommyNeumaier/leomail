@@ -1,13 +1,14 @@
 package at.htlleonding.leomail.services;
 
 import at.htlleonding.leomail.entities.NaturalContact;
-import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
+import at.htlleonding.leomail.repositories.ContactRepository;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -16,7 +17,6 @@ import java.util.List;
 
 @ApplicationScoped
 public class KeycloakAdminService {
-
 
     private static final Logger LOGGER = Logger.getLogger(KeycloakAdminService.class);
 
@@ -32,11 +32,34 @@ public class KeycloakAdminService {
     @Inject
     ImportStatusService importStatusService;
 
+    @Inject
+    ManagedExecutor managedExecutor;
+
+    /**
+     * Beobachtet das StartupEvent und startet den Importprozess asynchron.
+     */
     public void onStart(@Observes StartupEvent event) {
-        saveAllUsersToAppDb();
+        LOGGER.info("StartupEvent empfangen. Initialisiere asynchronen Import.");
+        importUsersAsync();
     }
 
+    /**
+     * Führt den Import der Nutzer asynchron aus.
+     */
+    public void importUsersAsync() {
+        managedExecutor.runAsync(this::saveAllUsersToAppDb).thenRun(() -> {
+            LOGGER.info("Asynchroner Import abgeschlossen.");
+        }).exceptionally(ex -> {
+            LOGGER.error("Fehler beim asynchronen Import", ex);
+            return null;
+        });
+    }
+
+    /**
+     * Importiert alle Nutzer in die Anwendungsdatenbank.
+     */
     public void saveAllUsersToAppDb() {
+        LOGGER.info("Starte saveAllUsersToAppDb Methode");
         if (!isProduction()) {
             LOGGER.info("Nicht im Produktionsmodus. Import der Keycloak-Nutzer wird übersprungen.");
             return;
@@ -69,30 +92,6 @@ public class KeycloakAdminService {
         return "prod".equals(profile);
     }
 
-    /**
-     * Finds a user by user ID and returns a NaturalContactSearchDTO.
-     *
-     * @param userId User ID
-     * @return NaturalContactSearchDTO object or null if not found
-     */
-    public NaturalContactSearchDTO findUserAsNaturalContactSearchDTO(String userId) {
-        try {
-            UserRepresentation user = keycloakClient.realm(realm)
-                    .users().get(userId).toRepresentation();
-            if (user == null) {
-                return null;
-            }
-            return new NaturalContactSearchDTO(
-                    user.getId(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getEmail()
-            );
-        } catch (Exception e) {
-            LOGGER.error("Error finding user", e);
-            throw new RuntimeException("Error finding user", e);
-        }
-    }
 
     /**
      * Saves or updates a Keycloak user in the application database.
