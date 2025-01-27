@@ -1,7 +1,7 @@
 package at.htlleonding.leomail.services;
 
 import at.htlleonding.leomail.entities.NaturalContact;
-import at.htlleonding.leomail.repositories.ContactRepository;
+import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -53,6 +53,31 @@ public class KeycloakAdminService {
             LOGGER.error("Fehler beim asynchronen Import", ex);
             return null;
         });
+    }
+
+    /**
+     * Finds a user by user ID and returns a NaturalContactSearchDTO.
+     *
+     * @param userId User ID
+     * @return NaturalContactSearchDTO object or null if not found
+     */
+    public NaturalContactSearchDTO findUserAsNaturalContactSearchDTO(String userId) {
+        try {
+            UserRepresentation user = keycloakClient.realm(realm)
+                    .users().get(userId).toRepresentation();
+            if (user == null) {
+                return null;
+            }
+            return new NaturalContactSearchDTO(
+                    user.getId(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getEmail()
+            );
+        } catch (Exception e) {
+            LOGGER.error("Error finding user", e);
+            throw new RuntimeException("Error finding user", e);
+        }
     }
 
     /**
