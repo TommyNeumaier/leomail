@@ -1,15 +1,12 @@
 package at.htlleonding.leomail.websockets;
 
+import at.htlleonding.leomail.services.ImportStatusService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnError;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
-import jakarta.websocket.Session;
+import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
-import at.htlleonding.leomail.services.ImportStatusService;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -20,6 +17,8 @@ import java.util.Set;
 @ApplicationScoped
 public class ImportStatusWebSocket {
 
+    @Inject
+    ManagedExecutor executor;
 
     private static final Logger LOGGER = Logger.getLogger(ImportStatusWebSocket.class);
     private static Set<Session> sessions = Collections.synchronizedSet(new HashSet<>());
@@ -28,7 +27,7 @@ public class ImportStatusWebSocket {
     public void onOpen(Session session) {
         LOGGER.info("WebSocket geöffnet: " + session.getId());
         sessions.add(session);
-        sendStatus(session, ImportStatusService.getInstance().isImporting());
+        executor.execute(() -> sendStatus(session, ImportStatusService.getInstance().isImporting());
     }
 
     @OnClose
@@ -71,13 +70,13 @@ public class ImportStatusWebSocket {
      * Sendet den Importstatus an eine spezifische Session.
      *
      * @param session    Die WebSocket-Session
-     * @param importing Der aktuelle Importstatus
+     * @param status Der aktuelle Importstatus
      */
-    private void sendStatus(Session session, boolean importing) {
+    private void sendStatus(Session session, String status) {
         try {
-            session.getBasicRemote().sendText("{\"importing\": " + importing + "}");
+            session.getBasicRemote().sendText(status);
         } catch (IOException e) {
-            LOGGER.error("Fehler beim Senden des Initialstatus an Session " + session.getId(), e);
+            e.printStackTrace();
         }
     }
 }
