@@ -3,7 +3,7 @@
 <template>
   <div class="post-login">
     <Spinner /> <!-- Optional: Fügen Sie einen Spinner oder Ladeindikator hinzu -->
-    <p>Überprüfung der Outlook-Autorisierung...</p>
+    <p>Kontakte werden importiert ... Bitte warte einen Moment</p>
   </div>
 </template>
 

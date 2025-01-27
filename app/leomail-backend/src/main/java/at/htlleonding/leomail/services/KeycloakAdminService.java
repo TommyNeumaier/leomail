@@ -6,8 +6,10 @@ import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.contacts.NaturalContactSearchDTO;
 import at.htlleonding.leomail.repositories.ContactRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.StartupEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -41,6 +43,10 @@ public class KeycloakAdminService {
 
     @Inject
     EncryptionService encryptionService;
+
+    public void onStart(@Observes StartupEvent event) {
+        saveAllUsersToAppDB();
+    }
 
     /**
      * Searches for users in Keycloak and converts them to NaturalContactSearchDTO.
@@ -98,7 +104,6 @@ public class KeycloakAdminService {
      */
     @PostConstruct
     public void saveAllUsersToAppDB() {
-        // Überprüfen, ob die Anwendung im Produktionsmodus läuft
         if (!isProduction()) {
             LOGGER.info("Nicht im Produktionsmodus. Import der Keycloak-Nutzer wird übersprungen.");
             return;
