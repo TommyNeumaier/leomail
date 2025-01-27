@@ -72,9 +72,9 @@ public class ImportStatusWebSocket {
      * @param session    Die WebSocket-Session
      * @param status Der aktuelle Importstatus
      */
-    private void sendStatus(Session session, String status) {
+    private void sendStatus(Session session, boolean status) {
         try {
-            session.getBasicRemote().sendText(status);
+            session.getBasicRemote().sendText(String.valueOf(status));
         } catch (IOException e) {
             e.printStackTrace();
         }
