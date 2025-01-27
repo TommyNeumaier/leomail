@@ -96,7 +96,7 @@ public class KeycloakAdminService {
         importStatusService.setImporting(true);
         try {
             int first = 0;
-            int max = 100;
+            int max = 2000;
             List<UserRepresentation> usersBatch;
             do {
                 usersBatch = keycloakClient.realm(realm).users().list(first, max);
