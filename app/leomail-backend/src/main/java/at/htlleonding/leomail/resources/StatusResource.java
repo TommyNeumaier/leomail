@@ -1,6 +1,7 @@
 package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.services.ImportStatusService;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -11,6 +12,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.Map;
 
 @Path("/status")
+@ApplicationScoped
 public class StatusResource {
 
     @Inject

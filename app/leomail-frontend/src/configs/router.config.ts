@@ -1,12 +1,11 @@
-import { createRouter, createWebHistory } from 'vue-router';
+// src/router/index.ts
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import MailView from "@/views/MailView.vue";
 import Login from "@/views/Login.vue";
 import PersonenView from "@/views/ContactView.vue";
 import ProfilView from "@/views/ProfilView.vue";
-import { useAuthStore } from "@/stores/auth.store";
 import NewProject from "@/views/NewProject.vue";
 import NewMail from "@/views/NewMail.vue";
-import { refreshToken, validateToken } from "@/services/auth.service";
 import ProjectView from "@/views/ProjectView.vue";
 import ScheduledMailsView from "@/views/ScheduledMailsView.vue";
 import GroupView from "@/views/GroupView.vue";
@@ -14,12 +13,17 @@ import TemplateView from "@/views/TemplateView.vue";
 import SettingsView from "@/views/SettingsView.vue";
 import AuthorisationComponent from "@/views/AuthorisationView.vue";
 import PostLoginView from "@/views/PostLoginView.vue";
-import {pinia} from "@/main";
+import ImportingView from "@/views/ImportingView.vue"; // ImportingView importieren
+import MailDetailView from "@/views/MailDetailView.vue";
+import { useAuthStore } from "@/stores/auth.store";
+import { refreshToken, validateToken } from "@/services/auth.service";
+import { pinia } from "@/main";
 import axiosInstance from "@/axiosInstance";
-import {useImportStatusStore} from "@/stores/import-status.store";
+import { useImportStatusStore } from "@/stores/import-status.store";
 
-const routes = [
+const routes: Array<RouteRecordRaw> = [
   { path: '/login', name: 'login', component: Login },
+  { path: '/importing', name: 'importing', component: ImportingView }, // Neue Route für ImportingView
   { path: '/post-login', name: 'post-login', component: PostLoginView, meta: { requiresAuth: true } },
   { path: '/mail', name: 'mail', component: MailView, meta: { requiresAuth: true } },
   { path: '/mail/new', name: 'newMail', component: NewMail, meta: { requiresAuth: true } },
@@ -35,7 +39,7 @@ const routes = [
   {
     path: '/mail/:id/:projectId',
     name: 'MailDetail',
-    component: () => import('@/views/MailDetailView.vue'),
+    component: MailDetailView,
     props: true,
     meta: { requiresAuth: true }
   }
@@ -46,15 +50,30 @@ const router = createRouter({
   routes,
 });
 
+// Funktion zum Handhaben ungültiger Tokens
 function handleInvalidToken(authStore, next) {
   authStore.logout();
   return next({ name: 'login' });
 }
 
+// Globale Navigation Guards
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore(pinia);
   const importStatusStore = useImportStatusStore();
 
+  // Zuerst den Importstatus überprüfen
+  try {
+    await importStatusStore.updateImportStatus();
+  } catch (error) {
+    console.error('Fehler beim Aktualisieren des Importstatus:', error);
+  }
+
+  // Wenn der Import läuft und der Zielroute nicht ImportingView ist, umleiten
+  if (importStatusStore.importing && to.name !== 'importing') {
+    return next({ name: 'importing' });
+  }
+
+  // Prüfen, ob die Route Authentifizierung erfordert
   if (to.meta.requiresAuth) {
     const accessToken = authStore.accessToken;
 
@@ -67,10 +86,11 @@ router.beforeEach(async (to, from, next) => {
       if (isValid) {
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
+        // Importstatus erneut aktualisieren
         await importStatusStore.updateImportStatus();
 
-        if (importStatusStore.importing && to.name !== 'post-login') {
-          return next({ name: 'post-login' });
+        if (importStatusStore.importing && to.name !== 'importing') {
+          return next({ name: 'importing' });
         }
 
         return next();
@@ -82,8 +102,8 @@ router.beforeEach(async (to, from, next) => {
 
           await importStatusStore.updateImportStatus();
 
-          if (importStatusStore.importing && to.name !== 'post-login') {
-            return next({ name: 'post-login' });
+          if (importStatusStore.importing && to.name !== 'importing') {
+            return next({ name: 'importing' });
           }
 
           return next();

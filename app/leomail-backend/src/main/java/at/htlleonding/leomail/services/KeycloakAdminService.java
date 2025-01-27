@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class KeycloakAdminService {
 
+
     private static final Logger LOGGER = Logger.getLogger(KeycloakAdminService.class);
 
     @Inject
@@ -32,20 +33,54 @@ public class KeycloakAdminService {
     @ConfigProperty(name = "quarkus.keycloak.admin-client.realm")
     String realm;
 
-    @ConfigProperty(name= "quarkus.profile")
+    @ConfigProperty(name = "quarkus.profile")
     String profile;
-
-    @Inject
-    ContactRepository contactRepository;
 
     @Inject
     ImportStatusService importStatusService;
 
     @Inject
+    ContactRepository contactRepository;
+
+    @Inject
     EncryptionService encryptionService;
 
     public void onStart(@Observes StartupEvent event) {
-        saveAllUsersToAppDB();
+        saveAllUsersToAppDb();
+    }
+
+    public void saveAllUsersToAppDb() {
+        LOGGER.info("Starte saveAllUsersToAppDb Methode");
+        if (!isProduction()) {
+            LOGGER.info("Nicht im Produktionsmodus. Import der Keycloak-Nutzer wird übersprungen.");
+            return;
+        }
+
+        LOGGER.info("Im Produktionsmodus. Starte Import der Keycloak-Nutzer.");
+        importStatusService.setImporting(true);
+        try {
+            int first = 0;
+            int max = 100;
+            List<UserRepresentation> usersBatch;
+            do {
+                usersBatch = keycloakClient.realm(realm).users().list(first, max);
+                LOGGER.info("Importiere Batch von " + first + " bis " + (first + max));
+                for (UserRepresentation user : usersBatch) {
+                    saveOrUpdateKeycloakUser(user);
+                }
+                first += max;
+            } while (!usersBatch.isEmpty());
+            LOGGER.info("Alle Keycloak-Nutzer wurden in die Anwendungsdatenbank importiert.");
+        } catch (Exception e) {
+            LOGGER.error("Fehler beim Importieren der Keycloak-Nutzer", e);
+        } finally {
+            importStatusService.setImporting(false);
+            LOGGER.info("Importstatus auf false gesetzt.");
+        }
+    }
+
+    private boolean isProduction() {
+        return "prod".equals(profile);
     }
 
     /**
@@ -97,41 +132,6 @@ public class KeycloakAdminService {
             LOGGER.error("Error finding user", e);
             throw new RuntimeException("Error finding user", e);
         }
-    }
-
-    /**
-     * Saves all users from Keycloak to the application database.
-     */
-    @PostConstruct
-    public void saveAllUsersToAppDB() {
-        if (!isProduction()) {
-            LOGGER.info("Nicht im Produktionsmodus. Import der Keycloak-Nutzer wird übersprungen.");
-            return;
-        }
-
-        importStatusService.setImporting(true);
-        try {
-            int first = 0;
-            int max = 100;
-            List<UserRepresentation> usersBatch;
-            do {
-                usersBatch = keycloakClient.realm(realm).users().list(first, max);
-                for (UserRepresentation user : usersBatch) {
-                    saveOrUpdateKeycloakUser(user);
-                }
-                first += max;
-            } while (!usersBatch.isEmpty());
-            LOGGER.info("Alle Keycloak-Nutzer wurden in die Anwendungsdatenbank importiert.");
-        } finally {
-            importStatusService.setImporting(false);
-        }
-    }
-
-    private boolean isProduction() {
-        if(profile == null) {
-            return false;
-        }
-        return profile.equals("prod");
     }
 
     /**

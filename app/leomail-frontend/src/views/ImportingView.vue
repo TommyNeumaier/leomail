@@ -1,41 +1,25 @@
-<!-- src/views/PostLoginView.vue -->
+<!-- src/views/ImportingView.vue -->
 
 <template>
-  <div class="post-login">
-    <Spinner /> <!-- Optional: Fügen Sie einen Spinner oder Ladeindikator hinzu -->
+  <div v-if="importing" class="importing-view">
+    <Spinner />
     <p>Kontakte werden importiert ... Bitte warte einen Moment</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { Service } from '@/services/service';
 import Spinner from '@/components/Spinner.vue';
-import {useImportStatusStore} from "@/stores/import-status.store";
+import { useImportStatusStore } from '@/stores/import-status.store';
+import { Service } from '@/services/service';
 
 const router = useRouter();
 const importStatusStore = useImportStatusStore();
+
 const importing = ref(true);
 
-/**
- * Überprüft den Importstatus und aktualisiert den Store.
- */
-const checkImportStatus = async () => {
-  try {
-    await importStatusStore.updateImportStatus();
-    importing.value = importStatusStore.importing;
-    if (!importing.value) {
-      await checkOutlookAuthorization();
-    } else {
-      // Weiter warten und erneut prüfen nach 2 Sekunden
-      setTimeout(checkImportStatus, 2000);
-    }
-  } catch (error) {
-    console.error('Fehler beim Überprüfen des Importstatus:', error);
-    setTimeout(checkImportStatus, 5000); // Wiederholen nach 5 Sekunden
-  }
-};
+let socket: WebSocket | null = null;
 
 /**
  * Überprüft die Outlook-Autorisierung und navigiert entsprechend.
@@ -54,13 +38,59 @@ const checkOutlookAuthorization = async () => {
   }
 };
 
+/**
+ * Verbindet sich mit dem WebSocket-Server und empfängt Importstatus-Updates.
+ */
+const connectWebSocket = () => {
+  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const host = window.location.host;
+  const wsUrl = `${protocol}://${host}/ws/import-status`;
+
+  socket = new WebSocket(wsUrl);
+
+  socket.onopen = () => {
+    console.log('WebSocket-Verbindung hergestellt.');
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      importStatusStore.importing = data.importing;
+      console.log('Importstatus aktualisiert:', data.importing);
+    } catch (error) {
+      console.error('Fehler beim Parsen der WebSocket-Nachricht:', error);
+    }
+  };
+
+  socket.onclose = () => {
+    console.log('WebSocket-Verbindung geschlossen.');
+    // Optional: Wiederverbinden versuchen
+  };
+
+  socket.onerror = (error) => {
+    console.error('WebSocket-Fehler:', error);
+  };
+};
+
+/**
+ * Beobachtet Änderungen im Importing-Status und navigiert bei Abschluss.
+ */
+watch(
+    () => importStatusStore.importing,
+    (newVal) => {
+      if (!newVal) {
+        checkOutlookAuthorization();
+      }
+    }
+);
+
 onMounted(() => {
-  checkImportStatus();
+  connectWebSocket();
 });
 </script>
 
 <style scoped>
-.post-login {
+.importing-view {
   display: flex;
   flex-direction: column;
   align-items: center;
