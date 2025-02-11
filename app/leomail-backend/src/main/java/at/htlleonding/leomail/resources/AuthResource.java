@@ -132,7 +132,7 @@ public class AuthResource {
             if (response.getStatus() == 200) {
                 return Response.ok(response.readEntity(String.class)).build();
             } else {
-                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid credentials").build();
+                return Response.status(Response.Status.UNAUTHORIZED).entity(response).build();
             }
         } catch (Exception e) {
             LOGGER.errorf("Login failed for user: %s", username, e);
