@@ -273,6 +273,7 @@ const isButtonDisabled = computed(() => {
               :disabled="isButtonDisabled"
           >
             {{ isChecking ? 'Überprüfe...' : 'Überprüfen' }}
+            <span v-if="isButtonDisabled" class="loader"></span> <!-- Ladezeichen -->
             <span v-if="isEmailVerified" class="checkmark">&#10003;</span>
           </button>
           <p v-if="errorMessages.emailVerification" class="error">{{ errorMessages.emailVerification }}</p>
@@ -373,12 +374,11 @@ const isButtonDisabled = computed(() => {
 
 /* Allgemeine Container */
 #bigContentBox {
-  width: 80%;
+  width: 80vw;
   margin: 2% auto;
-  padding: 3rem 4rem;
+  padding: 3vh 4vw;
   background-color: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
 }
@@ -560,6 +560,25 @@ li:hover .user-info small {
   background-color: #cccccc;
   cursor: not-allowed;
 }
+
+/*spinner*/
+.loader {
+  border: 2px solid #f3f3f3; /* Hintergrund des Kreises */
+  border-top: 2px solid #78A6FF; /* Farbe des sich drehenden Teils */
+  border-radius: 50%;
+  width: 18px;  /* kleinere Größe */
+  height: 18px; /* kleinere Größe */
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle; /* Vertikal ausrichten */
+  margin-left: 10px; /* Abstand zum Text im Button */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 
 /* Fehleranzeige */
 .error {

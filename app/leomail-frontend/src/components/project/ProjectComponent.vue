@@ -272,6 +272,7 @@ const handleSubmit = () => {
               :disabled="isChecking"
           >
             {{ isChecking ? 'Überprüfe...' : 'Account Überprüfung' }}
+            <span v-if="isEmailVerified" class="checkmark">&#10003;</span>
           </button>
           <span v-if="isChecking" class="loader"></span> <!-- Ladezeichen -->
         </div>

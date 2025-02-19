@@ -185,5 +185,10 @@ onMounted(() => {
 .project-item {
   padding: 10px;
   border-bottom: 1px solid #ECECEC;
+  cursor: pointer;
+}
+
+.project-item:hover {
+  background-color: #f4f4f4;
 }
 </style>

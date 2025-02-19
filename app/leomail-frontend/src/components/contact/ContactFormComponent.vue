@@ -411,7 +411,7 @@ const contactName = computed(() => {
   border: solid 1px #D3D3D3;
   border-radius: 5px;
   padding: 0.6vw;
-  font-size: 0.5em;
+  font-size: 0.8em;
   background-color: #F6F6F6;
 }
 
@@ -463,11 +463,11 @@ const contactName = computed(() => {
   padding: 1vh 0;
   background-color: #78A6FF;
   color: white;
-  width: 100%;
+  width: 60%;
   border: #78A6FF solid 1px;
   font-size: 0.8rem;
   text-align: center;
-  margin-left: 2%;
+  margin-left: 50%;
 }
 
 #submitButton:hover {

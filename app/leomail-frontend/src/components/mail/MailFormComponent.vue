@@ -1,5 +1,6 @@
 <!-- src/components/mail/MailForm.vue -->
 
+
 <template>
   <div id="mailFormContainer">
     <div id="formHeader">
@@ -15,7 +16,7 @@
               <option :value="personalMail">{{profileData.firstName}} {{profileData.lastName}} <{{ personalMail }}></option>
               <option :value="projectMail.id">{{ projectMail.displayName}} <{{ projectMail.mailAddress }}></option>
             </select>
-            <i class="fas fa-chevron-down"></i>
+            <!--<i class="fas fa-chevron-down"></i>-->
           </div>
         </div>
 
@@ -61,17 +62,6 @@
           </div>
         </div>
 
-        <!-- Dateien anhängen -->
-        <div class="form-group">
-          <label for="attachments" class="form-label">Dateien anhängen:</label>
-          <input type="file" id="attachments" multiple @change="handleFileUpload"/>
-          <ul>
-            <li v-for="(file, index) in selectedFiles" :key="index">
-              {{ file.name }} ({{ formatFileSize(file.size) }})
-              <button type="button" @click="removeFile(index)">✕</button>
-            </li>
-          </ul>
-        </div>
 
         <!-- Sendezeit auswählen -->
         <div class="form-group">
@@ -134,10 +124,22 @@
           </div>
         </div>
 
+        <!-- Dateien anhängen -->
+        <div class="form-group">
+          <label for="attachments" class="form-label">Dateien anhängen:</label>
+          <input type="file" id="attachments" multiple @change="handleFileUpload"/>
+          <ul>
+            <li v-for="(file, index) in selectedFiles" :key="index">
+              {{ file.name }} ({{ formatFileSize(file.size) }})
+              <button type="button"  @click="removeFile(index)">✕</button>
+            </li>
+          </ul>
+        </div>
+
         <!-- Vorschau anzeigen Button -->
         <div class="form-actions">
           <button type="button" @click="handlePreview" :disabled="!canPreview" class="btn">
-            Vorschau anzeigen
+            Weiter
           </button>
         </div>
       </form>
@@ -558,6 +560,7 @@ const removeGroup = (group: Group) => {
 </script
 >
 <style scoped>
+
 .input-with-icon {
   position: relative;
 }
@@ -601,8 +604,10 @@ const removeGroup = (group: Group) => {
 
 /* Header */
 #formContent {
-  height: 85%;
-  margin-top: 2%;
+  height: 75vh;
+  overflow-y: scroll;
+  margin-top: 1%;
+  padding-bottom: 3%;
   background-color: white;
   box-shadow: 5px 5px 10px lightgray;
 }
@@ -619,9 +624,9 @@ const removeGroup = (group: Group) => {
 }
 
 #formHeader h1 {
-  margin-left: 4%;
-  margin-top: 2%;
-  margin-bottom: 2%;
+  margin-left: 2%;
+  margin-top: 1%;
+  margin-bottom: 1%;
   font-size: 1.1em;
 }
 
@@ -756,7 +761,7 @@ const removeGroup = (group: Group) => {
 .btn {
   background-color: #78A6FF;
   color: white;
-  padding: 12px 20px;
+  padding: 1% 4%;
   border: none;
   border-radius: 5px;
   font-size: 1em;
@@ -793,6 +798,7 @@ const removeGroup = (group: Group) => {
   color: red;
   cursor: pointer;
 }
+
 
 /* Weitere bestehende Stile */
 .editor-wrapper {
