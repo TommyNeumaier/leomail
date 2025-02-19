@@ -27,6 +27,10 @@ public class ContactRepository {
     @Inject
     KeycloakAdminService keycloakAdminService;
 
+    public boolean userExists(String id) {
+        return NaturalContact.count("id", id) > 0;
+    }
+
     /**
      * Adds a new natural contact.
      *

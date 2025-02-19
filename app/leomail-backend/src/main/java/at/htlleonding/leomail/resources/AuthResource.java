@@ -1,5 +1,6 @@
 package at.htlleonding.leomail.resources;
 
+import at.htlleonding.leomail.contracts.KeycloakAuthClient;
 import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.auth.JwtClaimTest;
@@ -25,6 +26,7 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.FormParam;
 import org.slf4j.LoggerFactory;
@@ -71,6 +73,10 @@ public class AuthResource {
     @ConfigProperty(name = "quarkus.oidc.credentials.secret")
     String clientSecret;
 
+    @Inject
+    @RestClient
+    KeycloakAuthClient keycloakAuthClient;
+
     /**
      * Endpoint to retrieve JWT details.
      *
@@ -115,28 +121,19 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(@FormParam("username") String username, @FormParam("password") String password) {
         try {
-            MultivaluedMap<String, String> formParams = new MultivaluedHashMap<>();
-            formParams.add("grant_type", "password");
-            formParams.add("client_id", clientId);
-            formParams.add("username", username);
-            formParams.add("password", password);
-            formParams.add("scope", "openid");
-
-            formParams.add("client_secret", clientSecret);
-
-            Response response = ClientBuilder.newClient()
-                    .target(String.format("%s/protocol/openid-connect/token", keycloakUrl))
-                    .request(MediaType.APPLICATION_FORM_URLENCODED)
-                    .post(Entity.form(formParams));
+            Response response = keycloakAuthClient.login(
+                    "password", clientId, clientSecret, username, password, "openid profile email offline_access");
 
             if (response.getStatus() == 200) {
                 return Response.ok(response.readEntity(String.class)).build();
             } else {
-                return Response.status(Response.Status.UNAUTHORIZED).entity("response").build();
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("Invalid username or password")
+                        .build();
             }
         } catch (Exception e) {
-            LOGGER.errorf("Login failed for user: %s", username, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error during login").build();
+            LOGGER.error("Error during login", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Login failed").build();
         }
     }
 
@@ -175,34 +172,21 @@ public class AuthResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateToken() {
         try {
-            long exp = jwt.getExpirationTime() * 1000;
-            long iat = jwt.getIssuedAtTime()* 1000;
-
-            long currentTime = System.currentTimeMillis();
-
-            if (exp > currentTime && iat < currentTime) {
-                if (Contact.findById(jwt.getSubject()) == null) {
-                    String givenName = jwt.getClaim("given_name");
-                    String familyName = jwt.getClaim("family_name");
-                    String email = jwt.getClaim("email");
-                    if (email == null || email.isEmpty()) {
-                        return Response.status(Response.Status.BAD_REQUEST)
-                                .entity("Email is required in the token")
-                                .build();
-                    }
-                    contactRepository.saveKeycloakUserLocally(jwt.getSubject(), givenName, familyName, email);
-                }
-                return Response.ok(true).build();
-            } else {
+            if (jwt.getSubject() == null) {
                 return Response.status(Response.Status.UNAUTHORIZED).entity(false).build();
             }
+
+            if (!contactRepository.userExists(jwt.getSubject())) {
+                contactRepository.saveKeycloakUserLocally(jwt.getSubject(), jwt.getClaim("given_name"), jwt.getClaim("family_name"), jwt.getClaim("email"));
+            }
+
+            return Response.ok(true).build();
         } catch (Exception e) {
             LOGGER.error("Token validation failed", e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error during token validation")
-                    .build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error during token validation").build();
         }
     }
+
 
     /**
      * Endpoint to retrieve the user profile.
