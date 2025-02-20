@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -63,6 +64,11 @@ public class StorageService {
      * @throws Exception bei Fehlern
      */
     public String uploadFile(InputStream stream, String fileName, String contentType, long size) throws Exception {
+        if (size < 0) {
+            byte[] data = stream.readAllBytes();
+            size = data.length;
+            stream = new ByteArrayInputStream(data);
+        }
         String objectName = UUID.randomUUID().toString() + "_" + fileName;
         minioClient.putObject(
                 PutObjectArgs.builder()

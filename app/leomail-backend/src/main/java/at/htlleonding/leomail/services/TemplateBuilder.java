@@ -57,7 +57,7 @@ public class TemplateBuilder {
     private List<TemplateInstance> buildTemplateInstances(String templateId, List<Contact> contacts, boolean personalized) {
         Template template = Template.findById(templateId);
         if (template == null) {
-            LOGGER.errorf("Template with ID %d not found.", templateId);
+            LOGGER.errorf("Template with ID %s not found.", templateId);
             throw new IllegalArgumentException("Template not found.");
         }
 
@@ -73,18 +73,18 @@ public class TemplateBuilder {
             TemplateInstance instance = quteTemplate.instance();
             for (String variable : templateVariables) {
                 String value = getContactValue(contact, variable);
-                if (value != null) {
-                    instance.data(variable, value);
-                }
+                instance.data(variable, value != null ? value : "");
             }
             instance.data("personalized", personalized);
-            instance.data("sex", contact instanceof NaturalContact naturalContact ? naturalContact.gender.toString(): "");
+            instance.data("sex", contact instanceof NaturalContact naturalContact ?
+                    (naturalContact.gender != null ? naturalContact.gender.toString() : "") : "");
             LOGGER.debugf("Data Map for Contact ID %s: [personalized=%s]", contact.id, personalized);
             instances.add(instance);
         }
 
         return instances;
     }
+
 
     /**
      * Extracts variables from the template content.

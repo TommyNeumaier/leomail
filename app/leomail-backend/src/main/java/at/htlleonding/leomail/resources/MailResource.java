@@ -83,43 +83,44 @@ public class MailResource {
             if (attachmentParts == null) {
                 attachmentParts = new ArrayList<>();
             }
+            int numAttachments = attachmentParts.size();
+            List<String> safeFileNames = new ArrayList<>();
+            List<String> safeContentTypes = new ArrayList<>();
+            List<String> safeSizesStr = new ArrayList<>();
 
-            if (fileNames == null) {
-                fileNames = new ArrayList<>();
-            }
-
-            if (contentTypes == null) {
-                contentTypes = new ArrayList<>();
-            }
-
-            if (sizesStr == null) {
-                sizesStr = new ArrayList<>();
-            }
-
-            if (attachmentParts.size() != fileNames.size() ||
-                    attachmentParts.size() != contentTypes.size() ||
-                    attachmentParts.size() != sizesStr.size()) {
-                LOGGER.error("Mismatch zwischen Anzahl der Anhänge und der Metadaten.");
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Mismatch zwischen Anzahl der Anhänge und der Metadaten.")
-                        .build();
+            for (int i = 0; i < numAttachments; i++) {
+                if (fileNames != null && fileNames.size() > i) {
+                    safeFileNames.add(fileNames.get(i));
+                } else {
+                    safeFileNames.add(extractFileName(attachmentParts.get(i)));
+                }
+                if (contentTypes != null && contentTypes.size() > i) {
+                    safeContentTypes.add(contentTypes.get(i));
+                } else {
+                    safeContentTypes.add("application/octet-stream");
+                }
+                if (sizesStr != null && sizesStr.size() > i) {
+                    safeSizesStr.add(sizesStr.get(i));
+                } else {
+                    // Fallback: -1 signalisiert, dass die Größe unbekannt ist
+                    safeSizesStr.add("-1");
+                }
             }
 
             List<Attachment> attachments = new ArrayList<>();
             String userId = jwt.getClaim("sub");
 
-            for (int i = 0; i < attachmentParts.size(); i++) {
+            for (int i = 0; i < numAttachments; i++) {
                 InputPart part = attachmentParts.get(i);
-                String fileName = fileNames.get(i);
-                String contentType = contentTypes.get(i);
+                String fileName = safeFileNames.get(i);
+                String contentType = safeContentTypes.get(i);
                 long size;
-
                 try {
-                    size = Long.parseLong(sizesStr.get(i));
+                    size = Long.parseLong(safeSizesStr.get(i));
                 } catch (NumberFormatException e) {
-                    LOGGER.error("Ungültige Größe für Anhang: " + sizesStr.get(i), e);
+                    LOGGER.error("Ungültige Größe für Anhang: " + safeSizesStr.get(i), e);
                     return Response.status(Response.Status.BAD_REQUEST)
-                            .entity("Ungültige Größe für Anhang: " + sizesStr.get(i))
+                            .entity("Ungültige Größe für Anhang: " + safeSizesStr.get(i))
                             .build();
                 }
 
@@ -155,6 +156,28 @@ public class MailResource {
                     .entity("Allgemeiner Fehler beim Verarbeiten der Anfrage: " + e.getMessage())
                     .build();
         }
+    }
+
+    /**
+     * Hilfsmethode zum Extrahieren des Dateinamens aus dem Content-Disposition Header.
+     */
+    private String extractFileName(InputPart part) {
+        try {
+            String header = part.getHeaders().getFirst("Content-Disposition");
+            if (header != null) {
+                for (String content : header.split(";")) {
+                    if (content.trim().startsWith("filename")) {
+                        String[] nameParts = content.split("=");
+                        if (nameParts.length > 1) {
+                            return nameParts[1].trim().replaceAll("\"", "");
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Konnte Dateinamen nicht extrahieren.", e);
+        }
+        return "unknown";
     }
 
     /**

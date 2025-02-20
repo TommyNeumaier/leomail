@@ -485,7 +485,7 @@ const sendMail = async () => {
     selectedFiles.value.forEach((file, index) => {
       formData.append('attachments', file); // Schlüsselname muss 'attachments' sein
       formData.append('fileName', file.name);
-      formData.append('contentType', file.type);
+      formData.append('contentType', file.type || 'application/octet-stream');
       formData.append('size', file.size.toString());
     });
 

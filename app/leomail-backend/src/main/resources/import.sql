@@ -58,7 +58,7 @@ VALUES
 INSERT INTO project(id, name, description, createdon, mailaddress, password, createdby_id)
 VALUES
     ('123e4567-e89b-12d3-a456-426614174000', 'Test Project', 'This is a test project', NOW(), 'project@example.com',
-     'password', '3e1d204f-fde9-4f3a-9fc6-b8b0d1a05600');
+     'password', '2319034a-46f7-4039-882e-6ea5509c22ec');
 
 -- 6. Insert into template
 INSERT INTO template(id, name, headline, content, createdby_id, greeting_id, created, project_id)
