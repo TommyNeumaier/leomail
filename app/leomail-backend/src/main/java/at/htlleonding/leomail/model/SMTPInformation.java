@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public record SMTPInformation(
         Receiver receiver,
-        Long templateId,
+        String templateId,
         boolean personalized,
         LocalDateTime scheduledAt,
         FromMailDTO from
