@@ -125,6 +125,7 @@ public class TemplateResource {
                     template.name,
                     template.headline,
                     template.content,
+                    template.filesRequired,
                     template.greeting.id,
                     template.createdBy.id,
                     template.project.id);

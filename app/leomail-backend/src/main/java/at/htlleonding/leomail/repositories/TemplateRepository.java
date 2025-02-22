@@ -52,6 +52,7 @@ public class TemplateRepository {
                         template.name,
                         template.headline,
                         template.content,
+                        template.filesRequired,
                         template.greeting.id,
                         template.createdBy.id,
                         template.project.id))
@@ -93,6 +94,7 @@ public class TemplateRepository {
                 templateDTO.name(),
                 templateDTO.headline(),
                 templateDTO.content(),
+                templateDTO.filesRequired(),
                 createdBy,
                 greeting,
                 templateDTO.projectId());
@@ -106,6 +108,7 @@ public class TemplateRepository {
                 template.name,
                 template.headline,
                 template.content,
+                template.filesRequired,
                 template.greeting.id,
                 template.createdBy.id,
                 template.project.id);
@@ -145,6 +148,7 @@ public class TemplateRepository {
                 template.name,
                 template.headline,
                 template.content,
+                template.filesRequired,
                 template.greeting.id,
                 template.createdBy.id,
                 template.project.id);

@@ -61,12 +61,12 @@ VALUES
      'password', '2319034a-46f7-4039-882e-6ea5509c22ec');
 
 -- 6. Insert into template
-INSERT INTO template(id, name, headline, content, createdby_id, greeting_id, created, project_id)
+INSERT INTO template(id, name, headline, content, createdby_id, greeting_id, created, project_id, filesRequired)
 VALUES
     (1, 'Kontaktdateninformation (TEST)', 'Ihre Kontaktdaten', '<p>hier eine Verständigung über Ihre Stammdaten, welche in unseren Unternehmen hinterlegt sind:</p><p><br></p><p><u>Vollständiger Name</u></p><p>{firstname} {lastname}</p><p><br></p><p><u>E-Mail-Adresse</u></p><p>{mailAddress}</p><p><br></p><p>Sollten sich Änderungen ergeben haben, bitte melden Sie sich bei uns.</p><p><br></p><p>Mit freundlichen Grüßen</p><p>Max Mustermann</p>',
-     '1d1d1d1d-1111-1111-1111-111111111111', 1, '2024-07-16 14:26:22.530728', '123e4567-e89b-12d3-a456-426614174000'),
+     '1d1d1d1d-1111-1111-1111-111111111111', 1, '2024-07-16 14:26:22.530728', '123e4567-e89b-12d3-a456-426614174000', true),
     (3, 'Begrüßung', 'Herzlich Willkommen!', '<p>Willkommen {firstname} {lastname} bei unserem Unternehmen.</p><p><br></p><p>Ihre E-Mail-Adresse ist {mailAddress}</p><p><br></p><p>Mit freundlichen Grüßen</p><p>Max Mustermann</p>',
-     '2d2d2d2d-2222-2222-2222-222222222222', 2, '2024-07-16 14:26:22.530728', '123e4567-e89b-12d3-a456-426614174000');
+     '2d2d2d2d-2222-2222-2222-222222222222', 2, '2024-07-16 14:26:22.530728', '123e4567-e89b-12d3-a456-426614174000', false);
 
 
 -- 7. Insert into project_contact

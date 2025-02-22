@@ -28,6 +28,9 @@ public class Template extends PanacheEntityBase {
     @Column(length = 8192, nullable = false)
     public String content;
 
+    @Column(nullable = false)
+    public boolean filesRequired = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     public Contact createdBy;
 
@@ -38,17 +41,18 @@ public class Template extends PanacheEntityBase {
         this.created = LocalDateTime.now();
     }
 
-    public Template(String name, String headline, String content, Contact createdBy, TemplateGreeting greeting) {
+    public Template(String name, String headline, String content, boolean filesRequired, Contact createdBy, TemplateGreeting greeting) {
         this();
         this.name = name;
         this.headline = headline;
         this.content = content;
+        this.filesRequired = filesRequired;
         this.createdBy = createdBy;
         this.greeting = greeting;
     }
 
-    public Template(String name, String headline, String content, Contact createdBy, TemplateGreeting greeting, String projectId) {
-        this(name, headline, content, createdBy, greeting);
+    public Template(String name, String headline, String content, boolean filesRequired, Contact createdBy, TemplateGreeting greeting, String projectId) {
+        this(name, headline, content, filesRequired, createdBy, greeting);
         this.project = Project.findById(projectId);
     }
 }
