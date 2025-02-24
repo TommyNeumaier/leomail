@@ -9,9 +9,22 @@
     </div>
 
     <div id="search-container">
-      <input type="text" id="search" placeholder="suche" aria-label="E-Mail Suche" />
+      <input
+          type="text"
+          id="search"
+          v-model="searchQuery"
+          @input="searchUsedTemplates"
+          placeholder="suche"
+          aria-label="E-Mail Suche"
+      />
       <div id="searchIconBox">
-        <img src="../../assets/icons/search.png" alt="Suchsymbol" id="search-icon" width="auto" height="10" />
+        <img
+            src="../../assets/icons/search.png"
+            alt="Suchsymbol"
+            id="search-icon"
+            width="auto"
+            height="10"
+        />
       </div>
     </div>
 
@@ -215,6 +228,56 @@ const deleteSelectedMails = async () => {
     alert('Fehler beim Löschen der E-Mails.');
   }
 };
+
+const searchQuery = ref("");
+
+const searchUsedTemplates = async () => {
+  if (!searchQuery.value.trim()) {
+    await getMails();
+    return;
+  }
+
+  try {
+    const response = await Service.getInstance().searchUsedTemplates(appStore.$state.project, searchQuery.value);
+
+    fetchedMails.value = response.data.map((mail: any) => {
+      const sentOnDate = parseISO(mail.keyDates.sentOn);
+      let formatted = format(sentOnDate, 'dd.MM.yyyy, HH:mm');
+
+      const mappedMails: MailDetails[] = mail.mails
+          .filter((mailDetail: any) => mailDetail.contact != null)
+          .map((mailDetail: any) => ({
+            contact: {
+              id: mailDetail.contact.id,
+              firstName: mailDetail.contact.firstName,
+              lastName: mailDetail.contact.lastName,
+              mailAddress: mailDetail.contact.mailAddress,
+            },
+            content: mailDetail.content,
+          }));
+
+      return {
+        ...mail,
+        mails: mappedMails,
+        visible: true,
+        sentOnDate: formatted,
+      };
+    });
+
+    totalMails.value = fetchedMails.value.length;
+    updatePaginationIndices();
+  } catch (error) {
+    console.error('Error searching templates:', error);
+  }
+};
+
+watch(searchQuery, async (newQuery) => {
+  if (newQuery.trim() === "") {
+    await getMails(); // Fallback zur Standardmethode
+  } else {
+    await searchUsedTemplates();
+  }
+});
 
 onMounted(() => {
   getMails();

@@ -125,16 +125,17 @@
         </div>
 
         <!-- Dateien anhängen -->
-        <div class="form-group">
+        <div v-if="selectedTemplate?.filesRequired" class="form-group">
           <label for="attachments" class="form-label">Dateien anhängen:</label>
           <input type="file" id="attachments" multiple @change="handleFileUpload"/>
           <ul>
             <li v-for="(file, index) in selectedFiles" :key="index">
               {{ file.name }} ({{ formatFileSize(file.size) }})
-              <button type="button"  @click="removeFile(index)">✕</button>
+              <button type="button" @click="removeFile(index)">✕</button>
             </li>
           </ul>
         </div>
+
 
         <!-- Vorschau anzeigen Button -->
         <div class="form-actions">
@@ -174,6 +175,7 @@ interface Template {
   greeting: string;
   content: string;
   visible: boolean;
+  filesRequired: boolean;
 }
 
 interface User {
