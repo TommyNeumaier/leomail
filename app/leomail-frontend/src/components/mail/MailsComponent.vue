@@ -33,15 +33,15 @@
               id="trash-icon"
               width="auto"
               height="12"
-              style="margin-left: 25%"
               @click="deleteSelectedMails"
+              style="cursor: pointer"
               class="trash-icon"
           />
         </div>
       </div>
 
 
-
+<!--
       <div id="pages">
         <div id="pagesNummern">
           <p>{{ startIndex }}</p>
@@ -70,7 +70,7 @@
             <img src="../../assets/icons/pfeil-rechts.png" alt="Increment" class="icon" />
           </button>
         </div>
-      </div>
+      </div>-->
     </div>
 
     <div id="mailsBox">
@@ -231,6 +231,7 @@ onMounted(() => {
 }
 #mailHeadline {
   width: 60%;
+  font-weight: bold;
 }
 #checkboxContainer {
   width: 3%;
@@ -272,7 +273,7 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   border-bottom: #dbdbdb solid 2px;
-  height: 4vh;
+  height: 5vh;
   justify-content: center;
   align-items: center;
   cursor: pointer;
@@ -331,7 +332,7 @@ onMounted(() => {
 }
 
 #mailFeaturesContainer div {
-  width: 2%;
+  width: 3%;
   height: 2%;
   display: flex;
   align-items: center;
@@ -418,7 +419,7 @@ onMounted(() => {
   background-color: white;
   height: 75%;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 
 #pagesButtonBox {

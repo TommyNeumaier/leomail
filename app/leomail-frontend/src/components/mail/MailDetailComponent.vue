@@ -281,15 +281,15 @@ onMounted(() => {
 }
 
 #heading {
-  margin-left: 4%;
-  margin-top: 2%;
-  margin-bottom: 2%;
+  margin-left: 2%;
+  margin-top: 0.5%;
+  margin-bottom: 0.5%;
   font-size: 1.1em;
   font-weight: var(--font-weight-bold);
 }
 
 #content {
-  margin-top: 2%;
+  margin-top: 1%;
   background-color: white;
   box-shadow: 5px 5px 10px lightgray;
   padding: 2% 3%;
@@ -365,7 +365,7 @@ onMounted(() => {
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #f9f9f9;
-  min-height: 40vh;
+  min-height: 35vh;
   overflow-y: auto;
   color: #333;
 }

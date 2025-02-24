@@ -172,13 +172,10 @@ watch(() => route.query.mailsend, (newValue) => {
           <input type="checkbox" v-model="checkAllMails" id="checkbox" />
         </div>
         <div>
-          <img src="../../assets/reload.png" alt="Reload" id="reload-icon" width="auto" height="12" @click="getMails" />
-        </div>
-        <div>
           <img src="../../assets/trash.png" alt="Trash" id="trash-icon" width="auto" height="12" />
         </div>
       </div>
-
+<!--
       <div id="pages">
         <div id="pagesNummern">
           <p>{{ startIndex }}</p>
@@ -197,7 +194,7 @@ watch(() => route.query.mailsend, (newValue) => {
             <img src="../../assets/icons/pfeil-rechts.png" alt="Increment" class="icon" />
           </button>
         </div>
-      </div>
+      </div>-->
     </div>
 
     <div id="mailsBox">
@@ -348,7 +345,11 @@ watch(() => route.query.mailsend, (newValue) => {
 }
 
 #mailFeaturesContainer div {
-  width: 4%;
+  width: 3%;
+  height: 2%;
+  display: flex;
+  align-items: center;
+  margin-top: 2%;
 }
 
 #searchIconBox {
@@ -432,17 +433,6 @@ watch(() => route.query.mailsend, (newValue) => {
   height: 75%;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.12);
 
-}
-
-#mailFeaturesContainer {
-  display: flex;
-  flex-direction: row;
-  width: 75%;
-  padding-left: 1%;
-}
-
-#mailFeaturesContainer div {
-  width: 4%;
 }
 
 #pagesButtonBox {

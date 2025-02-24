@@ -17,6 +17,7 @@ interface Template {
   headline: string;
   greeting: Greeting;
   content: string;
+  filesRequired: boolean;
 }
 
 const appStore = useAppStore();
@@ -25,6 +26,7 @@ const inputHeading = ref('');
 const selectedGreeting = ref<number | null>(null);
 const content = ref('');
 const greetingData = ref<Greeting[]>([]);
+const filesRequired = ref(false);
 //const checkedCompany = ref(false);
 //const checkedIndividual = ref(true);
 //const pickedEntity = ref<string>('');
@@ -55,9 +57,11 @@ const addTemplate = async () => {
       headline: inputHeading.value,
       content: content.value,
       greeting: selectedGreeting.value,
-      projectId: appStore.$state.project
+      projectId: appStore.$state.project,
+      filesRequired: filesRequired.value
     };
     const response = await Service.getInstance().addTemplate(formData);
+    console.log(formData);
     emitEvents('group-added', formData);
     clearForm();
   } catch (error) {
@@ -73,10 +77,12 @@ const updateTemplate = async () => {
       headline: inputHeading.value,
       content: content.value,
       greeting: selectedGreeting.value,
-      projectId: appStore.$state.project
+      projectId: appStore.$state.project,
+      filesRequired: filesRequired.value
     };
     const response = await Service.getInstance().updateTemplate(updatedData);
     emitEvents('group-saved', updatedData);
+    console.log(updatedData);
     props.selectedTemplate = null;
     clearForm();
   } catch (error) {
@@ -100,7 +106,8 @@ const removeTemplate = async () => {
 const clearForm = () => {
   inputName.value = '';
   inputHeading.value = '';
-  selectedGreeting.value = '';
+  selectedGreeting.value = null;
+  filesRequired.value = false;
   //content.value = '';
   // Falls ein Quill-Editor vorhanden ist, leere auch den Editor
   if (quillEditor.value) {
@@ -131,10 +138,12 @@ watch(
     () => props.selectedTemplate,
     (newTemplate) => {
       if (newTemplate) {
+        console.log(newTemplate);
         inputName.value = newTemplate.name;
         inputHeading.value = newTemplate.headline;
         selectedGreeting.value = newTemplate.greeting;
         content.value = newTemplate.content;
+        filesRequired.value = newTemplate.filesRequired;
 
         if (quillEditor.value) {
           quillEditor.value.root.innerHTML = newTemplate.content;
@@ -177,6 +186,11 @@ watch(
           <option v-for="item in greetingData" :key="item.id" :value="item.id">{{ item.content }}</option>
         </select>
       </div>
+    </div>
+
+    <div id="anhangBox">
+      <label for="anhang" class="template-label">Anhang hinzufügen</label><br>
+      <input type="checkbox" id="anhang" v-model="filesRequired">
     </div>
 
     <!--
@@ -232,6 +246,17 @@ watch(
 </template>
 
 <style scoped>
+#anhangBox{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 2vh;
+}
+#anhangBox label{
+  padding: 0 0.5vw 0 0;
+  font-size: 0.8em;
+}
+
 #formFlexBox {
   display: flex;
   flex-direction: row;

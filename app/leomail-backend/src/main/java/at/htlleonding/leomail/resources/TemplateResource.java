@@ -92,6 +92,7 @@ public class TemplateResource {
     @Produces("application/json")
     public Response addTemplate(TemplateDTO templateDTO) {
         try {
+            System.out.println(templateDTO);
             TemplateDTO createdTemplate = templateRepository.addTemplate(templateDTO, jwt.getClaim("sub"));
             return Response.status(Response.Status.CREATED).entity(createdTemplate).build();
         } catch (TemplateNameAlreadyExistsException excp) {
@@ -165,6 +166,7 @@ public class TemplateResource {
     public Response updateTemplate(TemplateDTO templateDTO) {
         try {
             String userId = jwt.getClaim("sub");
+            System.out.println(templateDTO);
             if (permissionService.hasPermission(templateDTO.projectId(), userId)) {
                 TemplateDTO updatedTemplate = templateRepository.updateTemplate(templateDTO);
                 return Response.ok(updatedTemplate).build();
