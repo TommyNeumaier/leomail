@@ -10,7 +10,9 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class MailScheduler {
@@ -49,9 +51,14 @@ public class MailScheduler {
     }
 
     /**
-     * Scheduled task to check and resend any unsent mails.
-     * This also runs every 15 seconds and attempts to send any pending/unsent mails.
+     * Retrieves all email templates that are scheduled and ready to be sent.
+     *
+     * @return List of SentTemplates that are scheduled to be sent but not yet sent.
      */
+    private List<SentTemplate> getAllScheduledUsedTemplates() {
+        return SentTemplate.find("scheduledAt < ?1 and sentOn is null", java.time.LocalDateTime.now()).list();
+    }
+
     @Scheduled(every = "15s")
     @Transactional
     public void checkUnsentMails() {
@@ -62,18 +69,17 @@ public class MailScheduler {
             LOGGER.infof("Found %d unsent mails ready for sending.", unsentMails.size());
         }
 
+        Set<Long> templateIds = new HashSet<>();
         for(SentMail unsentMail : unsentMails) {
-            LOGGER.infof("Resending email for mail ID: %s", unsentMail.id);
-            mailRepository.sendMail(unsentMail.id);
+            if (unsentMail.usedTemplate != null && unsentMail.usedTemplate.sentOn == null) {
+                templateIds.add(unsentMail.usedTemplate.id);
+            }
+        }
+
+        for (Long templateId : templateIds) {
+            LOGGER.infof("Resending emails for template ID: %s", templateId);
+            mailRepository.sendMail(templateId);
         }
     }
 
-    /**
-     * Retrieves all email templates that are scheduled and ready to be sent.
-     *
-     * @return List of SentTemplates that are scheduled to be sent but not yet sent.
-     */
-    private List<SentTemplate> getAllScheduledUsedTemplates() {
-        return SentTemplate.find("scheduledAt < ?1 and sentOn is null", java.time.LocalDateTime.now()).list();
-    }
 }

@@ -15,4 +15,9 @@ public class CompanyContact extends Contact {
     public CompanyContact() {
         super();
     }
+
+    @Override
+    public String getMailAddress() {
+        return mailAddress;
+    }
 }

@@ -6,6 +6,8 @@ import at.htlleonding.leomail.repositories.MailRepository;
 import at.htlleonding.leomail.services.PermissionService;
 import at.htlleonding.leomail.services.StorageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -61,11 +63,12 @@ public class MailResource {
                         .build();
             }
 
-            // Extrahieren und Parsen von smtpInformation
             String smtpInfoJson = getValue(uploadForm, "smtpInformation");
             SMTPInformation smtpInformation;
             try {
                 ObjectMapper mapper = new ObjectMapper();
+                mapper.registerModule(new JavaTimeModule());
+                mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
                 smtpInformation = mapper.readValue(smtpInfoJson, SMTPInformation.class);
             } catch (Exception e) {
                 LOGGER.error("Ungültiges SMTP-Information JSON: ", e);
@@ -139,7 +142,6 @@ public class MailResource {
                 }
             }
 
-            // Senden der E-Mails
             try {
                 repository.sendMailsByTemplate(projectId, userId, smtpInformation, attachments);
                 return Response.ok("Emails mit Anhängen erfolgreich gesendet").build();

@@ -35,4 +35,6 @@ public abstract class Contact extends PanacheEntityBase {
     public String getId() {
         return id;
     }
+
+    public abstract String getMailAddress();
 }

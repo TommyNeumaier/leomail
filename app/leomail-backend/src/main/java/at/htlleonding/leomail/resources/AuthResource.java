@@ -1,7 +1,6 @@
 package at.htlleonding.leomail.resources;
 
 import at.htlleonding.leomail.contracts.KeycloakAuthClient;
-import at.htlleonding.leomail.entities.Contact;
 import at.htlleonding.leomail.entities.NaturalContact;
 import at.htlleonding.leomail.model.dto.auth.JwtClaimTest;
 import at.htlleonding.leomail.model.dto.auth.JwtTest;
@@ -18,11 +17,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedHashMap;
-import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -76,43 +71,6 @@ public class AuthResource {
     @Inject
     @RestClient
     KeycloakAuthClient keycloakAuthClient;
-
-    /**
-     * Endpoint to retrieve JWT details.
-     *
-     * @return JSON with JWT details
-     */
-    @GET
-    @Path("/jwt")
-    @Authenticated
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getJwt() {
-        try {
-            List<JwtClaimTest> claims = jwt.getClaimNames().stream()
-                    .map(claim -> new JwtClaimTest(claim, jwt.getClaim(claim)))
-                    .collect(Collectors.toList());
-
-            JwtTest jwtTest = new JwtTest(
-                    jwt.getAudience(),
-                    claims,
-                    jwt.getExpirationTime(),
-                    jwt.getGroups(),
-                    jwt.getIssuedAtTime(),
-                    jwt.getIssuer(),
-                    jwt.getName(),
-                    jwt.getRawToken(),
-                    jwt.getSubject(),
-                    jwt.getTokenID()
-            );
-
-            return Response.ok(jwtTest).build();
-        } catch (Exception e) {
-            LOGGER.error("Error retrieving JWT", e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error retrieving JWT")
-                    .build();
-        }
-    }
 
     @POST
     @Path("/login")

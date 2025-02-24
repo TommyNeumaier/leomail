@@ -32,4 +32,9 @@ public class NaturalContact extends Contact {
     public NaturalContact() {
         super();
     }
+
+    @Override
+    public String getMailAddress() {
+        return mailAddress;
+    }
 }
