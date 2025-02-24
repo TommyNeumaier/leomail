@@ -166,7 +166,6 @@ public class TemplateResource {
     public Response updateTemplate(TemplateDTO templateDTO) {
         try {
             String userId = jwt.getClaim("sub");
-            System.out.println(templateDTO);
             if (permissionService.hasPermission(templateDTO.projectId(), userId)) {
                 TemplateDTO updatedTemplate = templateRepository.updateTemplate(templateDTO);
                 return Response.ok(updatedTemplate).build();

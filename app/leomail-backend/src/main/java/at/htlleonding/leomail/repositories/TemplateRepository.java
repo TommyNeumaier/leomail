@@ -136,6 +136,7 @@ public class TemplateRepository {
         template.name = templateDTO.name();
         template.headline = templateDTO.headline();
         template.content = templateDTO.content();
+        template.filesRequired = templateDTO.filesRequired();
         TemplateGreeting greeting = TemplateGreeting.findById(templateDTO.greeting());
         if (greeting == null) {
             throw new NonExistingGreetingException();
