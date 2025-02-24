@@ -326,6 +326,15 @@ export class Service {
         });
     }
 
+    async searchUsedTemplates(pid: string, query: string) {
+        return axiosInstance.get(`/template/searchUsedTemplates`, {
+            params: {
+                "pid": pid,
+                "query": query
+            }
+        });
+    }
+
     /**
      * Ruft den aktuellen Importstatus ab.
      *

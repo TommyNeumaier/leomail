@@ -223,6 +223,26 @@ public class TemplateResource {
         }
     }
 
+    /**
+     * Search used templates
+     * @param query search query
+     * @param pid project id
+     * @return list of used templates
+     */
+    @GET
+    @Path("/searchUsedTemplates")
+    @Authenticated
+    @Produces("application/json")
+    public Response searchUsedTemplates(@QueryParam("query") String query, @QueryParam("pid") String pid) {
+        try {
+            String userId = jwt.getClaim("sub");
+            List<UsedTemplateDTO> usedTemplates = templateRepository.searchUsedTemplates(query, pid, userId);
+            return Response.ok(usedTemplates).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
     @POST
     @Path("/deleteUsedTemplates")
     @Authenticated

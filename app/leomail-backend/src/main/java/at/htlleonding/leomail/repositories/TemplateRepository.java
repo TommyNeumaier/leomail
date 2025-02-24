@@ -308,4 +308,53 @@ public class TemplateRepository {
             template.delete();
         }
     }
+
+    public List<UsedTemplateDTO> searchUsedTemplates(String query, String pid, String userId) {
+        if(!permissionService.hasPermission(pid, userId)) {
+            throw new IllegalArgumentException("Permission denied");
+        }
+
+        List<SentTemplate> usedTemplateList = SentTemplate.list("project.id", pid);
+        List<UsedTemplateDTO> dtoList = new ArrayList<>();
+
+        for (SentTemplate template : usedTemplateList) {
+            TemplateAccountInformationDTO accountInformation = new TemplateAccountInformationDTO(
+                    template.template.createdBy.id,
+                    template.senderId != null ? template.senderId : null);
+
+            TemplateDateInformationDTO dateInformation = new TemplateDateInformationDTO(
+                    template.template.created,
+                    template.sentOn != null ? template.sentOn : null,
+                    template.scheduledAt != null ? template.scheduledAt : null);
+
+            Hibernate.initialize(template.template.greeting);
+
+            TemplateMetaInformationDTO metaInformation = new TemplateMetaInformationDTO(
+                    template.template.name.trim(),
+                    template.template.headline.trim(),
+                    template.template.content.trim(),
+                    template.template.greeting.id,
+                    template.template.greeting.content.trim()
+            );
+
+            List<SentMailDTO> mailList = new ArrayList<>();
+            for (SentMail mail : template.mails) {
+                try {
+                    TemplateMailContactInformationDTO contactInfo = createMailContactInfo(mail.contact);
+                    mailList.add(new SentMailDTO(contactInfo, mail.actualContent.trim()));
+                } catch (IllegalArgumentException e) {
+                    LOG.error("Error creating contact info: " + e.getMessage(), e);
+                }
+            }
+            SentMailDTO[] mails = mailList.toArray(new SentMailDTO[0]);
+
+            dtoList.add(new UsedTemplateDTO(template.id.toString(), metaInformation, dateInformation, accountInformation, Arrays.stream(mails).toList(), null));
+        }
+
+        if (query != null && !query.isBlank()) {
+            dtoList.removeIf(template -> !template.meta().templateName().contains(query));
+        }
+
+        return dtoList;
+    }
 }
