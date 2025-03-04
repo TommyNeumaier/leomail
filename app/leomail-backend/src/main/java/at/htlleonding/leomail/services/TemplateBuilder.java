@@ -56,16 +56,11 @@ public class TemplateBuilder {
      */
     private List<TemplateInstance> buildTemplateInstances(String templateId, List<Contact> contacts, boolean personalized) {
         Template template = Template.findById(templateId);
-        if (template == null) {
-            LOGGER.errorf("Template with ID %s not found.", templateId);
-            throw new IllegalArgumentException("Template not found.");
-        }
+        if (template == null) throw new IllegalArgumentException("Template not found.");
 
         String combinedTemplate = template.greeting.templateString + "<br>" + template.content;
         io.quarkus.qute.Template quteTemplate = engine.parse(combinedTemplate);
         List<String> templateVariables = extractTemplateVariables(combinedTemplate);
-
-        LOGGER.debugf("Template Variables Extracted: %s", templateVariables);
 
         List<TemplateInstance> instances = new ArrayList<>(contacts.size());
 
@@ -78,10 +73,8 @@ public class TemplateBuilder {
             instance.data("personalized", personalized);
             instance.data("sex", contact instanceof NaturalContact naturalContact ?
                     (naturalContact.gender != null ? naturalContact.gender.toString() : "") : "");
-            LOGGER.debugf("Data Map for Contact ID %s: [personalized=%s]", contact.id, personalized);
             instances.add(instance);
         }
-
         return instances;
     }
 
