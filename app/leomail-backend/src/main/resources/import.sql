@@ -50,7 +50,8 @@ VALUES
 
 INSERT INTO naturalcontact(id, firstname, lastname, mailaddress, gender, outlook_encrypted_password)
 VALUES
-    ('2319034a-46f7-4039-882e-6ea5509c22ec', 'Tommy', 'Neumaier', 't.neumaier@students.htl-leonding.ac.at', 'M', 'wwKujbiLnUWkHaueCLb9SCT/H3VmT6UmrHGFOkODYvFLvla5dFoVZ4mSDIoB2TIwf5pfwGolzwTBTDpF');
+   ('2319034a-46f7-4039-882e-6ea5509c22ec', 'Tommy', 'Neumaier', 't.neumaier@students.htl-leonding.ac.at', 'M', null);
+   --('2319034a-46f7-4039-882e-6ea5509c22ec', 'Tommy', 'Neumaier', 't.neumaier@students.htl-leonding.ac.at', 'M', 'wwKujbiLnUWkHaueCLb9SCT/H3VmT6UmrHGFOkODYvFLvla5dFoVZ4mSDIoB2TIwf5pfwGolzwTBTDpF');
 
 -- 4. If you have any company contacts, insert them into companycontact table similarly.
 

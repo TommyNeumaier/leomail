@@ -4,11 +4,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.security.spec.KeySpec;
 import java.util.Base64;
 
 @ApplicationScoped
@@ -16,21 +19,21 @@ public class EncryptionService {
 
     private static final String ALGORITHM = "AES";
     private static final int IV_SIZE = 12;
-    private static final int TAG_LENGTH_BIT = 128; //
+    private static final int TAG_LENGTH_BIT = 128;
 
     @ConfigProperty(name = "encryption.key")
-    public String encryptionKeyBase64;
+    public String encryptionKey;
 
     /**
      * Encrypts the given value using AES-GCM with a random IV.
      *
      * @param value The value to encrypt.
-     * @return The encrypted value, with the IV prepended.
+     * @return The encrypted value, with the IV prepended and then Base64-encoded.
      */
     public String encrypt(String value) {
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            SecretKeySpec secretKey = getSecretKey(); // Validate and retrieve the AES key
+            SecretKeySpec secretKey = getSecretKey(); // Derive the AES key from the passphrase
 
             byte[] iv = generateIV(); // Generate a random IV
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_LENGTH_BIT, iv);
@@ -58,12 +61,11 @@ public class EncryptionService {
         try {
             byte[] decodedValue = Base64.getDecoder().decode(encryptedValue);
 
-            // Extract the IV from the decoded value
             byte[] iv = new byte[IV_SIZE];
             System.arraycopy(decodedValue, 0, iv, 0, IV_SIZE);
 
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_LENGTH_BIT, iv);
-            SecretKeySpec secretKey = getSecretKey(); // Retrieve the AES key
+            SecretKeySpec secretKey = getSecretKey();
 
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmParameterSpec);
@@ -77,19 +79,27 @@ public class EncryptionService {
     }
 
     /**
-     * Retrieves the AES key from the Base64-encoded string.
+     * Derives the AES key from the provided UTF-8 passphrase using PBKDF2.
+     * This allows the passphrase to contain any UTF-8 characters.
      *
-     * @return A SecretKeySpec object containing the AES key.
+     * @return A SecretKeySpec object containing the derived AES key.
      */
     private SecretKeySpec getSecretKey() {
-        // Decode the Base64 encoded key
-        byte[] keyBytes = Base64.getDecoder().decode(encryptionKeyBase64);
+        try {
+            // Use a fixed salt for demonstration. For production use a securely generated salt stored securely.
+            byte[] salt = "fixedSaltValue".getBytes(StandardCharsets.UTF_8);
+            int iterations = 65536;
+            int keyLength = 256; // in bits
 
-        if (keyBytes.length != 16 && keyBytes.length != 24 && keyBytes.length != 32) {
-            throw new IllegalArgumentException("Invalid AES key length: " + keyBytes.length + " bytes. Must be 16, 24, or 32 bytes.");
+            KeySpec spec = new PBEKeySpec(encryptionKey.trim().toCharArray(), salt, iterations, keyLength);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+
+            byte[] keyBytes = factory.generateSecret(spec).getEncoded();
+
+            return new SecretKeySpec(keyBytes, ALGORITHM);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while generating secret key", e);
         }
-
-        return new SecretKeySpec(keyBytes, ALGORITHM);
     }
 
     /**

@@ -198,7 +198,7 @@ public class AuthResource {
     @Authenticated
     public Response saveOutlookPassword(OutlookPasswordRequest request) {
         try {
-            // Verifiziere die SMTP-Anmeldedaten
+            System.out.println(request);
             boolean isValid = mailService.verifyOutlookCredentials(request.email(), request.password());
 
             if (!isValid) {
