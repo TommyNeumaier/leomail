@@ -39,6 +39,7 @@ const getData = async () => {
 };
 
 const handleCreate = () => {
+  console.log(selectedTemplate.value);
   selectedTemplate.value = null;
 
   if (route.path.includes('template')) {
@@ -51,8 +52,7 @@ const handleCreate = () => {
 
 const handleClick = (item) => {
   console.log("item:", item);
-  console.log(selectedTemplate.value);
-  selectedTemplate.value = item;
+  //selectedTemplate.value = item;
 
   /*if (route.path.includes('groups')) {
     console.log("groups");
@@ -67,7 +67,6 @@ const handleClick = (item) => {
       console.error('Fehler beim Laden des Templates:', error.message);
     });
   }*/
-  console.log("selectedTemplate", selectedTemplate.value);
 };
 
 const handleNewAddedObject = (newObject) => {

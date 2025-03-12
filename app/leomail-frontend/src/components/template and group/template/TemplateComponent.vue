@@ -132,6 +132,17 @@ onMounted(() => {
   });
 
   console.log("props.selectedTemplate", props.selectedTemplate?.id);
+  if (props.selectedTemplate) {
+    inputName.value = props.selectedTemplate.name;
+    inputHeading.value = props.selectedTemplate.headline;
+    selectedGreeting.value = props.selectedTemplate.greeting;
+    content.value = props.selectedTemplate.content;
+    filesRequired.value = props.selectedTemplate.filesRequired;
+
+    if (quillEditor.value) {
+      quillEditor.value.root.innerHTML = props.selectedTemplate.content;
+    }
+  }
 });
 
 watch(
