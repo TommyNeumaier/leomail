@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {onMounted, ref, watch} from 'vue';
-import Quill from 'quill'; // Stellen Sie sicher, dass Quill importiert ist
-import {Service} from '@/services/service';
+import { onMounted, ref, watch, defineProps, defineEmits, defineExpose } from 'vue';
+import Quill from 'quill';
+import { Service } from '@/services/service';
 import 'quill/dist/quill.snow.css';
-import AutocompleteModule from '../../../autocompleteModule'; // Pfad zu Ihrer Datei
-import {useAppStore} from "@/stores/app.store";
+import AutocompleteModule from '../../../autocompleteModule';
+import { useAppStore } from '@/stores/app.store';
 
 interface Greeting {
   id: number;
@@ -27,23 +27,21 @@ const selectedGreeting = ref<number | null>(null);
 const content = ref('');
 const greetingData = ref<Greeting[]>([]);
 const filesRequired = ref(false);
-//const checkedCompany = ref(false);
-//const checkedIndividual = ref(true);
-//const pickedEntity = ref<string>('');
 const toolbarOptions = ref([
-  [{'font': []}],
-  [{'size': ['small', false, 'large', 'huge']}],
+  [{ 'font': [] }],
+  [{ 'size': ['small', false, 'large', 'huge'] }],
   ['bold', 'italic', 'underline', 'strike'],
-  [{'color': []}, {'background': []}],
-  [{'align': []}],
-  [{'list': 'ordered'}, {'list': 'bullet'}, {'list': 'check'}],
+  [{ 'color': [] }, { 'background': [] }],
+  [{ 'align': [] }],
+  [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
   ['blockquote'],
   ['link', 'image', 'clean']
 ]);
 
 const quillEditor = ref<Quill | null>(null);
-const emitEvents = defineEmits(['group-added', 'group-removed', 'group-saved']);
+const emit = defineEmits(['group-added', 'group-removed', 'group-saved']);
 const props = defineProps<{ selectedTemplate: Template | null }>();
+const localSelectedTemplate = ref<Template | null>(null);
 
 const getGreetings = async () => {
   const response = await Service.getInstance().getGreetings();
@@ -51,135 +49,104 @@ const getGreetings = async () => {
 };
 
 const addTemplate = async () => {
-  try {
-    const formData = {
-      name: inputName.value,
-      headline: inputHeading.value,
-      content: content.value,
-      greeting: selectedGreeting.value,
-      projectId: appStore.$state.project,
-      filesRequired: filesRequired.value
-    };
-    const response = await Service.getInstance().addTemplate(formData);
-    //console.log(formData);
-    emitEvents('group-added', formData);
-    clearForm();
-  } catch (error) {
-    console.error('Fehler beim Senden der Daten:', error);
-  }
+  const formData = {
+    name: inputName.value,
+    headline: inputHeading.value,
+    content: content.value,
+    greeting: selectedGreeting.value,
+    projectId: appStore.$state.project,
+    filesRequired: filesRequired.value
+  };
+  await Service.getInstance().addTemplate(formData);
+  emit('group-added', formData);
+  clearForm();
 };
 
 const updateTemplate = async () => {
-  try {
-    const updatedData = {
-      id: props.selectedTemplate?.id,
-      name: inputName.value,
-      headline: inputHeading.value,
-      content: content.value,
-      greeting: selectedGreeting.value,
-      projectId: appStore.$state.project,
-      filesRequired: filesRequired.value
-    };
-    const response = await Service.getInstance().updateTemplate(updatedData);
-    emitEvents('group-saved', updatedData);
-    //console.log(updatedData);
-    props.selectedTemplate = null;
-    clearForm();
-  } catch (error) {
-    console.error('Fehler beim Speichern der Daten:', error);
-  }
+  const updatedData = {
+    id: localSelectedTemplate.value!.id,
+    name: inputName.value,
+    headline: inputHeading.value,
+    content: content.value,
+    filesRequired: filesRequired.value,
+    greeting: selectedGreeting.value,
+  };
+  await Service.getInstance().updateTemplate(updatedData);
+  emit('group-saved', updatedData);
+  clearForm();
 };
 
 const removeTemplate = async () => {
-  const confirmed = confirm('Möchten Sie diese Vorlage wirklich löschen?');
-  if (confirmed) {
-    try {
-      const response = await Service.getInstance().removeTemplate(props.selectedTemplate?.id, appStore.$state.project);
-      emitEvents('group-removed', props.selectedTemplate);
-      clearForm();
-    } catch (error) {
-      console.error('Fehler beim Löschen der Daten:', error);
-    }
+  if (confirm('Möchten Sie diese Vorlage wirklich löschen?')) {
+    await Service.getInstance().removeTemplate(localSelectedTemplate.value?.id, appStore.$state.project);
+    emit('group-removed', localSelectedTemplate.value);
+    clearForm();
   }
 };
 
 const clearForm = () => {
-  console.log("clearForm aufgerufen");
   inputName.value = '';
   inputHeading.value = '';
   selectedGreeting.value = null;
   filesRequired.value = false;
-  if (quillEditor.value) {
-    quillEditor.value.setText('');
-  }
+  content.value = '';
+  quillEditor.value?.setText('');
+  localSelectedTemplate.value = null;
 };
 
 defineExpose({ clearForm });
-
-onMounted(() => {
-  //clearForm();
-  getGreetings();
-
-  console.log("template opened");
-  const editor = new Quill('#editor', {
-    theme: 'snow',
-    modules: {
-      toolbar: toolbarOptions.value
-    }
-  });
-
-  quillEditor.value = editor;
-  new AutocompleteModule(editor); // Initialisieren Sie das Autocomplete-Modul
-
-  editor.on('text-change', () => {
-    content.value = editor.root.innerHTML;
-  });
-
-  console.log("props.selectedTemplate", props.selectedTemplate?.id);
-  if (props.selectedTemplate) {
-    inputName.value = props.selectedTemplate.name;
-    inputHeading.value = props.selectedTemplate.headline;
-    selectedGreeting.value = props.selectedTemplate.greeting;
-    content.value = props.selectedTemplate.content;
-    filesRequired.value = props.selectedTemplate.filesRequired;
-
-    if (quillEditor.value) {
-      quillEditor.value.root.innerHTML = props.selectedTemplate.content;
-    }
-  }
-});
 
 watch(
     () => props.selectedTemplate,
     (newTemplate) => {
       if (newTemplate) {
-        console.log("newTemplate", newTemplate);
         inputName.value = newTemplate.name;
         inputHeading.value = newTemplate.headline;
-        selectedGreeting.value = newTemplate.greeting;
-        content.value = newTemplate.content;
+        selectedGreeting.value = newTemplate.greeting.id;
         filesRequired.value = newTemplate.filesRequired;
-
-        if (quillEditor.value) {
-          quillEditor.value.root.innerHTML = newTemplate.content;
-        }
+        content.value = newTemplate.content;
+        quillEditor.value?.root.innerHTML = newTemplate.content;
+        localSelectedTemplate.value = newTemplate;
       } else {
-        console.log("selectedTemplate ist null, clearForm wird aufgerufen");
         clearForm();
       }
-    }
+    },
+    { immediate: true }
 );
 
-/*const handleEntities = (entity: string) => {
-  pickedEntity.value = entity;
-  if (entity === 'company') {
-    checkedCompany.value = true;
-    checkedIndividual.value = false;
-  } else if (entity === 'individual') {
-    checkedCompany.value = false;
-    checkedIndividual.value = true;
+onMounted(async () => {
+  const editor = new Quill('#editor', {
+    theme: 'snow',
+    modules: { toolbar: toolbarOptions.value }
+  });
+  quillEditor.value = editor;
+  new AutocompleteModule(editor);
+  editor.on('text-change', () => {
+    content.value = editor.root.innerHTML;
+  });
+
+  await getGreetings();
+
+  if (props.selectedTemplate) {
+    localSelectedTemplate.value = props.selectedTemplate;
   }
-};*/
+});
+
+watch(() => props.selectedTemplate, (newTemplate) => {
+  if (newTemplate) {
+    localSelectedTemplate.value = newTemplate;
+    inputName.value = newTemplate.name;
+    inputHeading.value = newTemplate.headline;
+    selectedGreeting.value = newTemplate.greeting.id;
+    filesRequired.value = newTemplate.filesRequired;
+    content.value = newTemplate.content;
+    quillEditor.value?.root.innerHTML = newTemplate.content;
+  } else {
+    clearForm();
+  }
+});
+
+defineExpose({ clearForm });
 </script>
 
 <template>
