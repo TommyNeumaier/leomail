@@ -179,7 +179,7 @@ watch(
 </script>
 
 <template>
-  <form @submit.prevent="addTemplate">
+  <form @submit.prevent="props.selectedTemplate ? updateTemplate() : addTemplate()">
     <div>
       <label for="name" class="template-label">Vorlage-Name</label><br>
       <input v-model="inputName" type="text" id="name" class="formTemplate"

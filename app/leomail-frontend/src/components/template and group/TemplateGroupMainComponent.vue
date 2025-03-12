@@ -34,7 +34,7 @@ const getData = async () => {
     fetchedData.value = response.data;
     //console.log("allData:", fetchedData);
   } catch (error) {
-    //console.error('Fehler beim Abrufen der Daten:', error);
+    console.error('Fehler beim Abrufen der Daten:', error);
   }
 };
 
@@ -76,14 +76,14 @@ const handleNewAddedObject = (newObject) => {
 };
 
 const handleRemovedObject = (removedObject) => {
-  selectedTemplate.value = null; // Clear the selected template
+  selectedTemplate.value = null;
   fetchedData.value = fetchedData.value.filter((obj) => removedObject.id !== obj.id);
   getData();
 };
 
 const handleSavedObject = (savedObject = {}) => {
   if (!savedObject || Object.keys(savedObject).length === 0) {
-    //console.error('Saved object is invalid or undefined!');
+    console.error('Saved object is invalid or undefined!');
     return;
   }
 
