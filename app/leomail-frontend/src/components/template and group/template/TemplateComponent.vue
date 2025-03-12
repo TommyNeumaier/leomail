@@ -117,6 +117,7 @@ onMounted(() => {
   //clearForm();
   getGreetings();
 
+  console.log("template opened");
   const editor = new Quill('#editor', {
     theme: 'snow',
     modules: {
@@ -145,7 +146,7 @@ onMounted(() => {
   }
 });
 
-watch(
+/*watch(
     () => props.selectedTemplate,
     (newTemplate) => {
       if (newTemplate) {
@@ -163,7 +164,7 @@ watch(
         clearForm();
       }
     }
-);
+);*/
 
 /*const handleEntities = (entity: string) => {
   pickedEntity.value = entity;
