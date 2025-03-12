@@ -24,6 +24,31 @@ export class Service {
         });
     }
 
+    public getTemplateById(id: string) {
+        return axiosInstance.get(`/template/getById`, {
+            params: {
+                id: id
+            }
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.data;
+                }
+                throw new Error('Template nicht gefunden');
+            })
+            .catch(error => {
+                if (error.response) {
+                    if (error.response.status === 404) {
+                        throw new Error('Template nicht gefunden');
+                    } else if (error.response.status === 403) {
+                        throw new Error('Keine Berechtigung für dieses Template');
+                    }
+                }
+                throw error;
+            });
+    }
+
+
     public getGreetings() {
         return axiosInstance.get(`/template/greetings`);
     }
