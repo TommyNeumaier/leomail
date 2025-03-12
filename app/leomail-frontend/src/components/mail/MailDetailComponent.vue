@@ -63,6 +63,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { Service } from '@/services/service';
 import { format, parseISO } from 'date-fns';
+import {useAppStore} from "@/stores/app.store";
 
 interface Attachment {
   id: string;
@@ -116,7 +117,8 @@ const currentRecipientIndex = ref(0);
 const filledTemplate = ref('');
 
 const mailId = ref(route.params.id as string);
-const projectIdProp = ref(route.params.projectId as string);
+
+const appStore = useAppStore();
 
 // Methode zum Abrufen des Profils
 const getProfile = async () => {
@@ -131,7 +133,7 @@ const getProfile = async () => {
 // Methode zum Abrufen der Mail-Details
 const fetchMailDetail = async () => {
   try {
-    const response = await Service.getInstance().getUsedTemplate(mailId.value, projectIdProp.value);
+    const response = await Service.getInstance().getUsedTemplate(mailId.value, appStore.$state.project);
     mailDetail.value = response.data;
 
     if (mailDetail.value && mailDetail.value.keyDates && mailDetail.value.keyDates.sentOn) {
