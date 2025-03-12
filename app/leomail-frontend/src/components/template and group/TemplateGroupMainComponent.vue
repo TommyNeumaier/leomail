@@ -55,7 +55,7 @@ const handleClick = (item) => {
   selectedTemplate.value = item;
   console.log("selected:", selectedTemplate.value);
 
-  /*if (route.path.includes('groups')) {
+  if (route.path.includes('groups')) {
     console.log("groups");
     Service.getInstance().getGroupDetails(appStore.$state.project, item.id).then((response) => {
       selectedTemplate.value = response.data;
@@ -67,7 +67,7 @@ const handleClick = (item) => {
     }).catch((error) => {
       console.error('Fehler beim Laden des Templates:', error.message);
     });
-  }*/
+  }
 };
 
 const handleNewAddedObject = (newObject) => {
