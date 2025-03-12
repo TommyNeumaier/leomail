@@ -131,7 +131,7 @@ const getProfile = async () => {
 // Methode zum Abrufen der Mail-Details
 const fetchMailDetail = async () => {
   try {
-    const response = await Service.getInstance().getUsedTemplate(mailId.value, props.projectId);
+    const response = await Service.getInstance().getUsedTemplate(mailId.value, projectIdProp.value);
     mailDetail.value = response.data;
 
     if (mailDetail.value && mailDetail.value.keyDates && mailDetail.value.keyDates.sentOn) {
