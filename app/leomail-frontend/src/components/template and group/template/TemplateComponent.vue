@@ -114,6 +114,8 @@ const clearForm = () => {
   }
 };
 
+defineExpose({ clearForm });
+
 onMounted(() => {
   //clearForm();
   getGreetings();
