@@ -114,7 +114,7 @@ const clearForm = () => {
 };
 
 onMounted(() => {
-  clearForm();
+  //clearForm();
   getGreetings();
 
   console.log("template opened");
