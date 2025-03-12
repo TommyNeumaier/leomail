@@ -57,7 +57,7 @@ const handleClick = (item) => {
     Service.getInstance().getGroupDetails(appStore.$state.project, item.id).then((response) => {
       selectedTemplate.value = response.data;
     });
-  } else if (route.path.includes('templates')) {
+  } else if (route.path.includes('template')) {
     Service.getInstance().getTemplateById(item.id).then((response) => {
       selectedTemplate.value = response.data;
     }).catch((error) => {
