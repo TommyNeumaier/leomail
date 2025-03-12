@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {defineEmits, defineExpose, defineProps, onMounted, ref, watch} from 'vue';
+import { onMounted, ref, watch, defineProps, defineEmits, defineExpose } from 'vue';
 import Quill from 'quill';
-import {Service} from '@/services/service';
+import { Service } from '@/services/service';
 import 'quill/dist/quill.snow.css';
 import AutocompleteModule from '../../../autocompleteModule';
-import {useAppStore} from '@/stores/app.store';
+import { useAppStore } from '@/stores/app.store';
 
 interface Greeting {
   id: number;
@@ -28,12 +28,12 @@ const content = ref('');
 const greetingData = ref<Greeting[]>([]);
 const filesRequired = ref(false);
 const toolbarOptions = ref([
-  [{'font': []}],
-  [{'size': ['small', false, 'large', 'huge']}],
+  [{ 'font': [] }],
+  [{ 'size': ['small', false, 'large', 'huge'] }],
   ['bold', 'italic', 'underline', 'strike'],
-  [{'color': []}, {'background': []}],
-  [{'align': []}],
-  [{'list': 'ordered'}, {'list': 'bullet'}, {'list': 'check'}],
+  [{ 'color': [] }, { 'background': [] }],
+  [{ 'align': [] }],
+  [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
   ['blockquote'],
   ['link', 'image', 'clean']
 ]);
@@ -63,21 +63,17 @@ const addTemplate = async () => {
 };
 
 const updateTemplate = async () => {
-  try {
-    const updatedData = {
-      id: localSelectedTemplate.value!.id,
-      name: inputName.value,
-      headline: inputHeading.value,
-      content: content.value,
-      filesRequired: filesRequired.value,
-      greeting: selectedGreeting.value,
-    };
-    await Service.getInstance().updateTemplate(updatedData);
-    emit('group-saved', updatedData);
-    clearForm();
-} catch (error) {
-    console.error('Fehler beim Speichern der Vorlage:', error);
-  }
+  const updatedData = {
+    id: localSelectedTemplate.value!.id,
+    name: inputName.value,
+    headline: inputHeading.value,
+    content: content.value,
+    filesRequired: filesRequired.value,
+    greeting: selectedGreeting.value,
+  };
+  await Service.getInstance().updateTemplate(updatedData);
+  emit('group-saved', updatedData);
+  clearForm();
 };
 
 const removeTemplate = async () => {
@@ -100,36 +96,36 @@ const clearForm = () => {
 
 defineExpose({ clearForm });
 
-  watch(
-      () => props.selectedTemplate,
-      (newTemplate) => {
-        if (newTemplate) {
-          inputName.value = newTemplate.name;
-          inputHeading.value = newTemplate.headline;
-          selectedGreeting.value = newTemplate.greeting.id;
-          filesRequired.value = newTemplate.filesRequired;
-          content.value = newTemplate.content;
-          quillEditor.value?.root.innerHTML = newTemplate.content;
-          localSelectedTemplate.value = newTemplate;
-        } else {
-          clearForm();
-        }
-      },
-      {immediate: true}
-  );
+watch(
+    () => props.selectedTemplate,
+    (newTemplate) => {
+      if (newTemplate) {
+        inputName.value = newTemplate.name;
+        inputHeading.value = newTemplate.headline;
+        selectedGreeting.value = newTemplate.greeting.id;
+        filesRequired.value = newTemplate.filesRequired;
+        content.value = newTemplate.content;
+        quillEditor.value?.root.innerHTML = newTemplate.content;
+        localSelectedTemplate.value = newTemplate;
+      } else {
+        clearForm();
+      }
+    },
+    { immediate: true }
+);
 
-  onMounted(async () => {
+onMounted(async () => {
   const editor = new Quill('#editor', {
     theme: 'snow',
-    modules: {toolbar: toolbarOptions.value}
+    modules: { toolbar: toolbarOptions.value }
   });
   quillEditor.value = editor;
-    new AutocompleteModule(editor);
+  new AutocompleteModule(editor);
   editor.on('text-change', () => {
     content.value = editor.root.innerHTML;
   });
 
-    await getGreetings();
+  await getGreetings();
 
   if (props.selectedTemplate) {
     localSelectedTemplate.value = props.selectedTemplate;
@@ -137,20 +133,20 @@ defineExpose({ clearForm });
 });
 
 watch(() => props.selectedTemplate, (newTemplate) => {
-    if (newTemplate) {
-      localSelectedTemplate.value = newTemplate;
-      inputName.value = newTemplate.name;
-      inputHeading.value = newTemplate.headline;
-      selectedGreeting.value = newTemplate.greeting.id;
-      filesRequired.value = newTemplate.filesRequired;
-      content.value = newTemplate.content;
-      quillEditor.value?.root.innerHTML = newTemplate.content;
-    } else {
-      clearForm();
-    }
-  });
+  if (newTemplate) {
+    localSelectedTemplate.value = newTemplate;
+    inputName.value = newTemplate.name;
+    inputHeading.value = newTemplate.headline;
+    selectedGreeting.value = newTemplate.greeting.id;
+    filesRequired.value = newTemplate.filesRequired;
+    content.value = newTemplate.content;
+    quillEditor.value?.root.innerHTML = newTemplate.content;
+  } else {
+    clearForm();
+  }
+});
 
-  defineExpose({clearForm});
+defineExpose({ clearForm });
 </script>
 
 <template>
