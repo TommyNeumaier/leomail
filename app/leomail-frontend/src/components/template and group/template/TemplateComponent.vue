@@ -114,7 +114,7 @@ const clearForm = () => {
 };
 
 onMounted(() => {
-  //clearForm();
+  clearForm();
   getGreetings();
 
   console.log("template opened");
@@ -146,7 +146,7 @@ onMounted(() => {
   }
 });
 
-/*watch(
+watch(
     () => props.selectedTemplate,
     (newTemplate) => {
       if (newTemplate) {
@@ -164,7 +164,7 @@ onMounted(() => {
         clearForm();
       }
     }
-);*/
+);
 
 /*const handleEntities = (entity: string) => {
   pickedEntity.value = entity;
