@@ -131,7 +131,7 @@ onMounted(() => {
     content.value = editor.root.innerHTML;
   });
 
-  console.log("props.selectedTemplate", props.selectedTemplate);
+  console.log("props.selectedTemplate", props.selectedTemplate?.id);
 });
 
 watch(

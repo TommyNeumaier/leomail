@@ -54,17 +54,19 @@ const handleClick = (item) => {
   selectedTemplate.value = item;
 
   if (route.path.includes('groups')) {
+    console.log("groups");
     Service.getInstance().getGroupDetails(appStore.$state.project, item.id).then((response) => {
       selectedTemplate.value = response.data;
     });
   } else if (route.path.includes('template')) {
+    console.log("template");
     Service.getInstance().getTemplateById(item.id).then((response) => {
       selectedTemplate.value = response.data;
     }).catch((error) => {
       console.error('Fehler beim Laden des Templates:', error.message);
     });
-    console.log("selectedTemplate", selectedTemplate.value);
   }
+  console.log("selectedTemplate", selectedTemplate.value);
 };
 
 const handleNewAddedObject = (newObject) => {
