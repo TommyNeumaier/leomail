@@ -31,7 +31,7 @@ public class PermissionService {
         if (project == null) {
             return false;
         }
-        return project.members.stream().anyMatch(member -> member.id.equals(userId));
+        return project.members.stream().anyMatch(member -> member.id.equals(userId)) || project.createdBy.id.equals(userId);
     }
 
     /**
