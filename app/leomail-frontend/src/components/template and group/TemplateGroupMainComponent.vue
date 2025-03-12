@@ -49,11 +49,23 @@ const handleCreate = () => {
 
 
 const handleClick = (item) => {
+  console.log('Clicked item:', item);
   selectedTemplate.value = item;
-  if(route.path.includes('groups')) {
-    Service.getInstance().getGroupDetails(appStore.$state.project, item.id).then((response) => {
-      selectedTemplate.value = response.data;
-    });
+
+  if (route.path.includes('groups')) {
+    Service.getInstance()
+        .getGroupDetails(appStore.$state.project, item.id)
+        .then((response) => {
+          if (response.data) {
+            console.log('Group details:', response.data);
+            selectedTemplate.value = response.data;
+          } else {
+            console.error('Invalid group details response:', response.data);
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching group details:', error);
+        });
   }
 };
 

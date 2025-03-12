@@ -220,7 +220,11 @@ const deleteSelectedMails = async () => {
   try {
     await Service.getInstance().deleteSentMails(selectedMailIds.value, appStore.$state.project).then(() => {
       alert('Ausgewählte E-Mails wurden gelöscht.');
+      fetchedMails.value = fetchedMails.value.filter(
+          (mail) => !selectedMailIds.value.includes(mail.id)
+      );
       selectedMailIds.value = [];
+      checkAllMails.value = false;
     });
     await getMails();
   } catch (error) {

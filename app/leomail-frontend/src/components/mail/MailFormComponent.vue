@@ -6,8 +6,10 @@
     <div id="formHeader">
       <h1>Neue E-Mail</h1>
     </div>
+
     <div id="formContent">
       <form @submit.prevent="handlePreview" id="mailForm">
+
         <!-- Absender Auswahl -->
         <div class="form-group">
           <label for="senderMail" class="form-label">Senden als: </label>
@@ -127,7 +129,7 @@
         <!-- Dateien anhängen -->
         <div v-if="selectedTemplate?.filesRequired" class="form-group">
           <label for="attachments" class="form-label">Dateien anhängen:</label>
-          <input type="file" id="attachments" multiple @change="handleFileUpload"/>
+          <input type="file" id="attachments" multiple required @change="handleFileUpload"/>
           <ul>
             <li v-for="(file, index) in selectedFiles" :key="index">
               {{ file.name }} ({{ formatFileSize(file.size) }})
@@ -254,7 +256,7 @@ const fetchProjectMail = async () => {
 };
 
 // Computed Property for Preview Button
-const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value);
+const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value && selectedFiles.value.length > 0);
 
 // Handle Preview
 const handlePreview = async () => {
@@ -268,6 +270,8 @@ const handlePreview = async () => {
     alert('Bitte wählen Sie eine Vorlage aus.');
     return;
   }
+
+  if (!validateAttachments()) return;
 
   try {
     // Erstelle eine Kopie der individuell ausgewählten Nutzer
@@ -347,6 +351,14 @@ const isScheduled = () => {
   } else {
     return null;
   }
+};
+
+const validateAttachments = () => {
+  if (selectedTemplate.value?.filesRequired && selectedFiles.value.length === 0) {
+    alert('Bitte laden Sie die erforderlichen Dateien hoch.');
+    return false;
+  }
+  return true;
 };
 
 /* Lifecycle Hooks */
@@ -466,6 +478,8 @@ const formatFileSize = (size: number): string => {
  * Send Mail with Attachments
  */
 const sendMail = async () => {
+  if (!validateAttachments()) return;
+
   try {
     const formData = new FormData();
     formData.append('projectId', appStore.$state.project);
