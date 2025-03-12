@@ -32,6 +32,7 @@ const getData = async () => {
       response = await Service.getInstance().getPersonalGroups(appStore.$state.project);
     }
     fetchedData.value = response.data;
+    console.log(fetchedData);
   } catch (error) {
     console.error('Fehler beim Abrufen der Daten:', error);
   }
