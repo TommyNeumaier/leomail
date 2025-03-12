@@ -51,8 +51,9 @@ const handleCreate = () => {
 
 
 const handleClick = (item) => {
-  //console.log("item:", item);
-  //selectedTemplate.value = item;
+  console.log("item:", item);
+  selectedTemplate.value = item;
+  console.log("selected:", selectedTemplate.value);
 
   /*if (route.path.includes('groups')) {
     console.log("groups");
