@@ -108,15 +108,13 @@ const clearForm = () => {
   inputHeading.value = '';
   selectedGreeting.value = null;
   filesRequired.value = false;
-  //content.value = '';
-  // Falls ein Quill-Editor vorhanden ist, leere auch den Editor
   if (quillEditor.value) {
-    quillEditor.value.setText('');  // Setzt den Text im Editor zurück
+    quillEditor.value.setText('');
   }
 };
 
 onMounted(() => {
-  clearForm();
+  //clearForm();
   getGreetings();
 
   const editor = new Quill('#editor', {
@@ -132,13 +130,15 @@ onMounted(() => {
   editor.on('text-change', () => {
     content.value = editor.root.innerHTML;
   });
+
+  console.log("props.selectedTemplate", props.selectedTemplate);
 });
 
 watch(
     () => props.selectedTemplate,
     (newTemplate) => {
       if (newTemplate) {
-        console.log(newTemplate);
+        console.log("newTemplate", newTemplate);
         inputName.value = newTemplate.name;
         inputHeading.value = newTemplate.headline;
         selectedGreeting.value = newTemplate.greeting;
@@ -236,7 +236,7 @@ watch(
         Erstellen
       </button>
       <button v-if="selectedTemplate" type="button" @click="removeTemplate()" class="saveTemplate" id="deleteButton"
-              :disabled="selectedTemplate = null">Löschen
+              :disabled="selectedTemplate == null">Löschen
       </button>
       <button v-if="selectedTemplate" type="button" @click="updateTemplate()" class="saveTemplate"
               :disabled="selectedTemplate == null">Speichern

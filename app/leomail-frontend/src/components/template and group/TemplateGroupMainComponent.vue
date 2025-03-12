@@ -32,7 +32,7 @@ const getData = async () => {
       response = await Service.getInstance().getPersonalGroups(appStore.$state.project);
     }
     fetchedData.value = response.data;
-    console.log(fetchedData);
+    console.log("allData:", fetchedData);
   } catch (error) {
     console.error('Fehler beim Abrufen der Daten:', error);
   }
@@ -63,7 +63,7 @@ const handleClick = (item) => {
     }).catch((error) => {
       console.error('Fehler beim Laden des Templates:', error.message);
     });
-    console.log(selectedTemplate.value);
+    console.log("selectedTemplate", selectedTemplate.value);
   }
 };
 

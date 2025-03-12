@@ -44,7 +44,6 @@ const clearForm = () => {
   selectedMembers.value = [];
 };
 
-// Expose clearForm if needed elsewhere
 defineExpose({ clearForm });
 
 const fetchUsers = async (query: string) => {
@@ -176,7 +175,6 @@ watch(() => props.selectedTemplate, (newTemplate) => {
     groupName.value = newTemplate.name;
     groupDescription.value = newTemplate.description;
 
-    // Prüfen, ob die Mitglieder bereits in selectedMembers existieren
     const uniqueMembers = newTemplate.members.filter(newMember =>
         !selectedMembers.value.find(existingMember => existingMember.id === newMember.id)
     );
@@ -190,7 +188,7 @@ onMounted(() => {
   if (props.selectedTemplate) {
     groupName.value = props.selectedTemplate.name;
     groupDescription.value = props.selectedTemplate.description;
-    selectedMembers.value = [...props.selectedTemplate.members]; // Kopiere die Liste
+    selectedMembers.value = [...props.selectedTemplate.members];
   }
 });
 
@@ -202,7 +200,7 @@ const validateForm = () => {
     errorMessage.value = 'Alle Felder müssen ausgefüllt sein (Gruppenname, Beschreibung, Mitglieder)';
     return false;
   }
-  errorMessage.value = null; // Clear error if validation passes
+  errorMessage.value = null;
   return true;
 };
 
