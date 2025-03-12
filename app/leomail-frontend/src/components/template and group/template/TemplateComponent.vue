@@ -104,6 +104,7 @@ const removeTemplate = async () => {
 };
 
 const clearForm = () => {
+  console.log("clearForm aufgerufen");
   inputName.value = '';
   inputHeading.value = '';
   selectedGreeting.value = null;
@@ -161,6 +162,7 @@ watch(
           quillEditor.value.root.innerHTML = newTemplate.content;
         }
       } else {
+        console.log("selectedTemplate ist null, clearForm wird aufgerufen");
         clearForm();
       }
     }
