@@ -40,7 +40,7 @@ const getData = async () => {
 
 const handleCreate = () => {
   //console.log(selectedTemplate.value);
-  selectedTemplate.value = null;
+  //selectedTemplate.value = null;
 
   if (route.path.includes('template')) {
     formVG.value = TemplateComponent;
@@ -94,7 +94,7 @@ const handleSavedObject = (savedObject = {}) => {
 
   getData();
   getData();
-  selectedTemplate.value = null;
+  //selectedTemplate.value = null;
 };
 
 
