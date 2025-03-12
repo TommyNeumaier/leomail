@@ -64,8 +64,6 @@ const handleClick = (item) => {
     console.log("template");
     Service.getInstance().getTemplateById(item.id).then((response) => {
       selectedTemplate.value = response.data;
-    }).catch((error) => {
-      console.error('Fehler beim Laden des Templates:', error.message);
     });
   }
 };
