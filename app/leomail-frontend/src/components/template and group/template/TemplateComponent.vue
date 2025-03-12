@@ -61,7 +61,7 @@ const addTemplate = async () => {
       filesRequired: filesRequired.value
     };
     const response = await Service.getInstance().addTemplate(formData);
-    console.log(formData);
+    //console.log(formData);
     emitEvents('group-added', formData);
     clearForm();
   } catch (error) {
@@ -82,7 +82,7 @@ const updateTemplate = async () => {
     };
     const response = await Service.getInstance().updateTemplate(updatedData);
     emitEvents('group-saved', updatedData);
-    console.log(updatedData);
+    //console.log(updatedData);
     props.selectedTemplate = null;
     clearForm();
   } catch (error) {

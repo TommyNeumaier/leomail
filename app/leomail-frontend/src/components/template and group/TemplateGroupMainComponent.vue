@@ -32,14 +32,14 @@ const getData = async () => {
       response = await Service.getInstance().getPersonalGroups(appStore.$state.project);
     }
     fetchedData.value = response.data;
-    console.log("allData:", fetchedData);
+    //console.log("allData:", fetchedData);
   } catch (error) {
-    console.error('Fehler beim Abrufen der Daten:', error);
+    //console.error('Fehler beim Abrufen der Daten:', error);
   }
 };
 
 const handleCreate = () => {
-  console.log(selectedTemplate.value);
+  //console.log(selectedTemplate.value);
   selectedTemplate.value = null;
 
   if (route.path.includes('template')) {
@@ -51,7 +51,7 @@ const handleCreate = () => {
 
 
 const handleClick = (item) => {
-  console.log("item:", item);
+  //console.log("item:", item);
   //selectedTemplate.value = item;
 
   /*if (route.path.includes('groups')) {
@@ -82,7 +82,7 @@ const handleRemovedObject = (removedObject) => {
 
 const handleSavedObject = (savedObject = {}) => {
   if (!savedObject || Object.keys(savedObject).length === 0) {
-    console.error('Saved object is invalid or undefined!');
+    //console.error('Saved object is invalid or undefined!');
     return;
   }
 
