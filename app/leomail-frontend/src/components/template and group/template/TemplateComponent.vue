@@ -83,7 +83,7 @@ const updateTemplate = async () => {
     const response = await Service.getInstance().updateTemplate(updatedData);
     emitEvents('group-saved', updatedData);
     //console.log(updatedData);
-    props.selectedTemplate = null;
+    //props.selectedTemplate = null;
     clearForm();
   } catch (error) {
     console.error('Fehler beim Speichern der Daten:', error);
