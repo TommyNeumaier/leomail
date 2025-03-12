@@ -25,13 +25,19 @@ public class MailScheduler {
     @PostConstruct
     void init() {
         LOGGER.info("Initializing MailScheduler...");
-        checkScheduledTemplates(); // Initial check at application startup
+        checkScheduledTemplates();
     }
 
     /**
      * Scheduled task to check and send emails for any scheduled templates.
      * This runs every 15 seconds and sends any emails that are due for sending.
      */
+    private List<SentTemplate> getAllScheduledUsedTemplates() {
+        return SentTemplate
+                .find("scheduledAt <= ?1 and sentOn is null", java.time.LocalDateTime.now())
+                .list();
+    }
+
     @Scheduled(every = "15s")
     @Transactional
     public void checkScheduledTemplates() {
@@ -43,23 +49,12 @@ public class MailScheduler {
         }
 
         for (SentTemplate usedTemplate : usedTemplates) {
-            if ((usedTemplate.scheduledAt.isBefore(java.time.LocalDateTime.now()) || usedTemplate.scheduledAt.isEqual(java.time.LocalDateTime.now())) && usedTemplate.sentOn == null) {
-                LOGGER.infof("Sending emails for template ID: %s, scheduled at: %s", usedTemplate.id, usedTemplate.scheduledAt);
-                mailRepository.sendMail(usedTemplate.id);
-            }
+            LOGGER.infof("Sending emails for template ID: %s, scheduled at: %s", usedTemplate.id, usedTemplate.scheduledAt);
+            mailRepository.sendMail(usedTemplate.id);
         }
     }
 
-    /**
-     * Retrieves all email templates that are scheduled and ready to be sent.
-     *
-     * @return List of SentTemplates that are scheduled to be sent but not yet sent.
-     */
-    private List<SentTemplate> getAllScheduledUsedTemplates() {
-        return SentTemplate.find("scheduledAt < ?1 and sentOn is null", java.time.LocalDateTime.now()).list();
-    }
-
-    @Scheduled(every = "15s")
+    /*@Scheduled(every = "15s")
     @Transactional
     public void checkUnsentMails() {
         LOGGER.info("Checking for unsent mails...");
@@ -80,6 +75,5 @@ public class MailScheduler {
             LOGGER.infof("Resending emails for template ID: %s", templateId);
             mailRepository.sendMail(templateId);
         }
-    }
-
+    }*/
 }

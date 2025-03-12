@@ -41,7 +41,7 @@ public class KeycloakAdminService {
      */
     public void onStart(@Observes StartupEvent event) {
         LOGGER.info("StartupEvent empfangen. Initialisiere asynchronen Import.");
-       //  importUsersAsync();
+        importUsersAsync();
     }
 
     /**
