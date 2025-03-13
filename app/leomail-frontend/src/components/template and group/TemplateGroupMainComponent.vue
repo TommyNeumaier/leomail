@@ -20,7 +20,9 @@ const searchQuery = ref('');
 
 const filteredTemplates = computed(() => {
   if (!searchQuery.value) return fetchedData.value;
-  return fetchedData.value.filter(template => template.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
+  return fetchedData.value.filter(template =>
+      template.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
 });
 
 const getData = async () => {
@@ -32,23 +34,18 @@ const getData = async () => {
       response = await Service.getInstance().getPersonalGroups(appStore.$state.project);
     }
     fetchedData.value = response.data;
-    //console.log("allData:", fetchedData);
   } catch (error) {
     console.error('Fehler beim Abrufen der Daten:', error);
   }
 };
 
 const handleCreate = () => {
-  //console.log(selectedTemplate.value);
-  //selectedTemplate.value = null;
-
   if (route.path.includes('template')) {
     formVG.value = TemplateComponent;
   } else if (route.path.includes('groups')) {
     formVG.value = GroupComponent;
   }
 };
-
 
 const handleClick = async (item) => {
   try {
@@ -88,11 +85,10 @@ const handleSavedObject = (savedObject = {}) => {
     fetchedData.value.push(savedObject);
   }
 
+  // Mehrfache Aufrufe von getData() können hier zu unerwünschten Effekten führen!
   getData();
   getData();
-  //selectedTemplate.value = null;
 };
-
 
 onMounted(() => {
   getData();
@@ -121,7 +117,6 @@ watch(
     <nav-component></nav-component>
 
     <div id="bigVGContainer">
-
       <div id="dataVGContainer">
         <h3 id="headlineDataVG">{{ headlineVG }}</h3>
 
@@ -134,13 +129,17 @@ watch(
           </div>
 
           <ul id="templateGroupItemsContainer">
-            <li v-for="(item, index) in filteredTemplates" :key="index" :id="String('template-' + index)"
-                @click="handleClick(item)" class="templateGroupItems"
-                :class="{ highlighted: selectedTemplate && selectedTemplate.id === item.id }">
+            <li
+                v-for="(item, index) in filteredTemplates"
+                :key="index"
+                :id="String('template-' + index)"
+                @click="handleClick(item)"
+                class="templateGroupItems"
+                :class="{ highlighted: selectedTemplate && selectedTemplate.id === item.id }"
+            >
               {{ item.name }}
             </li>
           </ul>
-
         </div>
 
         <div id="newVGBox">
@@ -158,18 +157,21 @@ watch(
 
         <div id="VGFormBox">
           <router-view>
-            <component :is="formVG" @group-added="handleNewAddedObject" @group-removed="handleRemovedObject" @group-saved="handleSavedObject"
-                       :selected-template="selectedTemplate"></component>
+            <component
+                :is="formVG"
+                @group-added="handleNewAddedObject"
+                @group-removed="handleRemovedObject"
+                @group-saved="handleSavedObject"
+                :selected-template="selectedTemplate"
+            ></component>
           </router-view>
         </div>
       </div>
-
     </div>
   </div>
 </template>
 
 <style scoped>
-
 #VGMainContainer {
   display: flex;
   flex-direction: row;
@@ -182,6 +184,7 @@ watch(
   display: flex;
   flex-direction: row;
 }
+
 #newVGButton {
   background-color: unset;
   border: none;
@@ -205,7 +208,7 @@ watch(
   box-shadow: 0 6px 6px 0 rgba(0, 0, 0, 0.3);
 }
 
-#newVGButton img{
+#newVGButton img {
   margin-right: 0.5vw;
 }
 
@@ -289,11 +292,10 @@ input[type="text"] {
   box-shadow: 5px 5px 10px lightgray;
 }
 
-
 #getVGBox {
   display: flex;
   flex-direction: column;
-  height: 60%; /* Das bleibt gleich */
+  height: 60%;
 }
 
 #templateGroupItemsContainer {
@@ -304,34 +306,33 @@ input[type="text"] {
   margin: 0;
   box-sizing: border-box;
   word-wrap: break-word;
-  height: 100%; /* Nimmt die verbleibende Höhe des Elterncontainers */
-  overflow-y: auto; /* Fügt den Scroll-Effekt hinzu */
-  padding-right: 10px; /* Platz für den Scrollbalken */
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 10px;
 }
 
-/* Scrollbar-Stile für Webkit (Chrome, Edge, Safari) */
 #templateGroupItemsContainer::-webkit-scrollbar {
-  width: 8px; /* Breite des Scrollbalkens */
+  width: 8px;
 }
 
 #templateGroupItemsContainer::-webkit-scrollbar-track {
-  background: #f1f1f1; /* Hintergrund des Scrollbalkens */
+  background: #f1f1f1;
 }
 
 #templateGroupItemsContainer::-webkit-scrollbar-thumb {
-  background: #888; /* Farbe des Scrollbalkens */
-  border-radius: 4px; /* Runde Kanten für den Scrollbalken */
+  background: #888;
+  border-radius: 4px;
 }
 
 #templateGroupItemsContainer::-webkit-scrollbar-thumb:hover {
-  background: #555; /* Farbe des Scrollbalkens beim Hover */
+  background: #555;
 }
 
 .templateGroupItems {
   border-bottom: 1px solid #ddd;
   cursor: pointer;
   font-size: 0.8rem;
-  padding: 8px; /* Fügt etwas Padding für besseren Abstand hinzu */
+  padding: 8px;
 }
 
 .templateGroupItems:hover {
