@@ -105,7 +105,9 @@ watch(
         selectedGreeting.value = newTemplate.greeting.id;
         filesRequired.value = newTemplate.filesRequired;
         content.value = newTemplate.content;
-        quillEditor.value?.root.innerHTML = newTemplate.content;
+        if (quillEditor.value) {
+          quillEditor.value.root.innerHTML = newTemplate.content;
+        }
         localSelectedTemplate.value = newTemplate;
       } else {
         clearForm();
@@ -140,7 +142,9 @@ watch(() => props.selectedTemplate, (newTemplate) => {
     selectedGreeting.value = newTemplate.greeting.id;
     filesRequired.value = newTemplate.filesRequired;
     content.value = newTemplate.content;
-    quillEditor.value?.root.innerHTML = newTemplate.content;
+    if (quillEditor.value) {
+      quillEditor.value.root.innerHTML = newTemplate.content;
+    }
   } else {
     clearForm();
   }
