@@ -149,8 +149,6 @@ watch(() => props.selectedTemplate, (newTemplate) => {
     clearForm();
   }
 });
-
-defineExpose({ clearForm });
 </script>
 
 <template>
