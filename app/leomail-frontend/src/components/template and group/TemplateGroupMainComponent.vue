@@ -40,6 +40,8 @@ const getData = async () => {
 };
 
 const handleCreate = () => {
+  selectedTemplate.value = null;
+
   if (route.path.includes('template')) {
     formVG.value = TemplateComponent;
   } else if (route.path.includes('groups')) {
