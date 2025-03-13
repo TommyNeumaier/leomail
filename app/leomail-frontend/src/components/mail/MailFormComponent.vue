@@ -256,7 +256,12 @@ const fetchProjectMail = async () => {
 };
 
 // Computed Property for Preview Button
-const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value && selectedFiles.value.length > 0);
+//const canPreview = computed(() => (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value && selectedFiles.value.length > 0);
+
+const canPreview = computed(() => {
+  const hasFiles = selectedTemplate?.value?.filesRequired ? selectedFiles.value.length > 0 : true;
+  return (selectedUsers.value.length > 0 || selectedGroups.value.length > 0) && selectedTemplate.value && hasFiles;
+});
 
 // Handle Preview
 const handlePreview = async () => {
@@ -573,8 +578,8 @@ const removeUser = (user: User) => {
 const removeGroup = (group: Group) => {
   selectedGroups.value = selectedGroups.value.filter(g => g.id !== group.id);
 };
-</script
->
+</script>
+
 <style scoped>
 
 .input-with-icon {
