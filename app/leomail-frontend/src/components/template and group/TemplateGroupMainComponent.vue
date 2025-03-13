@@ -50,21 +50,17 @@ const handleCreate = () => {
 };
 
 
-const handleClick = (item) => {
-  console.log("item:", item);
-  selectedTemplate.value = item;
-  console.log("selected:", selectedTemplate.value);
-
-  if (route.path.includes('groups')) {
-    console.log("groups");
-    Service.getInstance().getGroupDetails(appStore.$state.project, item.id).then((response) => {
-      selectedTemplate.value = response.data;
-    });
-  } else if (route.path.includes('template')) {
-    console.log("template");
-    Service.getInstance().getTemplateById(item.id).then((response) => {
-      selectedTemplate.value = response.data;
-    });
+const handleClick = async (item) => {
+  try {
+    let response;
+    if (route.path.includes('groups')) {
+      response = await Service.getInstance().getGroupDetails(appStore.$state.project, item.id);
+    } else if (route.path.includes('template')) {
+      response = await Service.getInstance().getTemplateById(item.id);
+    }
+    selectedTemplate.value = response.data; // Erst nach dem API-Call setzen
+  } catch (error) {
+    console.error('Fehler beim Laden:', error);
   }
 };
 
