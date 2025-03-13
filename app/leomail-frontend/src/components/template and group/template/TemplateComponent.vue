@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, defineProps, defineEmits, defineExpose } from 'vue';
+import { onMounted, ref, watch, defineProps, defineEmits, defineExpose, nextTick } from 'vue';
 import Quill from 'quill';
 import { Service } from '@/services/service';
 import 'quill/dist/quill.snow.css';
@@ -15,7 +15,7 @@ interface Template {
   id: number;
   name: string;
   headline: string;
-  greeting: Greeting;
+  greeting: number;
   content: string;
   filesRequired: boolean;
 }
@@ -40,7 +40,14 @@ const toolbarOptions = ref([
 
 const quillEditor = ref<Quill | null>(null);
 const emit = defineEmits(['group-added', 'group-removed', 'group-saved']);
-const props = defineProps<{ selectedTemplate: Template | null }>();
+
+// Props-Definition (Default-Wert für selectedTemplate)
+const props = defineProps({
+  selectedTemplate: {
+    type: Object as () => Template | null,
+    default: null
+  }
+});
 const localSelectedTemplate = ref<Template | null>(null);
 
 const getGreetings = async () => {
@@ -99,22 +106,27 @@ defineExpose({ clearForm });
 watch(
     () => props.selectedTemplate,
     (newTemplate) => {
+      console.log("Template prop changed:", newTemplate); // Debug: Watcher-Aktivierung
       if (newTemplate) {
         inputName.value = newTemplate.name;
         inputHeading.value = newTemplate.headline;
-        selectedGreeting.value = newTemplate.greeting.id;
+        // Änderung: API liefert greeting als Zahl, daher direkt übernehmen
+        selectedGreeting.value = newTemplate.greeting;
         filesRequired.value = newTemplate.filesRequired;
         content.value = newTemplate.content;
-        if (quillEditor.value) {
-          quillEditor.value.root.innerHTML = newTemplate.content;
-        }
         localSelectedTemplate.value = newTemplate;
+        if (quillEditor.value) {
+          nextTick(() => {
+            quillEditor.value!.root.innerHTML = newTemplate.content;
+          });
+        }
       } else {
         clearForm();
       }
     },
     { immediate: true }
 );
+
 
 onMounted(async () => {
   const editor = new Quill('#editor', {
@@ -131,22 +143,6 @@ onMounted(async () => {
 
   if (props.selectedTemplate) {
     localSelectedTemplate.value = props.selectedTemplate;
-  }
-});
-
-watch(() => props.selectedTemplate, (newTemplate) => {
-  if (newTemplate) {
-    localSelectedTemplate.value = newTemplate;
-    inputName.value = newTemplate.name;
-    inputHeading.value = newTemplate.headline;
-    selectedGreeting.value = newTemplate.greeting.id;
-    filesRequired.value = newTemplate.filesRequired;
-    content.value = newTemplate.content;
-    if (quillEditor.value) {
-      quillEditor.value.root.innerHTML = newTemplate.content;
-    }
-  } else {
-    clearForm();
   }
 });
 </script>
@@ -178,66 +174,33 @@ watch(() => props.selectedTemplate, (newTemplate) => {
       <input type="checkbox" id="anhang" v-model="filesRequired">
     </div>
 
-    <!--
-
-    <div class="personContainer">
-      <div class="personBox">
-        <input
-            type="checkbox"
-            class="checkbox"
-            id="individual"
-            value="individual"
-            v-model="checkedIndividual"
-            @change="handleEntities('individual')"
-        />
-        <label for="individual">Privatperson</label>
-      </div>
-
-      <div class="personBox">
-        <input
-            type="checkbox"
-            class="checkbox"
-            id="company"
-            value="company"
-            v-model="checkedCompany"
-            @change="handleEntities('company')"
-        />
-        <label for="company">Unternehmen</label>
-      </div>
-    </div>
-
-
-    <img src="../../../assets/icons/icons8-info-250.png" id="tooltip" width="20"
-         v-tooltip="{ value: 'Vorname: {firstname} Nachname: {lastname} Email-Adresse: {mailAddress}', showDelay: 200, hideDelay: 400 }"
-         label="Save">
-     -->
     <div class="editor-wrapper">
       <div id="editor" class="quill-editor"></div>
     </div>
 
-
     <div id="buttonBox">
-      <button v-if="!selectedTemplate" type="submit" class="saveTemplate" :disabled="selectedTemplate != null">
+      <!-- Änderung: Verwende localSelectedTemplate statt selectedTemplate -->
+      <button v-if="!localSelectedTemplate" type="submit" class="saveTemplate" :disabled="localSelectedTemplate != null">
         Erstellen
       </button>
-      <button v-if="selectedTemplate" type="button" @click="removeTemplate()" class="saveTemplate" id="deleteButton"
-              :disabled="selectedTemplate == null">Löschen
+      <button v-if="localSelectedTemplate" type="button" @click="removeTemplate()" class="saveTemplate" id="deleteButton"
+              :disabled="localSelectedTemplate == null">Löschen
       </button>
-      <button v-if="selectedTemplate" type="button" @click="updateTemplate()" class="saveTemplate"
-              :disabled="selectedTemplate == null">Speichern
+      <button v-if="localSelectedTemplate" type="button" @click="updateTemplate()" class="saveTemplate"
+              :disabled="localSelectedTemplate == null">Speichern
       </button>
     </div>
   </form>
 </template>
 
 <style scoped>
-#anhangBox{
+#anhangBox {
   display: flex;
   flex-direction: row;
   align-items: center;
   margin-bottom: 2vh;
 }
-#anhangBox label{
+#anhangBox label {
   padding: 0 0.5vw 0 0;
   font-size: 0.8em;
 }
@@ -261,7 +224,7 @@ watch(() => props.selectedTemplate, (newTemplate) => {
   display: flex;
   flex-wrap: wrap;
   margin-top: 2%;
-  justify-content: flex-end; /* Align items to the right */
+  justify-content: flex-end;
 }
 
 .saveTemplate {
@@ -283,7 +246,7 @@ watch(() => props.selectedTemplate, (newTemplate) => {
 
 .saveTemplate:disabled {
   background-color: lightgray;
-  border-color: lightgray;;
+  border-color: lightgray;
 }
 
 .saveTemplate:disabled:hover {
@@ -293,7 +256,7 @@ watch(() => props.selectedTemplate, (newTemplate) => {
 
 #anredeBox {
   margin-bottom: 2vh;
-  margin-left: 5%
+  margin-left: 5%;
 }
 
 .editor-wrapper {
@@ -349,30 +312,4 @@ form {
   font-weight: var(--font-weight-bold);
   box-shadow: none;
 }
-
-/* checkbox
-.personBox {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 15%;
-}
-
-.personBox label {
-  margin-left: 5%;
-}
-
-.personContainer {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-}
-
-#tooltip {
-  display: flex;
-  margin-left: 97%;
-  margin-bottom: 0.2%;
-}
-*/
 </style>
-

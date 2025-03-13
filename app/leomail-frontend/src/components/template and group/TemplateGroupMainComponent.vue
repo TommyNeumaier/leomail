@@ -55,11 +55,14 @@ const handleClick = async (item) => {
     } else if (route.path.includes('template')) {
       response = await Service.getInstance().getTemplateById(item.id);
     }
-    selectedTemplate.value = response.data; // Erst nach dem API-Call setzen
+    console.log("Clicked item:", item, "Full response:", response);
+    // Falls response.data undefined ist, wird der Response selbst verwendet
+    selectedTemplate.value = response.data || response;
   } catch (error) {
     console.error('Fehler beim Laden:', error);
   }
 };
+
 
 const handleNewAddedObject = (newObject) => {
   fetchedData.value.push(newObject);
@@ -164,7 +167,7 @@ watch(
                 @group-saved="handleSavedObject"
                 :selected-template="selectedTemplate"
             ></component>
-          </router-view>
+            </router-view>
         </div>
       </div>
     </div>
