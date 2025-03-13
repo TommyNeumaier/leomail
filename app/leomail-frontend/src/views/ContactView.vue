@@ -249,6 +249,8 @@ onMounted(() => {
 #contactsBoxContainer {
   margin-left: 10%;
   margin-top: 5%;
+  height: 60vh;
+  overflow-y: scroll;
 }
 
 #headline {
